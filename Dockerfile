@@ -19,10 +19,9 @@ RUN apt-get -q update \
     xdotool \
     && apt-get clean
 
+# Download
 ENV UNITY_DIR="/opt/unity"
 ENV UNITY_BIN="${UNITY_DIR}/UnityHub.AppImage"
-
-# Download
 RUN mkdir "${UNITY_DIR}" \
     && wget --no-verbose -O "${UNITY_BIN}" "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
     && chmod +x "${UNITY_BIN}"
@@ -31,6 +30,10 @@ RUN mkdir "${UNITY_DIR}" \
 RUN cd /tmp \
     && "${UNITY_BIN}" --appimage-extract \
     && ls -alh squashfs-root
+
+# Accept
+ENV CONFIG_DIR="/root/.config/Unity Hub"
+RUN mkdir -p "${CONFIG_DIR}" && touch "${CONFIG_DIR}/eulaAccepted"
 
 # Accept license
 COPY bootstrapper.sh .
