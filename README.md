@@ -25,15 +25,15 @@ docker build . -t proto
 
 Run image
 
-```
+```bash
 docker run -it --rm --cap-add SYS_ADMIN --device /dev/fuse proto bash
 ```
 
-> _The flags for `-cap-add SYS_ADMIN --device /dev/fuse` are needed for Fuse._
+> _The flags `--cap-add SYS_ADMIN` and `--device /dev/fuse` are needed for Fuse to work._
 
 Run UnityHub
 
-```
+```bash
 xvfb-run /opt/unity/UnityHub.AppImage
 ```
 
