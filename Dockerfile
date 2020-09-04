@@ -5,6 +5,8 @@ RUN apt-get -q update \
     && apt-get -q install -y --no-install-recommends --allow-downgrades \
     ca-certificates \
     wget \
+    libxtst6 \
+    libxss1 \
     desktop-file-utils \
     fuse \
     libasound2 \
@@ -25,7 +27,6 @@ RUN mkdir "${UNITY_DIR}" \
     && chmod +x "${UNITY_BIN}"
 
 # Extract
-RUN mkdir -p /usr/local/share/applications \
-    && cd /tmp \
+RUN cd /tmp \
     && "${UNITY_BIN}" --appimage-extract \
     && ls -alh squashfs-root

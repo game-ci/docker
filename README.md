@@ -1,7 +1,7 @@
 # docker-linux
 Proof of concept for linux-based unity setup in docker
 
-## Usage
+## Setup
 
 Clone this repo
 
@@ -21,10 +21,20 @@ Build the image
 docker build . -t proto
 ```
 
-Run interactive bash shell
+## Usage
+
+Run image
 
 ```
-docker run -it --rm proto bash
+docker run -it --rm --cap-add SYS_ADMIN --device /dev/fuse proto bash
+```
+
+> _The flags for `-cap-add SYS_ADMIN --device /dev/fuse` are needed for Fuse._
+
+Run UnityHub
+
+```
+xvfb-run /opt/unity/UnityHub.AppImage
 ```
 
 Start experimenting or wait for updates to the readme :)
