@@ -17,6 +17,7 @@ RUN apt-get -q update \
     zenity \
     libdbus-glib-1-2 \
     xdotool \
+    curl \
     && apt-get clean
 
 # Download
