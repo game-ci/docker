@@ -16,6 +16,7 @@ RUN apt-get -q update \
     xvfb \
     zenity \
     libdbus-glib-1-2 \
+    xdotool \
     && apt-get clean
 
 ENV UNITY_DIR="/opt/unity"
@@ -23,10 +24,14 @@ ENV UNITY_BIN="${UNITY_DIR}/UnityHub.AppImage"
 
 # Download
 RUN mkdir "${UNITY_DIR}" \
-    && wget --no-verbose -O "${UNITY_BIN}" 'https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage' \
+    && wget --no-verbose -O "${UNITY_BIN}" "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
     && chmod +x "${UNITY_BIN}"
 
 # Extract
 RUN cd /tmp \
     && "${UNITY_BIN}" --appimage-extract \
     && ls -alh squashfs-root
+
+# Accept license
+COPY bootstrapper.sh .
+COPY no-really-lets-click-everywhere.sh .
