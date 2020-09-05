@@ -41,16 +41,31 @@ docker run -it --rm --cap-add SYS_ADMIN --device /dev/fuse proto bash
 docker run -it --rm --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined proto bash
 ```
 
+> _Currently it is unsure whether the security profile is needed or not._
+
 ## Run UnityHub
 
-```bash
-xvfb-run /opt/unity/UnityHub.AppImage
-```
-
-> _Use `xvfb-run -e /dev/stdout` to output everything to console
+Run UnityHub in a framebuffer.
 
 ```bash
 xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
 ```
 
-Start experimenting or wait for updates to the readme :)
+> _Use `xvfb-run -e /dev/stdout` to output everything to console_
+
+## Todo
+
+- Get past the update part, where it is currently stuck;
+
+```bash
+root@ad6f13368198:/tmp/squashfs-root# xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
+Checking for update
+Update for version 2.3.2 is not available (latest version: 2.3.2, downgrade is disallowed).
+```
+
+- Shrink image to a minimum
+- Generate proper unity images with the correct NDK/SDK based on official versions
+
+## License
+
+[MIT license](./LICENSE)
