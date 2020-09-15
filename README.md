@@ -60,7 +60,7 @@ xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
 ```bash
 root@ad6f13368198:/tmp/squashfs-root# xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
 Checking for update
-Update for version 2.3.2 is not available (latest version: 2.3.2, downgrade is disallowed).
+Update for version 2.4.0 is not available (latest version: 2.4.0, downgrade is disallowed).
 ```
 
 - Shrink image to a minimum
