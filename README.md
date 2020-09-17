@@ -43,26 +43,36 @@ docker run -it --rm --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparm
 
 > _Currently it is unsure whether the security profile is needed or not._
 
-## Run UnityHub
+## Configure
 
-Run UnityHub in a framebuffer.
+Configure editor path
 
-```bash
-xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
 ```
+xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage --no-sandbox --headless install-path --set /opt/unity/editors/
+```
+
+## Run UnityHub
 
 > _Use `xvfb-run -e /dev/stdout` to output everything to console_
 
-Issue the help command
+#### help
+
+Run the help command
 
 ```bash
 xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage --no-sandbox --headless help
 ```
 
-## Configure
+#### install
 
-```
-xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage --no-sandbox --headless install-path --set /opt/unity/editors/
+Get a link from the [archive](https://unity3d.com/get-unity/download/archive).
+
+The link `unityhub://2020.1.4f1/fa717bb873ec` holds version `2020.1.4f1` and hash `fa717bb873ec`.
+
+Since we want to install android build support, we'll add `--module android`.
+
+```bash
+xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage --no-sandbox --headless install --version 2020.1.4f1 --changeset fa717bb873ec --module android
 ```
 
 ## Todo
