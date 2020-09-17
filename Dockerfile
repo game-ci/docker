@@ -37,7 +37,7 @@ ENV CONFIG_DIR="/root/.config/Unity Hub"
 RUN mkdir -p "${CONFIG_DIR}" && touch "${CONFIG_DIR}/eulaAccepted"
 
 # Configure
-mkdir -p "${UNITY_DIR}/editors"
+RUN mkdir -p "${UNITY_DIR}/editors"
 
 # Accept license
 COPY bootstrapper.sh .
