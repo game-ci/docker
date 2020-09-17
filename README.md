@@ -53,15 +53,19 @@ xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
 
 > _Use `xvfb-run -e /dev/stdout` to output everything to console_
 
-## Todo
-
-- Get past the update part, where it is currently stuck;
+Issue the help command
 
 ```bash
-root@ad6f13368198:/tmp/squashfs-root# xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
-Checking for update
-Update for version 2.4.0 is not available (latest version: 2.4.0, downgrade is disallowed).
+xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage --no-sandbox --headless help
 ```
+
+## Configure
+
+```
+xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage --no-sandbox --headless install-path --set /opt/unity/editors/
+```
+
+## Todo
 
 - Shrink image to a minimum
 - Generate proper unity images with the correct NDK/SDK based on official versions
