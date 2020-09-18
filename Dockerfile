@@ -20,17 +20,19 @@ RUN apt-get -q update \
     curl \
     && apt-get clean
 
-# Download
 ENV UNITY_DIR="/opt/unity"
-ENV UNITY_BIN="${UNITY_DIR}/UnityHub.AppImage"
-RUN mkdir "${UNITY_DIR}" \
-    && wget --no-verbose -O "${UNITY_BIN}" "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
-    && chmod +x "${UNITY_BIN}"
 
-# Extract
-RUN cd /tmp \
-    && "${UNITY_BIN}" --appimage-extract \
-    && ls -alh squashfs-root
+# Download & extract AppImage
+RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
+    && chmod +x /tmp/UnityHub.AppImage \
+    && cd /tmp \
+    && /tmp/UnityHub.AppImage --appimage-extract \
+    && cp -R /tmp/squashfs-root/* / \
+    && rm -rf /tmp/squashfs-root /tmp/UnityHub.AppImage \
+    && mkdir -p "$UNITY_DIR" \
+    && mv /AppRun /opt/unity/UnityHub
+
+ENV UNITY_HUB_BIN="/opt/unity/UnityHub"
 
 # Accept
 ENV CONFIG_DIR="/root/.config/Unity Hub"

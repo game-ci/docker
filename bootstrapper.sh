@@ -6,4 +6,4 @@ echo "starting clicker"
 
 # start unity hub
 echo "starting unity hub"
-xvfb-run -e /dev/stdout /opt/unity/UnityHub.AppImage
+xvfb-run -e /dev/stdout /opt/unity/UnityHub
