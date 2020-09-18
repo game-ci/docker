@@ -20,17 +20,19 @@ RUN apt-get -q update \
     curl \
     && apt-get clean
 
-# Download
 ENV UNITY_DIR="/opt/unity"
-ENV UNITY_BIN="${UNITY_DIR}/UnityHub.AppImage"
-RUN mkdir "${UNITY_DIR}" \
-    && wget --no-verbose -O "${UNITY_BIN}" "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
-    && chmod +x "${UNITY_BIN}"
 
-# Extract
-RUN cd /tmp \
-    && "${UNITY_BIN}" --appimage-extract \
-    && ls -alh squashfs-root
+# Download & extract AppImage
+RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
+    && chmod +x /tmp/UnityHub.AppImage \
+    && cd /tmp \
+    && /tmp/UnityHub.AppImage --appimage-extract \
+    && cp -R /tmp/squashfs-root/* / \
+    && rm -rf /tmp/squashfs-root /tmp/UnityHub.AppImage \
+    && mkdir -p "$UNITY_DIR" \
+    && mv /AppRun /opt/unity/UnityHub
+
+ENV UNITY_HUB_BIN="/opt/unity/UnityHub"
 
 # Accept
 ENV CONFIG_DIR="/root/.config/Unity Hub"
@@ -39,6 +41,9 @@ RUN mkdir -p "${CONFIG_DIR}" && touch "${CONFIG_DIR}/eulaAccepted"
 # Configure
 RUN mkdir -p "${UNITY_DIR}/editors"
 
-# Accept license
-COPY bootstrapper.sh .
-COPY no-really-lets-click-everywhere.sh .
+# Note that because Docker kills processes too fast, `RUN xvfb-run` leaves
+# a /tmp/.X99-lock file around which hampers further executions of `xvfb-run`.
+# See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932070
+# Hence the "sleep 1" addition.
+RUN xvfb-run --auto-servernum --error-file=/dev/stdout "$UNITY_HUB_BIN" --no-sandbox --headless install-path --set "${UNITY_DIR}/editors/" \
+    && sleep 1
