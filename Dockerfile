@@ -41,6 +41,9 @@ RUN mkdir -p "${CONFIG_DIR}" && touch "${CONFIG_DIR}/eulaAccepted"
 # Configure
 RUN mkdir -p "${UNITY_DIR}/editors"
 
-# Accept license
-COPY bootstrapper.sh .
-COPY no-really-lets-click-everywhere.sh .
+# Note that because Docker kills processes too fast, `RUN xvfb-run` leaves
+# a /tmp/.X99-lock file around which hampers further executions of `xvfb-run`.
+# See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932070
+# Hence the "sleep 1" addition.
+RUN xvfb-run --auto-servernum --error-file=/dev/stdout "$UNITY_HUB_BIN" --no-sandbox --headless install-path --set "${UNITY_DIR}/editors/" \
+    && sleep 1
