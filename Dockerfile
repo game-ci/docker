@@ -16,7 +16,6 @@ RUN apt-get -q update \
     xvfb \
     zenity \
     libdbus-glib-1-2 \
-    xdotool \
     curl \
     xz-utils \
     cpio \
