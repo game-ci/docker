@@ -23,9 +23,12 @@ RUN apt-get -q update \
     lsb-release \
     && apt-get clean
 
-ENV UNITY_DIR="/opt/unity"
+# Inject patched binaries
+COPY ./xvfb-run /usr/bin/
 
 # Download & extract AppImage
+ENV UNITY_DIR="/opt/unity"
+
 RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
     && chmod +x /tmp/UnityHub.AppImage \
     && cd /tmp \
@@ -43,10 +46,4 @@ RUN mkdir -p "${CONFIG_DIR}" && touch "${CONFIG_DIR}/eulaAccepted"
 
 # Configure
 RUN mkdir -p "${UNITY_DIR}/editors"
-
-# Note that because Docker kills processes too fast, `RUN xvfb-run` leaves
-# a /tmp/.X99-lock file around which hampers further executions of `xvfb-run`.
-# See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932070
-# Hence the "sleep 1" addition.
-RUN xvfb-run --auto-servernum --error-file=/dev/stdout "$UNITY_HUB_BIN" --no-sandbox --headless install-path --set "${UNITY_DIR}/editors/" \
-    && sleep 1
+RUN xvfb-run -ae /dev/stdout "$UNITY_HUB_BIN" --no-sandbox --headless install-path --set "${UNITY_DIR}/editors/"
