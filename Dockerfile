@@ -18,6 +18,9 @@ RUN apt-get -q update \
     libdbus-glib-1-2 \
     xdotool \
     curl \
+    xz-utils \
+    cpio \
+    lsb-release \
     && apt-get clean
 
 ENV UNITY_DIR="/opt/unity"
