@@ -87,8 +87,12 @@ clean_up() {
             exit 5
         fi
     fi
+
+    # Patched for docker run.
+    # See: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=932070
     if [ -n "$XVFBPID" ]; then
         kill "$XVFBPID" >>"$ERRORFILE" 2>&1
+        wait "$XVFBPID" >>"$ERRORFILE" 2>&1
     fi
 }
 
