@@ -29,24 +29,12 @@ Just to run the image
 docker run -it --rm proto bash
 ```
 
-## Configure
-
-Configure editor path
-
-```
-xvfb-run -ae /dev/stdout /opt/unity/UnityHub --no-sandbox --headless install-path --set /opt/unity/editors/
-```
-
-## Run UnityHub
-
-> _Use `xvfb-run -ae /dev/stdout` to output everything to console_
-
 #### help
 
 Run the help command
 
 ```bash
-xvfb-run -ae /dev/stdout /opt/unity/UnityHub --no-sandbox --headless help
+unity-hub help
 ```
 
 #### install
@@ -58,7 +46,7 @@ The link `unityhub://2020.1.4f1/fa717bb873ec` holds version `2020.1.4f1` and has
 Since we want to install android build support, we'll add `--module android`.
 
 ```bash
-xvfb-run -ae /dev/stdout /opt/unity/UnityHub --no-sandbox --headless install --version 2020.1.4f1 --changeset fa717bb873ec --module android
+unity-hub install --version 2020.1.4f1 --changeset fa717bb873ec --module android
 ```
 
 ## Todo
