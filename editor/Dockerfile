@@ -22,4 +22,4 @@ FROM base
 
 ARG version="2020.1.4f1"
 
-COPY --from=builder /opt/unity/editors/ /opt/unity/
+COPY --from=builder /opt/unity/editors/$version/ /opt/unity/editor/
