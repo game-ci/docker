@@ -33,19 +33,21 @@ Build editor
 docker build editor -t editor
 ```
 
-## Run image
+## Editor usage
 
-Run the hub in an interactive shell
-
-```bash
-docker run -it --rm hub bash
-```
+Run the editor image using an interactive shell
 
 ```bash
 docker run -it --rm editor bash
 ```
 
 ## Hub usage
+
+Run the hub image using an interactive shell
+
+```bash
+docker run -it --rm hub bash
+```
 
 #### help
 
