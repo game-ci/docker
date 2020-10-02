@@ -8,7 +8,6 @@ RUN apt-get -q update \
     libxtst6 \
     libxss1 \
     desktop-file-utils \
-    fuse \
     libasound2 \
     libgtk2.0-0 \
     libnss3 \
