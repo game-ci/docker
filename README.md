@@ -15,10 +15,22 @@ Change directory to clone directory
 cd docker-linux/hub
 ```
 
-Build the image
+Build the base image
 
 ```bash
-docker build . -t hub
+docker build base -t base
+```
+
+Build hub
+
+```bash
+docker build hub -t hub
+```
+
+Build editor
+
+```bash
+docker build editor -t editor
 ```
 
 ## Run image

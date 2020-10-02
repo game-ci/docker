@@ -1,28 +1,4 @@
-FROM ubuntu:20.04
-
-RUN apt-get -q update \
-    && apt-get -q install -y --no-install-recommends apt-utils \
-    && apt-get -q install -y --no-install-recommends --allow-downgrades \
-    ca-certificates \
-    wget \
-    libxtst6 \
-    libxss1 \
-    desktop-file-utils \
-    libasound2 \
-    libgtk2.0-0 \
-    libnss3 \
-    xdg-utils \
-    xvfb \
-    zenity \
-    libdbus-glib-1-2 \
-    curl \
-    xz-utils \
-    cpio \
-    lsb-release \
-    && apt-get clean
-
-# Environment
-ENV UNITY_DIR="/opt/unity"
+FROM base
 
 # Download & extract AppImage
 RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
