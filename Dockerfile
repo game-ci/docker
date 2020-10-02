@@ -48,7 +48,3 @@ RUN mkdir -p "/root/.config/Unity Hub" && touch "/root/.config/Unity Hub/eulaAcc
 RUN --mount=type=tmpfs,target=/tmp \
     mkdir -p "${UNITY_DIR}/editors" \
     && unity-hub install-path --set "${UNITY_DIR}/editors/"
-
-RUN unity-hub install --version 2020.1.7f1
-
-RUN unity-hub editors -i
