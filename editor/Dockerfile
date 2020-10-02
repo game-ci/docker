@@ -9,7 +9,7 @@ ARG changeset="fa717bb873ec"
 ARG module="android"
 
 # Install
-RUN unity-hub install --version $version --changeset $changeset --module $module
+RUN unity-hub install --version $version --changeset $changeset --module $module --cm
 
 ###########################
 #          Editor         #
