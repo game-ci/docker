@@ -21,9 +21,6 @@ RUN apt-get -q update \
     lsb-release \
     && apt-get clean
 
-# Inject patched binaries
-COPY xvfb-run /usr/bin/
-
 # Environment
 ENV UNITY_DIR="/opt/unity"
 
