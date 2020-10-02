@@ -15,18 +15,38 @@ Change directory to clone directory
 cd docker-linux
 ```
 
-Build the image
+Build the base image
 
 ```bash
-docker build . -t proto
+docker build base -t base
 ```
 
-## Run image
-
-Just to run the image
+Build hub
 
 ```bash
-docker run -it --rm proto bash
+docker build hub -t hub
+```
+
+Build editor
+
+```bash
+docker build editor -t editor
+```
+
+## Editor usage
+
+Run the editor image using an interactive shell
+
+```bash
+docker run -it --rm editor bash
+```
+
+## Hub usage
+
+Run the hub image using an interactive shell
+
+```bash
+docker run -it --rm hub bash
 ```
 
 #### help
@@ -48,11 +68,6 @@ Since we want to install android build support, we'll add `--module android`.
 ```bash
 unity-hub install --version 2020.1.4f1 --changeset fa717bb873ec --module android
 ```
-
-## Todo
-
-- Shrink image to a minimum
-- Generate proper unity images with the correct NDK/SDK based on official versions
 
 ## License
 
