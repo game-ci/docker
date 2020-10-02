@@ -39,9 +39,8 @@ RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout /opt/unity/UnityHub --no-sandbox
     && chmod +x /usr/bin/unity-hub \
     && ln -s /usr/bin/unity-hub /usr/bin/hub
 
-RUN echo test
 # Accept
 RUN mkdir -p "/root/.config/Unity Hub" && touch "/root/.config/Unity Hub/eulaAccepted"
 
 # Configure
-RUN mkdir -p "${UNITY_DIR}/editors" && unity-hub install-path --set "${UNITY_DIR}/editors/"
+RUN mkdir -p "${UNITY_DIR}/editors" && unity-hub install-path --set "${UNITY_DIR}/editors/" && find /tmp -mindepth 1 -delete
