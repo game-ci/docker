@@ -12,13 +12,13 @@ git clone git@github.com:unity-ci/docker-linux.git
 Change directory to clone directory
 
 ```bash
-cd docker-linux
+cd docker-linux/hub
 ```
 
 Build the image
 
 ```bash
-docker build . -t proto
+docker build . -t hub
 ```
 
 ## Run image
@@ -26,7 +26,7 @@ docker build . -t proto
 Just to run the image
 
 ```bash
-docker run -it --rm proto bash
+docker run -it --rm hub bash
 ```
 
 #### help
