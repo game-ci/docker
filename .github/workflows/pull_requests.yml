@@ -47,10 +47,16 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
-      - name: List images
-        run: docker image ls
+      #      - name: Image digest
+      #        run: echo ${{ steps.docker_build.outputs.digest }}
+      #      - name: Update DockerHub description
+      #        uses: peter-evans/dockerhub-description@v2
+      #        with:
+      #          username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      #          repository: peterevans/dockerhub-description
+      #          short-description: $(cat ./base/100-characters-dockerhub-description.txt)
+      #          readme-filepath: ./base/README.md
 
   testImages:
     name: Test images
