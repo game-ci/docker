@@ -3,6 +3,8 @@
 ###########################
 
 ARG hubImage="unity-ci/hub"
+ARG baseImage="unity-ci/base"
+
 FROM $hubImage AS builder
 
 ARG version="2020.1.4f1"
@@ -19,7 +21,6 @@ RUN unity-hub install-modules --version "$version" --module "$module" --childMod
 #          Editor         #
 ###########################
 
-ARG baseImage="unity-ci/base"
 FROM $baseImage
 
 ARG version="2020.1.4f1"
