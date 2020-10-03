@@ -17,13 +17,13 @@ jobs:
       - run: |
           for changed_file in ${{ steps.files.outputs.all }}; do
             echo "Do something with this ${changed_file}."
-            export imagesNeedToBeChecked=true
+            export imagesNeedToBeChecked="true"
           done
 
   baseImage:
     name: Build unity-ci/base
     needs: [checkForChangesInDocker]
-    if: ${{ env.imagesNeedToBeChecked == true }}
+    if: env.imagesNeedToBeChecked == "true"
     runs-on: ubuntu-latest
     services:
       registry:
