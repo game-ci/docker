@@ -1,4 +1,4 @@
-FROM base
+FROM unity-ci/base
 
 # Hub dependencies
 RUN apt-get -q update \
