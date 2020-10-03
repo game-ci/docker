@@ -102,9 +102,7 @@ jobs:
         with:
           context: .
           file: ./editor/Dockerfile
-          build-args: |
-            hubImage=localhost:5000/unity-ci/hub:latest
-            baseImage=localhost:5000/unity-ci/base:latest
+          build-args: hubImage=localhost:5000/unity-ci/hub:latest,baseImage=localhost:5000/unity-ci/base:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
