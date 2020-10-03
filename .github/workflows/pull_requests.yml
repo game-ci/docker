@@ -1,0 +1,24 @@
+name: PR 😎
+
+on:
+  pull_request: {}
+#  push: { branches: [main] }
+
+jobs:
+  baseImage:
+    name: Build unity-ci/base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build base image
+        run: echo "run base image"
+
+  testImages:
+    name: Test images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+      - run: echo "not implemented"
