@@ -5,8 +5,22 @@ on:
 #  push: { branches: [main] }
 
 jobs:
+  checkForChangesInDocker:
+    name: Check if builds are affected
+    runs-on: ubuntu-latest
+    steps:
+      - id: files
+        uses: jitterbit/get-changed-files@v1
+      - run: |
+          for changed_file in ${{ steps.files.outputs.all }}; do
+            echo "Do something with this ${changed_file}."
+            export IMAGED_NEED_TO_BE_CHECKED=true
+          done
+
   baseImage:
     name: Build unity-ci/base
+    needs: [checkForChangesInDocker]
+    if: ${{ $IMAGED_NEED_TO_BE_CHECKED }}
     runs-on: ubuntu-latest
     services:
       registry:
