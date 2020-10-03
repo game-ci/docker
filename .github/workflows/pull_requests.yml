@@ -4,6 +4,9 @@ on:
   pull_request: {}
 #  push: { branches: [main] }
 
+env:
+  imagesNeedToBeChecked: false
+
 jobs:
   checkForChangesInDocker:
     name: Check if builds are affected
