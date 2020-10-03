@@ -43,9 +43,7 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
-          tags: |
-            unity-ci/base:latest
-            localhost:5000/unity-ci/base:latest
+          tags: localhost:5000/unity-ci/base:latest
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
