@@ -24,6 +24,8 @@ jobs:
         uses: docker/build-push-action@v2
         id: docker_build
         with:
+          context: .
+          file: ./base/Dockerfile
           #push: true
           tags: |
             unity-ci/base:latest
