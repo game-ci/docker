@@ -102,7 +102,9 @@ jobs:
         with:
           context: .
           file: ./editor/Dockerfile
-          build-args: hubImage=localhost:5000/unity-ci/hub:latest,baseImage=localhost:5000/unity-ci/base:latest
+          build-args: |
+            hubImage=localhost:5000/unity-ci/hub:latest
+            baseImage=localhost:5000/unity-ci/base:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
@@ -129,3 +131,4 @@ jobs:
         with:
           lfs: true
       - run: echo "not implemented"
+        # TODO - Add test that checks if a license is valid after the changes to a dockerfile (hardware id verification)
