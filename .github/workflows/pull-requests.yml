@@ -34,9 +34,9 @@ jobs:
       #        with:
       #          username: ${{ secrets.DOCKERHUB_USERNAME }}
       #          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build image # and push
+      - name: Build base image # and push
         uses: docker/build-push-action@v2
-        id: docker_build
+        id: build_base_image
         with:
           context: .
           file: ./base/Dockerfile
@@ -45,10 +45,10 @@ jobs:
           push: true
           tags: localhost:5000/unity-ci/base:latest
       - name: Inspect
-        run: |
-          docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
+          run: |
+            docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
       #      - name: Image digest
-      #        run: echo ${{ steps.docker_build.outputs.digest }}
+      #        run: echo ${{ steps.build_base_image.outputs.digest }}
       #      - name: Update DockerHub description
       #        uses: peter-evans/dockerhub-description@v2
       #        with:
@@ -57,6 +57,52 @@ jobs:
       #          repository: peterevans/dockerhub-description
       #          short-description: $(cat ./base/100-characters-dockerhub-description.txt)
       #          readme-filepath: ./base/README.md
+      - name: Build hub image # and push
+          uses: docker/build-push-action@v2
+          id: build_hub_image
+          with:
+            context: .
+            file: ./hub/Dockerfile
+            cache-from: type=local,src=/tmp/.buildx-cache
+            cache-to: type=local,dest=/tmp/.buildx-cache
+            push: true
+            tags: localhost:5000/unity-ci/hub:latest
+      - name: Inspect
+          run: |
+            docker buildx imagetools inspect localhost:5000/unity-ci/hub:latest
+      #      - name: Image digest
+      #        run: echo ${{ steps.build_hub_image.outputs.digest }}
+      #      - name: Update DockerHub description
+      #        uses: peter-evans/dockerhub-description@v2
+      #        with:
+      #          username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      #          repository: peterevans/dockerhub-description
+      #          short-description: $(cat ./hub/100-characters-dockerhub-description.txt)
+      #          readme-filepath: ./hub/README.md
+      - name: Build editor image # and push
+          uses: docker/build-push-action@v2
+          id: build_editor_image
+          with:
+            context: .
+            file: ./editor/Dockerfile
+            cache-from: type=local,src=/tmp/.buildx-cache
+            cache-to: type=local,dest=/tmp/.buildx-cache
+            push: true
+            tags: localhost:5000/unity-ci/editor:latest
+      - name: Inspect
+          run: |
+            docker buildx imagetools inspect localhost:5000/unity-ci/editor:latest
+      #      - name: Image digest
+      #        run: echo ${{ steps.build_editor_image.outputs.digest }}
+      #      - name: Update DockerHub description
+      #        uses: peter-evans/dockerhub-description@v2
+      #        with:
+      #          username: ${{ secrets.DOCKEReditor_USERNAME }}
+      #          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      #          repository: peterevans/dockerhub-description
+      #          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
+      #          readme-filepath: ./editor/README.md
 
   testImages:
     name: Test images
