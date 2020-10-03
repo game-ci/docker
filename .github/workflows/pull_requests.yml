@@ -25,9 +25,9 @@ jobs:
         id: docker_build
         with:
           #push: true
-          tags: unity-ci |
+          tags: |
             unity-ci/base:latest
-            unity-ci/base:semver # TODO: use commit-semver
+            unity-ci/base:semver
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
       - name: List images
