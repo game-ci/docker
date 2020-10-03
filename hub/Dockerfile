@@ -7,7 +7,7 @@ RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3
     && /tmp/UnityHub.AppImage --appimage-extract \
     && cp -R /tmp/squashfs-root/* / \
     && rm -rf /tmp/squashfs-root /tmp/UnityHub.AppImage \
-    && mkdir -p "$UNITY_DIR" \
+    && mkdir -p "$UNITY_PATH" \
     && mv /AppRun /opt/unity/UnityHub
 
 # Alias to "unity-hub" or simply "hub" with default params
@@ -19,4 +19,4 @@ RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout /opt/unity/UnityHub --no-sandbox
 RUN mkdir -p "/root/.config/Unity Hub" && touch "/root/.config/Unity Hub/eulaAccepted"
 
 # Configure
-RUN mkdir -p "${UNITY_DIR}/editors" && unity-hub install-path --set "${UNITY_DIR}/editors/" && find /tmp -mindepth 1 -delete
+RUN mkdir -p "${UNITY_PATH}/editors" && unity-hub install-path --set "${UNITY_PATH}/editors/" && find /tmp -mindepth 1 -delete

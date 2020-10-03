@@ -22,4 +22,13 @@ FROM base
 
 ARG version="2020.1.4f1"
 
-COPY --from=builder /opt/unity/editors/$version/ /opt/unity/editor/
+# Always put "Editor" and "modules.json" directly in $UNITY_PATH
+COPY --from=builder /opt/unity/editors/$version/ "$UNITY_PATH/"
+
+# Add a file containing the version for this build
+RUN echo $version > "$UNITY_PATH/version"
+
+# Alias to "editor" or "unity" with default params
+RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/editor \
+    && chmod +x /usr/bin/editor
+    && ln -s /usr/bin/editor /usr/bin/unity

@@ -21,5 +21,5 @@ RUN apt-get -q update \
     lsb-release \
     && apt-get clean
 
-# Environment
-ENV UNITY_DIR="/opt/unity"
+# Used by Unity editor in "modules.json" and must not end with a slash.
+ENV UNITY_PATH="/opt/unity"
