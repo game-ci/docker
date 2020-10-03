@@ -28,6 +28,7 @@ jobs:
           file: ./base/Dockerfile
           #push: true
           tags: |
+            base
             unity-ci/base:latest
             unity-ci/base:semver
       - name: Image digest
