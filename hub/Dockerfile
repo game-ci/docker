@@ -16,10 +16,10 @@ RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout /opt/unity/UnityHub --no-sandbox
  && ln -s /usr/bin/unity-hub /usr/bin/hub
 
 # Accept
-RUN mkdir -p "/root/.config/Unity Hub"
+RUN mkdir -p "/root/.config/Unity Hub" \
  && touch "/root/.config/Unity Hub/eulaAccepted"
 
 # Configure
-RUN mkdir -p "${UNITY_PATH}/editors"
- && unity-hub install-path --set "${UNITY_PATH}/editors/"
+RUN mkdir -p "${UNITY_PATH}/editors" \
+ && unity-hub install-path --set "${UNITY_PATH}/editors/" \
  && find /tmp -mindepth 1 -delete
