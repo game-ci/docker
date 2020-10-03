@@ -43,10 +43,14 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
-          tags: localhost:5000/unity-ci/base:latest
+          tags: |
+            unity-ci/base:latest
+            localhost:5000/unity-ci/base:latest
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
+      - name: Pull image from local
+        run: docker pull localhost:5000/unity-ci/base:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_base_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -70,6 +74,8 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/hub:latest
+      - name: Pull image from local
+        run: docker pull localhost:5000/unity-ci/hub:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_hub_image.outputs.digest }}
       #      - name: Update DockerHub description
