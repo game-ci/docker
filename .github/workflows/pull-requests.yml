@@ -48,9 +48,9 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
       - name: Magic you won't believe
-        run: docker pull localhost:5000/unity-ci/base:latest
-      - run: docker tag localhost:5000/unity-ci/base:latest unity-ci/base:latest
-      - run: docker images
+        run: |
+          docker pull localhost:5000/unity-ci/base:latest
+          docker tag localhost:5000/unity-ci/base:latest docker.io/unity-ci/base:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_base_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -77,7 +77,7 @@ jobs:
       - name: Magic you won't believe again
         run: |
           docker pull localhost:5000/unity-ci/hub:latest
-          docker tag localhost:5000/unity-ci/hub:latest unity-ci/hub:latest
+          docker tag localhost:5000/unity-ci/hub:latest docker.io/unity-ci/hub:latest
       - name: Pull image from local
         run: docker pull localhost:5000/unity-ci/hub:latest
       #      - name: Image digest
