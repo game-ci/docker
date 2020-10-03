@@ -14,6 +14,9 @@ jobs:
         ports:
           - 5000:5000
     steps:
+      ###########################
+      #          Setup          #
+      ###########################
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up QEMU
@@ -34,6 +37,10 @@ jobs:
       #        with:
       #          username: ${{ secrets.DOCKERHUB_USERNAME }}
       #          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      ###########################
+      #        Base image       #
+      ###########################
       - name: Build base image # and push
         uses: docker/build-push-action@v2
         id: build_base_image
@@ -47,10 +54,6 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
-      - name: Magic you won't believe
-        run: |
-          docker pull localhost:5000/unity-ci/base:latest
-          docker tag localhost:5000/unity-ci/base:latest docker.io/unity-ci/base:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_base_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -61,12 +64,17 @@ jobs:
       #          repository: peterevans/dockerhub-description
       #          short-description: $(cat ./base/100-characters-dockerhub-description.txt)
       #          readme-filepath: ./base/README.md
+
+      ###########################
+      #        Hub image        #
+      ###########################
       - name: Build hub image # and push
         uses: docker/build-push-action@v2
         id: build_hub_image
         with:
           context: .
           file: ./hub/Dockerfile
+          build-args: baseImage=localhost:5000/unity-ci/base:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
@@ -74,12 +82,6 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/hub:latest
-      - name: Magic you won't believe again
-        run: |
-          docker pull localhost:5000/unity-ci/hub:latest
-          docker tag localhost:5000/unity-ci/hub:latest docker.io/unity-ci/hub:latest
-      - name: Pull image from local
-        run: docker pull localhost:5000/unity-ci/hub:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_hub_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -90,12 +92,19 @@ jobs:
       #          repository: peterevans/dockerhub-description
       #          short-description: $(cat ./hub/100-characters-dockerhub-description.txt)
       #          readme-filepath: ./hub/README.md
+
+      ###########################
+      #       Editor image      #
+      ###########################
       - name: Build editor image # and push
         uses: docker/build-push-action@v2
         id: build_editor_image
         with:
           context: .
           file: ./editor/Dockerfile
+          build-args: |
+            hubImage=localhost:5000/unity-ci/hub:latest
+            baseImage=localhost:5000/unity-ci/base:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true

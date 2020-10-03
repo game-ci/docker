@@ -1,4 +1,5 @@
-FROM unity-ci/base
+ARG baseImage="unity-ci/base"
+FROM $baseImage
 
 # Hub dependencies
 RUN apt-get -q update \
