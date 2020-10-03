@@ -20,7 +20,7 @@ jobs:
   baseImage:
     name: Build unity-ci/base
     needs: [checkForChangesInDocker]
-    if: ${{ $IMAGED_NEED_TO_BE_CHECKED }}
+    if: ${{ "$IMAGED_NEED_TO_BE_CHECKED" -eq "true" }}
     runs-on: ubuntu-latest
     services:
       registry:
