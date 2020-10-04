@@ -1,5 +1,10 @@
 FROM base
 
+# Hub dependencies
+RUN apt-get -q update \
+ && apt-get -q install -y --no-install-recommends --allow-downgrades zenity \
+ && apt-get clean
+
 # Download & extract AppImage
 RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
  && chmod +x /tmp/UnityHub.AppImage \
