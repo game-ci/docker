@@ -20,6 +20,14 @@ To contribute, please see the [development readme](./DEVELOPMENT.md)
 after you agree with our [code of conduct](./CODE_OF_CONDUCT.md) 
 and have read the [contribution guide](./CONTRIBUTING.md).
 
+## Todo
+
+Move these deps from base to hub image if possible
+
+- xz-utils 
+- cpio
+- lsb-release
+
 ## License
 
 [MIT license](./LICENSE)
