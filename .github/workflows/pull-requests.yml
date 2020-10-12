@@ -48,11 +48,19 @@ jobs:
           # https://github.com/apache/flink/blob/master/tools/azure-pipelines/free_disk_space.sh
           echo "Listing 100 largest packages"
           dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
+          df -h
 
           https://github.com/actions/virtual-environments/issues/709#issuecomment-612569242
           echo "Removing runner folders"
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+
+          # https://github.com/apache/flink/blob/master/tools/azure-pipelines/free_disk_space.sh
+          echo "autoremove"
+          sudo apt-get autoremove -y
+          sudo apt-get clean
+          df -h
       - name: Disk space after
         run: df -h
 
