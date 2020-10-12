@@ -80,6 +80,8 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
+      - name: Disk space after
+        run: df -h
       #      - name: Image digest
       #        run: echo ${{ steps.build_base_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -108,6 +110,8 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/hub:latest
+      - name: Disk space after
+        run: df -h
       #      - name: Image digest
       #        run: echo ${{ steps.build_hub_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -135,6 +139,8 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
           tags: localhost:5000/unity-ci/editor:latest
+      - name: Disk space after
+        run: df -h
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unity-ci/editor:latest
