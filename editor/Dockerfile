@@ -1,8 +1,10 @@
+ARG hubImage="unityci/hub"
+ARG baseImage="unityci/base"
+
 ###########################
 #         Builder         #
 ###########################
 
-ARG hubImage="unityci/hub"
 FROM $hubImage AS builder
 
 # Install editor
@@ -18,7 +20,6 @@ RUN unity-hub install-modules --version "$version" --module "$module" --childMod
 #          Editor         #
 ###########################
 
-ARG baseImage="unityci/base"
 FROM $baseImage
 
 # Always put "Editor" and "modules.json" directly in $UNITY_PATH
