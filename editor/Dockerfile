@@ -2,28 +2,24 @@
 #         Builder         #
 ###########################
 
-ARG hubImage="unity-ci/hub"
-ARG baseImage="unity-ci/base"
-
+ARG hubImage="unityci/hub"
 FROM $hubImage AS builder
 
+# Install editor
 ARG version="2020.1.4f1"
 ARG changeset="fa717bb873ec"
-ARG module="android"
-
-# Install editor
 RUN unity-hub install --version "$version" --changeset "$changeset"
 
 # Install modules for that editor
+ARG module="android"
 RUN unity-hub install-modules --version "$version" --module "$module" --childModules
 
 ###########################
 #          Editor         #
 ###########################
 
+ARG baseImage="unityci/base"
 FROM $baseImage
-
-ARG version="2020.1.4f1"
 
 # Always put "Editor" and "modules.json" directly in $UNITY_PATH
 COPY --from=builder /opt/unity/editors/$version/ "$UNITY_PATH/"

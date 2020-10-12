@@ -4,14 +4,57 @@ on:
   pull_request: {}
 
 jobs:
-  buildImages:
-    name: Build UnityCI images
+  build:
+    name: "Build editor for ${{ matrix.targetPlatform }}."
     runs-on: ubuntu-latest
     services:
       registry:
         image: registry:2
         ports:
           - 5000:5000
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          # Linux
+          - linux-mono # Linux Build Support
+          - linux-il2cpp # <-- Made up platform not documented by hub
+
+          # Windows
+          - windows # Windows Build Support
+          - windows-mono # Windows Build Support (Mono)
+          - windows-il2cpp # <-- Made up platform not documented by hub
+
+          # MacOS
+          - mac # <-- Made up platform not documented by hub
+          - mac-il2cpp # Mac Build Support (IL2CPP)
+
+          # Mobile
+          - ios # iOS Build Support
+          - android # Android Build Support
+
+          # Web
+          - webgl # WebGL Build Support
+
+          # Non-priorities: (but able to support)
+          #  - vuforia-ar # Vuforia Augmented Reality Support
+          #  - appletv # tvOS Build Support
+          #  - samsung # SamsungTV Build Support
+          #  - tizen # Tizen Build Support
+          #  - lumin # Lumin OS (Magic Leap) Build Support
+
+          # Language packs:
+          #  - language-ja
+          #  - language-ko
+          #  - language-zh-cn
+          #  - language-zh-hant
+          #  - language-zh-hans
+
+          # Tools: (probably included in build support packs)
+          # - android-sdk-ndk-tools # Android SDK & NDK Tools
+          # - android-open-jdk # OpenJDK
+          # - monodevelop # MonoDevelop / Unity Debugger
+
     steps:
       ###########################
       #          Setup          #
@@ -28,8 +71,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ matrix.targetPlatform }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.targetPlatform }}
             ${{ runner.os }}-buildx-
       #      - name: Login to DockerHub
       #        uses: docker/login-action@v1
@@ -110,6 +154,7 @@ jobs:
           build-args: |
             hubImage=localhost:5000/unityci/hub:latest
             baseImage=localhost:5000/unityci/base:latest
+            module=${{ matrix.targetPlatform }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
@@ -136,7 +181,8 @@ jobs:
         run: df -h
 
   testImages:
-    name: Test images
+    name: 🧪 Test images
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
