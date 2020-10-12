@@ -2,11 +2,10 @@ name: PR 😎
 
 on:
   pull_request: {}
-#  push: { branches: [main] }
 
 jobs:
-  baseImage:
-    name: Build unity-ci/base
+  buildImages:
+    name: Build UnityCI images
     runs-on: ubuntu-latest
     services:
       registry:
@@ -39,9 +38,9 @@ jobs:
       #          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       ###########################
-      #   Maximise disk space   #
+      #    Free disk space   #
       ###########################
-      - name: Maximise disk space
+      - name: Free disk space
         run: .github/workflows/scripts/free_disk_space.sh
 
       ###########################
@@ -56,12 +55,10 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
-          tags: localhost:5000/unity-ci/base:latest
+          tags: localhost:5000/unityci/base:latest
       - name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/unity-ci/base:latest
-      - name: Disk space after
-        run: df -h
+          docker buildx imagetools inspect localhost:5000/unityci/base:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_base_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -82,16 +79,14 @@ jobs:
         with:
           context: .
           file: ./hub/Dockerfile
-          build-args: baseImage=localhost:5000/unity-ci/base:latest
+          build-args: baseImage=localhost:5000/unityci/base:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
-          tags: localhost:5000/unity-ci/hub:latest
+          tags: localhost:5000/unityci/hub:latest
       - name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/unity-ci/hub:latest
-      - name: Disk space after
-        run: df -h
+          docker buildx imagetools inspect localhost:5000/unityci/hub:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_hub_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -113,17 +108,15 @@ jobs:
           context: .
           file: ./editor/Dockerfile
           build-args: |
-            hubImage=localhost:5000/unity-ci/hub:latest
-            baseImage=localhost:5000/unity-ci/base:latest
+            hubImage=localhost:5000/unityci/hub:latest
+            baseImage=localhost:5000/unityci/base:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
-          tags: localhost:5000/unity-ci/editor:latest
-      - name: Disk space after
-        run: df -h
+          tags: localhost:5000/unityci/editor:latest
       - name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/unity-ci/editor:latest
+          docker buildx imagetools inspect localhost:5000/unityci/editor:latest
       #      - name: Image digest
       #        run: echo ${{ steps.build_editor_image.outputs.digest }}
       #      - name: Update DockerHub description
@@ -134,6 +127,13 @@ jobs:
       #          repository: peterevans/dockerhub-description
       #          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
       #          readme-filepath: ./editor/README.md
+
+      ###########################
+      #         Metrics         #
+      ###########################
+      - name: Disk space after
+        if: always()
+        run: df -h
 
   testImages:
     name: Test images
