@@ -16,25 +16,30 @@ jobs:
       fail-fast: false
       matrix:
         targetPlatform:
-          # Linux
-          - linux-mono # Linux Build Support
-          - linux-il2cpp # <-- Made up platform not documented by hub
+          # This list of target platforms is based on Ubuntu as a base platform
+          # Linux Build Support
+          # - linux # May not exist at all
+          # - linux-mono # May not exist in newer versions / May already be working
+          - linux-il2cpp # May not exist in older versions
 
-          # Windows
-          - windows # Windows Build Support
-          - windows-mono # Windows Build Support (Mono)
-          - windows-il2cpp # <-- Made up platform not documented by hub
+          # Windows Build Support
+          # - windows # May not exist at all
+          - windows-mono
+          # - windows-il2cpp # May not exist for ubuntu
 
-          # MacOS
-          - mac # <-- Made up platform not documented by hub
-          - mac-il2cpp # Mac Build Support (IL2CPP)
+          # MacOS Build Support
+          # - mac # May not exist at all
+          - mac-mono
+          # - mac-il2cpp # May not exist for ubuntu
 
-          # Mobile
-          - ios # iOS Build Support
-          - android # Android Build Support
+          # iOS Build Support
+          - ios
 
-          # Web
-          - webgl # WebGL Build Support
+          # Android Build Support
+          - android
+
+          # WebGL Build support
+          - webgl
 
           # Non-priorities: (but able to support)
           #  - vuforia-ar # Vuforia Augmented Reality Support
