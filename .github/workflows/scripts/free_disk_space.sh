@@ -23,7 +23,7 @@ df -h
 #df -h
 
 echo "Removing large directories"
-# deleting 15GB
+# https://github.com/apache/flink/blob/master/tools/azure-pipelines/free_disk_space.sh
 rm -rf /usr/share/dotnet/
 
 # https://github.com/actions/virtual-environments/issues/709#issuecomment-612569242
