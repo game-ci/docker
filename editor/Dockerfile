@@ -14,7 +14,7 @@ RUN unity-hub install --version "$version" --changeset "$changeset"
 
 # Install modules for that editor
 ARG module="android"
-RUN unity-hub install-modules --version "$version" --module "$module" --childModules | grep 'Missing module' | wc -l | exit
+RUN unity-hub install-modules --version "$version" --module "$module" --childModules | grep 'Missing module' | exit $(wc -l)
 
 ###########################
 #          Editor         #
