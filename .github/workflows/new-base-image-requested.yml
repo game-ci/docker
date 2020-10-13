@@ -60,14 +60,14 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
           tags: |
-            "unityci/base:ubuntu-${{ github.event.client_payload.patchTag }}"
-            "unityci/base:${{ github.event.client_payload.patchTag }}"
-            "unityci/base:ubuntu-${{ github.event.client_payload.minorTag }}"
-            "unityci/base:${{ github.event.client_payload.minorTag }}"
-            "unityci/base:ubuntu-${{ github.event.client_payload.majorTag }}"
-            "unityci/base:${{ github.event.client_payload.majorTag }}"
-            "unityci/base:ubuntu-latest"
-            "unityci/base:latest"
+            unityci/base:ubuntu-${{ github.event.client_payload.patchTag }}
+            unityci/base:${{ github.event.client_payload.patchTag }}
+            unityci/base:ubuntu-${{ github.event.client_payload.minorTag }}
+            unityci/base:${{ github.event.client_payload.minorTag }}
+            unityci/base:ubuntu-${{ github.event.client_payload.majorTag }}
+            unityci/base:${{ github.event.client_payload.majorTag }}
+            unityci/base:ubuntu-latest
+            unityci/base:latest
       - name: Inspect
         run: |
           docker buildx imagetools inspect unityci/base:${{ github.event.client_payload.patchTag }}
