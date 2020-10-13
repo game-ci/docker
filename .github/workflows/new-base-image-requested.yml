@@ -11,14 +11,70 @@ on:
 # https://developer.github.com/webhooks/event-payloads/#repository_dispatch
 
 jobs:
-  buildImage:
-    name: Build unityci/editor
+  build:
+    name: "🛠 Build unityci/base"
     runs-on: ubuntu-latest
     steps:
-      - name: Test hook input
+      - name: Checkout
+        uses: actions/checkout@v2
+      ###########################
+      #        Variables        #
+      ###########################
+      - name: Show hook input
         run: |
-          echo client_payload
-          echo "github.event.client_payload.test_var ${{ github.event.client_payload.test_var }}"
-          echo "github.event.action ${{ github.event.action }}"
-          echo "github.event.branch in ${{ github.event.branch }}"
-          echo "github.event.repository.full_name in ${{ github.event.repository.full_name }}"
+          echo "Event ${{ github.event.event_type }}"
+          echo "Payload ${{ github.event.client_payload }}"
+          echo "Image tag (patch): ${{ github.event.client_payload.patchTag }}"
+          echo "Image tag (minor): ${{ github.event.client_payload.minorTag }}"
+          echo "Image tag (major): ${{ github.event.client_payload.majorTag }}"
+      ###########################
+      #          Setup          #
+      ###########################
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-base-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-base
+            ${{ runner.os }}-buildx-
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      ###########################
+      #        Base image       #
+      ###########################
+      - name: Build and publish
+        uses: docker/build-push-action@v2
+        id: build_base_image
+        with:
+          context: .
+          file: ./base/Dockerfile
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          push: true
+          tags: |
+            "unityci/base:${{ github.event.client_payload.patchTag }}"
+            "unityci/base:${{ github.event.client_payload.minorTag }}"
+            "unityci/base:${{ github.event.client_payload.majorTag }}"
+            "unityci/base:latest"
+      - name: Inspect
+        run: |
+          docker buildx imagetools inspect "unityci/base:latest"
+      - name: Image digest
+        run: echo ${{ steps.build_base_image.outputs.digest }}
+      - name: Update DockerHub description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: unityci/base
+          short-description: $(cat ./base/100-characters-dockerhub-description.txt)
+          readme-filepath: ./base/README.md
