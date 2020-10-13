@@ -112,7 +112,7 @@ jobs:
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
       - name: Inspect
         run: |
-          docker buildx imagetools inspect unityci/editor:${{ github.event.client_payload.patchTag }}
+          docker buildx imagetools inspect unityci/editor:ubuntu-${{ github.event.client_payload.unityVersion }}-${{ matrix.targetPlatform}}-${{ github.event.client_payload.patchTag }}
       - name: Image digest
         run: echo ${{ steps.build_editor_image.outputs.digest }}
       - name: Update DockerHub description

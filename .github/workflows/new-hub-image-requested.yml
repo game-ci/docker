@@ -46,6 +46,17 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Check if image not already exists
+        run: |
+          # Source: https://stackoverflow.com/a/39731444/3593896
+          function docker_tag_exists() {
+            curl --silent -f -lSL https://index.docker.io/v1/repositories/$1/tags/$2 > /dev/null
+          }
+
+          if docker_tag_exists unityci/hub ubuntu-${{ github.event.client_payload.patchTag }} ; then
+            echo "Image already exists. Exiting."
+            exit 1
+          fi
 
       ###########################
       #   Pull previous images  #
@@ -77,7 +88,7 @@ jobs:
             unityci/hub:latest
       - name: Inspect
         run: |
-          docker buildx imagetools inspect unityci/hub:${{ github.event.client_payload.patchTag }}
+          docker buildx imagetools inspect unityci/hub:ubuntu-${{ github.event.client_payload.patchTag }}
       - name: Image digest
         run: echo ${{ steps.build_hub_image.outputs.digest }}
       - name: Update DockerHub description
