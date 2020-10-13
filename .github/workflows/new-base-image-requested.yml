@@ -77,7 +77,7 @@ jobs:
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: unityci/base
           short-description: $(cat ./base/100-characters-dockerhub-description.txt)
           readme-filepath: ./base/README.md
