@@ -24,7 +24,6 @@ jobs:
           - android
           - webgl
     steps:
-      -
       - name: Checkout
         uses: actions/checkout@v2
       ###########################
