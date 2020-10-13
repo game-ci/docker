@@ -70,7 +70,7 @@ jobs:
             "unityci/base:latest"
       - name: Inspect
         run: |
-          docker buildx imagetools inspect "unityci/base:latest"
+          docker buildx imagetools inspect unityci/base:${{ github.event.client_payload.patchTag }}
       - name: Image digest
         run: echo ${{ steps.build_base_image.outputs.digest }}
       - name: Update DockerHub description
