@@ -11,7 +11,7 @@ on:
 
 jobs:
   buildImage:
-    name: Build unity-ci/editor
+    name: Build unityci/editor
     runs-on: ubuntu-latest
     steps:
       - name: Test hook input
