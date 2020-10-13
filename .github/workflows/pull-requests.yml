@@ -16,20 +16,16 @@ jobs:
       fail-fast: false
       matrix:
         targetPlatform:
-          - nonexistent
           # This list of target platforms is based on Ubuntu as a base platform
           # Linux Build Support
-          # - linux # May not exist at all
-          # - linux-mono # May not exist in newer versions / May already be working
+          # - linux-mono # May not exist in newer versions / May be default for Ubuntu
           - linux-il2cpp # May not exist in older versions
 
           # Windows Build Support
-          # - windows # May not exist at all
           - windows-mono
           # - windows-il2cpp # May not exist for ubuntu
 
           # MacOS Build Support
-          # - mac # May not exist at all
           - mac-mono
           # - mac-il2cpp # May not exist for ubuntu
 
