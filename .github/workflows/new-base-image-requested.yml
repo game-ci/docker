@@ -1,8 +1,9 @@
-name: Build request 😎
+name: New Base Version ⛭
 
 on:
+  pull_request: {}
   repository_dispatch:
-    types: [new_build_requested]
+    types: [new_base_image_requested]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
