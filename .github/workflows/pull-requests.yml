@@ -45,13 +45,6 @@ jobs:
           #  - tizen # Tizen Build Support
           #  - lumin # Lumin OS (Magic Leap) Build Support
 
-          # Language packs:
-          #  - language-ja
-          #  - language-ko
-          #  - language-zh-cn
-          #  - language-zh-hant
-          #  - language-zh-hans
-
           # Tools: (probably included in build support packs)
           # - android-sdk-ndk-tools # Android SDK & NDK Tools
           # - android-open-jdk # OpenJDK
