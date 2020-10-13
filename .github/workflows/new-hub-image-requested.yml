@@ -77,7 +77,7 @@ jobs:
             "unityci/hub:latest"
       - name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/unityci/hub:${{ github.event.client_payload.patchTag }}
+          docker buildx imagetools inspect unityci/hub:${{ github.event.client_payload.patchTag }}
       - name: Image digest
         run: echo ${{ steps.build_hub_image.outputs.digest }}
       - name: Update DockerHub description
