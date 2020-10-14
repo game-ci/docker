@@ -98,7 +98,7 @@ jobs:
           build-args: |
             hubImage=unityci/hub:${{ github.event.client_payload.patchTag }}
             baseImage=unityci/base:${{ github.event.client_payload.patchTag }}
-            version=${{ github.event.client_payload.unityVersion }}"
+            version=${{ github.event.client_payload.unityVersion }}
             changeSet=${{ github.event.client_payload.changeSet }}
             module=${{ matrix.targetPlatform }}
           cache-from: type=local,src=/tmp/.buildx-cache
