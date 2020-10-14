@@ -1,5 +1,6 @@
 ARG hubImage="unityci/hub"
 ARG baseImage="unityci/base"
+ARG version="2020.1.4f1"
 
 ###########################
 #         Builder         #
@@ -8,7 +9,6 @@ ARG baseImage="unityci/base"
 FROM $hubImage AS builder
 
 # Install editor
-ARG version="2020.1.4f1"
 ARG changeset="fa717bb873ec"
 RUN unity-hub install --version "$version" --changeset "$changeset"
 
@@ -23,7 +23,6 @@ RUN unity-hub install-modules --version "$version" --module "$module" --childMod
 FROM $baseImage
 
 # Always put "Editor" and "modules.json" directly in $UNITY_PATH
-ARG version="2020.1.4f1"
 COPY --from=builder /opt/unity/editors/$version/ "$UNITY_PATH/"
 
 # Add a file containing the version for this build
