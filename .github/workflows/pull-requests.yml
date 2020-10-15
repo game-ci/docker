@@ -17,6 +17,7 @@ jobs:
       matrix:
         targetPlatform:
           # This list of target platforms is based on Ubuntu as a base platform
+
           # Linux Build Support
           # - linux-mono # May not exist in newer versions / May be default for Ubuntu
           - linux-il2cpp # May not exist in older versions
@@ -66,15 +67,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ matrix.targetPlatform }}-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-pr-${{ matrix.targetPlatform }}-${{ github.sha }}
           restore-keys: |
+            ${{ runner.os }}-buildx-pr-${{ matrix.targetPlatform }}
             ${{ runner.os }}-buildx-${{ matrix.targetPlatform }}
             ${{ runner.os }}-buildx-
-      #      - name: Login to DockerHub
-      #        uses: docker/login-action@v1
-      #        with:
-      #          username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       ###########################
       #    Free disk space   #
@@ -98,16 +95,6 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/base:latest
-      #      - name: Image digest
-      #        run: echo ${{ steps.build_base_image.outputs.digest }}
-      #      - name: Update DockerHub description
-      #        uses: peter-evans/dockerhub-description@v2
-      #        with:
-      #          username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      #          repository: peterevans/dockerhub-description
-      #          short-description: $(cat ./base/100-characters-dockerhub-description.txt)
-      #          readme-filepath: ./base/README.md
 
       ###########################
       #        Hub image        #
@@ -118,7 +105,8 @@ jobs:
         with:
           context: .
           file: ./hub/Dockerfile
-          build-args: baseImage=localhost:5000/unityci/base:latest
+          build-args: |
+            baseImage=localhost:5000/unityci/base:latest
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
@@ -126,16 +114,6 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/hub:latest
-      #      - name: Image digest
-      #        run: echo ${{ steps.build_hub_image.outputs.digest }}
-      #      - name: Update DockerHub description
-      #        uses: peter-evans/dockerhub-description@v2
-      #        with:
-      #          username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      #          repository: peterevans/dockerhub-description
-      #          short-description: $(cat ./hub/100-characters-dockerhub-description.txt)
-      #          readme-filepath: ./hub/README.md
 
       ###########################
       #       Editor image      #
@@ -149,6 +127,8 @@ jobs:
           build-args: |
             hubImage=localhost:5000/unityci/hub:latest
             baseImage=localhost:5000/unityci/base:latest
+            version=2020.1.4f1
+            changeSet=fa717bb873ec
             module=${{ matrix.targetPlatform }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -157,16 +137,6 @@ jobs:
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/editor:latest
-      #      - name: Image digest
-      #        run: echo ${{ steps.build_editor_image.outputs.digest }}
-      #      - name: Update DockerHub description
-      #        uses: peter-evans/dockerhub-description@v2
-      #        with:
-      #          username: ${{ secrets.DOCKEReditor_USERNAME }}
-      #          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      #          repository: peterevans/dockerhub-description
-      #          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
-      #          readme-filepath: ./editor/README.md
 
       ###########################
       #         Metrics         #
