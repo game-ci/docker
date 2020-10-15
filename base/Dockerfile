@@ -11,6 +11,7 @@ RUN apt-get -q update \
  libnss3 \
  libxtst6 \
  libxss1 \
+ atop \
  cpio \
  curl \
  lsb-release \
