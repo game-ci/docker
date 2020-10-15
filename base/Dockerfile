@@ -16,6 +16,7 @@ RUN apt-get -q update \
  xz-utils \
  cpio \
  lsb-release \
+ libgconf-2-4 \
  && apt-get clean
 
 # Support forward compatibility for unity activation
