@@ -5,18 +5,18 @@ RUN apt-get -q update \
  && apt-get -q install -y --no-install-recommends apt-utils \
  && apt-get -q install -y --no-install-recommends --allow-downgrades \
  ca-certificates \
- wget \
- libxtst6 \
- libxss1 \
  libasound2 \
+ libgconf-2-4 \
  libgtk-3-0 \
  libnss3 \
- xvfb \
- curl \
- xz-utils \
+ libxtst6 \
+ libxss1 \
  cpio \
+ curl \
  lsb-release \
- libgconf-2-4 \
+ wget \
+ xvfb \
+ xz-utils \
  && apt-get clean
 
 # Support forward compatibility for unity activation
