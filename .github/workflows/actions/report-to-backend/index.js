@@ -93,4 +93,4 @@ if (status === 'published') {
   return;
 }
 
-
+throw new Error('Invalid status was given, so no action was taken.');
