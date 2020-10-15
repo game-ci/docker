@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    name: "🛠 Build editor (${{ matrix.targetPlatform }})."
+    name: "🧪 Test build (${{ matrix.targetPlatform }})"
     runs-on: ubuntu-latest
     services:
       registry:
