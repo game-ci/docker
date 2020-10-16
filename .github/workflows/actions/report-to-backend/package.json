@@ -1,0 +1,15 @@
+{
+  "name": "report-to-backend",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Unity CI",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.2.6",
+    "httpie": "^1.1.2"
+  }
+}
