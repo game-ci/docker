@@ -1,9 +1,9 @@
 const core = require('@actions/core');
 const { post } = require('httpie');
 
-const startedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/buildQueue-reportNewBuild';
-const failedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/buildQueue-reportBuildFailure';
-const publishedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/buildQueue-reportPublication';
+const startedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/reportNewBuild';
+const failedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/reportBuildFailure';
+const publishedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/reportPublication';
 
 const token = core.getInput('token', { required: true });
 const jobId = core.getInput('jobId', { required: true });
