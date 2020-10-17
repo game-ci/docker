@@ -70,7 +70,7 @@ if (status === 'published') {
     const imageName = core.getInput('imageName', { required: true });
     const friendlyTag = core.getInput('friendlyTag', { required: true });
     const specificTag = core.getInput('specificTag', { required: true });
-    const hash = core.getInput('hash', { required: true });
+    const digest = core.getInput('digest', { required: true });
 
     body = {
       buildId,
@@ -79,7 +79,7 @@ if (status === 'published') {
         imageName,
         friendlyTag,
         specificTag,
-        hash,
+        digest,
       }
     }
 

@@ -50,8 +50,8 @@ inputs:
   specificTag:
     description: 'The most specific tag possible'
     required: false
-  hash:
-    description: 'The hash of the published image'
+  digest:
+    description: 'The digest hash of the published image'
     required: false
 
 runs:
