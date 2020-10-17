@@ -16,21 +16,21 @@ const action = async () => {
   const editorVersion = core.getInput('editorVersion', { required: false }) || 'none';
   const targetPlatform = core.getInput('targetPlatform', { required: false }) || 'none';
 
+  const isDryRun = jobId === 'dryRun';
+
   // Determine job for dryRun automatically
   let jobId = jobIdInput
-  if (jobId === 'dryRun') {
+  if (isDryRun) {
     jobId += `-${imageType}`
-    if (imageType === 'editor') {
-      jobId += `-${editorVersion}`
-    }
+    if (imageType === 'editor') { jobId += `-${editorVersion}` }
     jobId += `-${repoVersion}`
   }
 
   // Determine identifier for this build
-  let buildId = `${imageType}-${baseOs}`
-  if (imageType === 'editor') {
-    buildId += `-${editorVersion}-${targetPlatform}`
-  }
+  let buildId = '';
+  if (isDryRun) { buildId += `dryRun-` }
+  buildId += `${imageType}-${baseOs}`
+  if (imageType === 'editor') { buildId += `-${editorVersion}-${targetPlatform}` }
   buildId += `-${repoVersion}`
 
   const headers = {
