@@ -39,6 +39,7 @@ const action = async () => {
     } catch (err) {
       console.error('An error occurred while reporting the start of this build.', err.statusCode, err.message);
       console.error('~> data:', err.data);
+      throw err;
     }
 
     return;
@@ -60,6 +61,7 @@ const action = async () => {
     } catch (err) {
       console.error('An error occurred while reporting the build failure.', err.statusCode, err.message);
       console.error('~> data:', err.data);
+      throw err;
     }
 
     return;
@@ -89,6 +91,7 @@ const action = async () => {
     } catch (err) {
       console.error('An error occurred while reporting this publication.', err.statusCode, err.message);
       console.error('~> data:', err.data);
+      throw err;
     }
 
     return;
