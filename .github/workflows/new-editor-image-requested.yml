@@ -32,12 +32,24 @@ jobs:
       - name: Show hook input
         run: |
           echo "Event ${{ github.event.event_type }}"
-          echo "Payload ${{ github.event.client_payload }}"
+          echo "jobId: ${{ github.event.client_payload.jobId }}"
           echo "Unity version: ${{ github.event.client_payload.unityVersion }}"
           echo "Unity changeset: ${{ github.event.client_payload.changeSet }}"
-          echo "Image tag (patch): ${{ github.event.client_payload.patchTag }}"
-          echo "Image tag (minor): ${{ github.event.client_payload.minorTag }}"
-          echo "Image tag (major): ${{ github.event.client_payload.majorTag }}"
+          echo "repoVersion (full): ${{ github.event.client_payload.repoVersionFull }}"
+          echo "repoVersion (only minor and major): ${{ github.event.client_payload.repoVersionMinor }}"
+          echo "repoVersion (only major): ${{ github.event.client_payload.repoVersionMajor }}"
+      - name: Report new build
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: started
+          # Build info
+          imageType: editor
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          unityVersion: ${{ github.event.client_payload.unityVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
       ###########################
       #          Setup          #
       ###########################
@@ -71,13 +83,11 @@ jobs:
             ${{ runner.os }}-buildx-editor-${{ github.event.client_payload.unityVersion }}-
             ${{ runner.os }}-buildx-editor-
             ${{ runner.os }}-buildx-
-
       ###########################
       #    Free disk space   #
       ###########################
       - name: Free disk space
         run: .github/workflows/scripts/free_disk_space.sh
-
       ###########################
       #   Pull previous images  #
       ###########################
@@ -85,7 +95,6 @@ jobs:
         run: docker pull unityci/base:${{ github.event.client_payload.patchTag }}
       - name: Pull hub image (must exist)
         run: docker pull unityci/hub:${{ github.event.client_payload.patchTag }}
-
       ###########################
       #       Editor image      #
       ###########################
@@ -125,7 +134,43 @@ jobs:
           repository: unityci/editor
           short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
           readme-filepath: ./editor/README.md
-
+      ###########################
+      #        reporting        #
+      ###########################
+      - name: Report publication
+        if: ${{ success() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: published
+          # Build info
+          imageType: editor
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          unityVersion: ${{ github.event.client_payload.unityVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Publication info
+          imageRepo: unityci
+          imageName: base
+          friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
+          specificTag: ubuntu-${{ github.event.client_payload.repoVersionFull }}
+          digest: ${{ steps.build_base_image.outputs.digest }}
+      - name: Report failure
+        if: ${{ failure() || cancelled() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: failed
+          # Build info
+          imageType: editor
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          unityVersion: ${{ github.event.client_payload.unityVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Failure info
+          reason: ${{ job.status }}
       ###########################
       #         Metrics         #
       ###########################

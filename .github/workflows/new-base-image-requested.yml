@@ -22,10 +22,20 @@ jobs:
       - name: Show hook input
         run: |
           echo "Event ${{ github.event.event_type }}"
-          echo "Payload ${{ github.event.client_payload }}"
-          echo "Image tag (patch): ${{ github.event.client_payload.patchTag }}"
-          echo "Image tag (minor): ${{ github.event.client_payload.minorTag }}"
-          echo "Image tag (major): ${{ github.event.client_payload.majorTag }}"
+          echo "jobId: ${{ github.event.client_payload.jobId }}"
+          echo "repoVersion (full): ${{ github.event.client_payload.repoVersionFull }}"
+          echo "repoVersion (only minor and major): ${{ github.event.client_payload.repoVersionMinor }}"
+          echo "repoVersion (only major): ${{ github.event.client_payload.repoVersionMajor }}"
+      - name: Report new build
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: started
+          # Build info
+          imageType: base
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
       ###########################
       #          Setup          #
       ###########################
@@ -45,7 +55,7 @@ jobs:
             curl --silent -f -lSL https://index.docker.io/v1/repositories/$1/tags/$2 > /dev/null
           }
 
-          if docker_tag_exists unityci/base ubuntu-${{ github.event.client_payload.patchTag }} ; then
+          if docker_tag_exists unityci/base ubuntu-${{ github.event.client_payload.repoVersionFull }} ; then
             echo "Image already exists. Exiting."
             exit 1
           fi
@@ -57,7 +67,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-base
             ${{ runner.os }}-buildx-
-
       ###########################
       #        Base image       #
       ###########################
@@ -71,17 +80,17 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
           tags: |
-            unityci/base:ubuntu-${{ github.event.client_payload.patchTag }}
-            unityci/base:${{ github.event.client_payload.patchTag }}
-            unityci/base:ubuntu-${{ github.event.client_payload.minorTag }}
-            unityci/base:${{ github.event.client_payload.minorTag }}
-            unityci/base:ubuntu-${{ github.event.client_payload.majorTag }}
-            unityci/base:${{ github.event.client_payload.majorTag }}
+            unityci/base:ubuntu-${{ github.event.client_payload.repoVersionFull }}
+            unityci/base:${{ github.event.client_payload.repoVersionFull }}
+            unityci/base:ubuntu-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/base:${{ github.event.client_payload.repoVersionMinor }}
+            unityci/base:ubuntu-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/base:${{ github.event.client_payload.repoVersionMajor }}
             unityci/base:ubuntu-latest
             unityci/base:latest
       - name: Inspect
         run: |
-          docker buildx imagetools inspect unityci/base:ubuntu-${{ github.event.client_payload.patchTag }}
+          docker buildx imagetools inspect unityci/base:ubuntu-${{ github.event.client_payload.repoVersionFull }}
       - name: Image digest
         run: echo ${{ steps.build_base_image.outputs.digest }}
       - name: Update DockerHub description
@@ -92,3 +101,36 @@ jobs:
           repository: unityci/base
           short-description: $(cat ./base/100-characters-dockerhub-description.txt)
           readme-filepath: ./base/README.md
+      ###########################
+      #        reporting        #
+      ###########################
+      - name: Report publication
+        if: ${{ success() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: published
+          # Build info
+          imageType: base
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          # Publication info
+          imageRepo: unityci
+          imageName: base
+          friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
+          specificTag: ubuntu-${{ github.event.client_payload.repoVersionFull }}
+          digest: ${{ steps.build_base_image.outputs.digest }}
+      - name: Report failure
+        if: ${{ failure() || cancelled() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: failed
+          # Build info
+          imageType: base
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          # Failure info
+          reason: ${{ job.status }}
