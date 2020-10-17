@@ -21,7 +21,7 @@ const action = async () => {
       const imageType = core.getInput('imageType', { required: true });
       const baseOs = core.getInput('baseOs', { required: true });
       const repoVersion = core.getInput('repoVersion', { required: true });
-      const unityVersion = core.getInput('unityVersion', { required: false }) || 'none';
+      const editorVersion = core.getInput('editorVersion', { required: false }) || 'none';
       const targetPlatform = core.getInput('targetPlatform', { required: false }) || 'none';
 
       const body = {
@@ -30,7 +30,7 @@ const action = async () => {
         imageType,
         baseOs,
         repoVersion,
-        unityVersion,
+        editorVersion,
         targetPlatform,
       }
 

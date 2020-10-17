@@ -22,7 +22,7 @@ jobs:
           - 0.1
         includes:
           - imageType: editor
-            unityVersion: 2020.1.4f1
+            editorVersion: 2020.1.4f1
             targetPlatform: android
     steps:
       - name: Checkout
@@ -32,21 +32,21 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
-          buildId: ${{ matrix.baseOs }}-${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          buildId: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: started
           # Start specific
           imageType: ${{ matrix.imageType }}
           baseOs: ${{ matrix.baseOs }}
           repoVersion: ${{ matrix.repoVersion }}
           # only set for editor
-          unityVersion: ${{ matrix.unityVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
       - name: Report build failure
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
-          buildId: ${{ matrix.baseOs }}-${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          buildId: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: failed
           # Failed specific
           reason: 'no real reason'
@@ -55,13 +55,13 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
-          buildId: ${{ matrix.baseOs }}-${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          buildId: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: published
           # Published specific
           imageRepo: unityci
           imageName: ${{ matrix.imageType }}
-          friendlyTag: ${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
-          specificTag: ${{ matrix.baseOs }}-${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          friendlyTag: ${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          specificTag: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
 
   build:

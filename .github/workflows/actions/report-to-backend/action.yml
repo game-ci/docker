@@ -25,12 +25,14 @@ inputs:
   repoVersion:
     description: 'The version of this repository (passed by build job)'
     required: false
-  unityVersion:
-    description: 'The version of unity, or "none" in case of base and hub'
+  editorVersion:
+    description: 'The version of the Unity editor, or "none" in case of non-editor images'
     required: false
+    default: 'none'
   targetPlatform:
-    description: 'The platform that the image targets its builds for'
+    description: 'The platform that the image targets its builds for, or "none" in case of non-editor images'
     required: false
+    default: 'none'
 
   # Failed
   reason:
