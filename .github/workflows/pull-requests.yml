@@ -5,7 +5,7 @@ on:
 
 jobs:
   reportingTest:
-    name: "🧪 Test reporting system"
+    name: "🧪 Test reporting system (${{ matrix.imageType }})"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
