@@ -6,16 +6,27 @@ const failedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.ne
 const publishedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/reportPublication';
 
 const action = async () => {
+  // Take input from workflow
   const token = core.getInput('token', { required: true });
-  const jobId = core.getInput('jobId', { required: true });
+  const jobIdInput = core.getInput('jobId', { required: true });
   const status = core.getInput('status', { required: true });
-
   const imageType = core.getInput('imageType', { required: true });
   const baseOs = core.getInput('baseOs', { required: true });
+  const repoVersion = core.getInput('repoVersion', { required: true });
   const editorVersion = core.getInput('editorVersion', { required: false }) || 'none';
   const targetPlatform = core.getInput('targetPlatform', { required: false }) || 'none';
-  const repoVersion = core.getInput('repoVersion', { required: true });
 
+  // Determine job for dryRun automatically
+  let jobId = jobIdInput
+  if (jobId === 'dryRun') {
+    jobId += `-${imageType}`
+    if (imageType === 'editor') {
+      jobId += `-${editorVersion}`
+    }
+    jobId += `-${repoVersion}`
+  }
+
+  // Determine identifier for this build
   let buildId = `${imageType}-${baseOs}`
   if (imageType === 'editor') {
     buildId += `-${editorVersion}-${targetPlatform}`
@@ -27,6 +38,7 @@ const action = async () => {
     'Content-Type': 'application/json',
   };
 
+  // Handle each status
   if (status === 'started') {
     try {
       const body = {
@@ -55,10 +67,9 @@ const action = async () => {
       const reason = core.getInput('reason', { required: true });
 
       const body = {
+        jobId,
         buildId,
-        failure: {
-          reason,
-        }
+        reason,
       }
 
       const { statusCode, data } = await post(failedEndpoint, { headers, body });
@@ -81,8 +92,9 @@ const action = async () => {
       const digest = core.getInput('digest', { required: true });
 
       const body = {
+        jobId,
         buildId,
-        dockerPublicationInfo: {
+        dockerInfo: {
           imageRepo,
           imageName,
           friendlyTag,
