@@ -8,9 +8,6 @@ inputs:
   jobId:
     description: 'The unique identifier for the job that scheduled this build'
     required: true
-  buildId:
-    description: 'The unique identifier of this build'
-    required: true
   status:
     description: 'The type of report to send: [ started | failed | published ]'
     required: true
@@ -25,12 +22,14 @@ inputs:
   repoVersion:
     description: 'The version of this repository (passed by build job)'
     required: false
-  unityVersion:
-    description: 'The version of unity, or "none" in case of base and hub'
+  editorVersion:
+    description: 'The version of the Unity editor, or "none" in case of non-editor images'
     required: false
+    default: 'none'
   targetPlatform:
-    description: 'The platform that the image targets its builds for'
+    description: 'The platform that the image targets its builds for, or "none" in case of non-editor images'
     required: false
+    default: 'none'
 
   # Failed
   reason:
@@ -50,8 +49,8 @@ inputs:
   specificTag:
     description: 'The most specific tag possible'
     required: false
-  hash:
-    description: 'The hash of the published image'
+  digest:
+    description: 'The digest hash of the published image'
     required: false
 
 runs:

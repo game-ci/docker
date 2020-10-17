@@ -1,0 +1,39 @@
+{
+  "name": "httpie",
+  "version": "1.1.2",
+  "repository": "lukeed/httpie",
+  "description": "A lightweight, Promise-based wrapper for Node.js HTTP requests~!",
+  "module": "dist/httpie.mjs",
+  "main": "dist/httpie.js",
+  "types": "httpie.d.ts",
+  "license": "MIT",
+  "author": {
+    "name": "Luke Edwards",
+    "email": "luke.edwards05@gmail.com",
+    "url": "lukeed.com"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "scripts": {
+    "build": "bundt",
+    "pretest": "npm run build",
+    "test": "tape -r esm test/*.js | tap-spec"
+  },
+  "files": [
+    "*.d.ts",
+    "dist"
+  ],
+  "keywords": [
+    "http",
+    "client",
+    "request",
+    "promise"
+  ],
+  "devDependencies": {
+    "bundt": "^0.2.0",
+    "esm": "^3.2.0",
+    "tap-spec": "^5.0.0",
+    "tape": "^4.9.1"
+  }
+}

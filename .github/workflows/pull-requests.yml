@@ -4,6 +4,74 @@ on:
   pull_request: {}
 
 jobs:
+  reportingTest:
+    name: "🧪 Test reporting system (${{ matrix.imageType }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jobId:
+          - dryRun # specifically use `dryRun` for testing.
+        imageType:
+          - base
+          - hub
+          - editor
+        baseOs:
+          - ubuntu
+        repoVersion:
+          - 0.1
+        include:
+          - imageType: editor
+            editorVersion: 2020.1.4f1
+            targetPlatform: android
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Report new build
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ matrix.jobId }}
+          status: started
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+      - name: Report build failure
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ matrix.jobId }}
+          status: failed
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Failed specific
+          reason: 'no real reason'
+      - name: Report publication
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ matrix.jobId }}
+          status: published
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Published specific
+          imageRepo: unityci
+          imageName: ${{ matrix.imageType }}
+          friendlyTag: ${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          specificTag: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
+
   build:
     name: "🧪 Test build (${{ matrix.targetPlatform }})"
     runs-on: ubuntu-latest
