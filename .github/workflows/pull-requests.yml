@@ -10,7 +10,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        token: ${{ secrets.VERSIONING_TOKEN }}
         jobId:
           - dryRun # specifically use `dryRun` for testing.
         imageType:
@@ -31,7 +30,7 @@ jobs:
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
-          token: ${{ matrix.token }}
+          token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
           buildId: ${{ matrix.baseOs }}-${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: started
@@ -45,7 +44,7 @@ jobs:
       - name: Report build failure
         uses: ./.github/workflows/actions/report-to-backend
         with:
-          token: ${{ matrix.token }}
+          token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
           buildId: ${{ matrix.baseOs }}-${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: failed
@@ -54,7 +53,7 @@ jobs:
       - name: Report publication
         uses: ./.github/workflows/actions/report-to-backend
         with:
-          token: ${{ matrix.token }}
+          token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
           buildId: ${{ matrix.baseOs }}-${{ matrix.unityVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: published
