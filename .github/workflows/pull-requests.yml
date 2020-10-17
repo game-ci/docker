@@ -32,13 +32,11 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
-          buildId: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: started
-          # Start specific
+          # Build info
           imageType: ${{ matrix.imageType }}
           baseOs: ${{ matrix.baseOs }}
           repoVersion: ${{ matrix.repoVersion }}
-          # only set for editor
           editorVersion: ${{ matrix.editorVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
       - name: Report build failure
@@ -46,8 +44,13 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
-          buildId: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: failed
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
           # Failed specific
           reason: 'no real reason'
       - name: Report publication
@@ -55,8 +58,13 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ matrix.jobId }}
-          buildId: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           status: published
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
           # Published specific
           imageRepo: unityci
           imageName: ${{ matrix.imageType }}

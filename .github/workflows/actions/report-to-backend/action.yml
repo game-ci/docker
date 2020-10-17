@@ -8,9 +8,6 @@ inputs:
   jobId:
     description: 'The unique identifier for the job that scheduled this build'
     required: true
-  buildId:
-    description: 'The unique identifier of this build'
-    required: true
   status:
     description: 'The type of report to send: [ started | failed | published ]'
     required: true
