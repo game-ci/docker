@@ -16,7 +16,7 @@ const action = async () => {
   const editorVersion = core.getInput('editorVersion', { required: false }) || 'none';
   const targetPlatform = core.getInput('targetPlatform', { required: false }) || 'none';
 
-  const isDryRun = jobId === 'dryRun';
+  const isDryRun = jobIdInput === 'dryRun';
 
   // Determine job for dryRun automatically
   let jobId = jobIdInput
