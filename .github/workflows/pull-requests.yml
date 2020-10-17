@@ -20,7 +20,7 @@ jobs:
           - ubuntu
         repoVersion:
           - 0.1
-        includes:
+        include:
           - imageType: editor
             editorVersion: 2020.1.4f1
             targetPlatform: android
