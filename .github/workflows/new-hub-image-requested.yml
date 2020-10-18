@@ -123,7 +123,7 @@ jobs:
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
           # Publication info
           imageRepo: unityci
-          imageName: base
+          imageName: hub
           friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
           specificTag: ubuntu-${{ github.event.client_payload.repoVersionFull }}
           digest: ${{ steps.build_hub_image.outputs.digest }}
