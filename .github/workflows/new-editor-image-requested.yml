@@ -155,7 +155,7 @@ jobs:
           imageName: base
           friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
           specificTag: ubuntu-${{ github.event.client_payload.repoVersionFull }}
-          digest: ${{ steps.build_base_image.outputs.digest }}
+          digest: ${{ steps.build_editor_image.outputs.digest }}
       - name: Report failure
         if: ${{ failure() || cancelled() }}
         uses: ./.github/workflows/actions/report-to-backend
