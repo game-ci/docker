@@ -139,7 +139,7 @@ jobs:
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
           editorVersion: ${{ github.event.client_payload.editorVersion }}
-          targetPlatform: ${{ matrix.targetPlatform }}
+          targetPlatform: ${{ github.event.client_payload.targetPlatform }}
           # Publication info
           imageRepo: unityci
           imageName: editor
@@ -158,7 +158,7 @@ jobs:
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
           editorVersion: ${{ github.event.client_payload.editorVersion }}
-          targetPlatform: repository_dispatch
+          targetPlatform: ${{ github.event.client_payload.targetPlatform }}
           # Failure info
           reason: ${{ job.status }}
       ###########################
