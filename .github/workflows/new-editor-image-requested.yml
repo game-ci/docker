@@ -77,12 +77,12 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.sha }}
+          key: ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-
-            ${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-
-            ${{ runner.os }}-buildx-editor-
-            ${{ runner.os }}-buildx-
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-
       ###########################
       #    Free disk space   #
       ###########################

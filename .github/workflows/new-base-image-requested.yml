@@ -63,10 +63,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-base-${{ github.sha }}
+          key: ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-base-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-base
-            ${{ runner.os }}-buildx-
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-base
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-
       ###########################
       #        Base image       #
       ###########################

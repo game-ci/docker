@@ -63,10 +63,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-hub-${{ github.sha }}
+          key: ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-hub-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-hub
-            ${{ runner.os }}-buildx-
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-hub
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-
       ###########################
       #   Pull previous images  #
       ###########################
