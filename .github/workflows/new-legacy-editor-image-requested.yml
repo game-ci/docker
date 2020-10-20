@@ -2,7 +2,7 @@ name: New Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [new_editor_image_requested]
+    types: [new_legacy_editor_image_requested]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -17,7 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         targetPlatform:
-          - linux-il2cpp
+          - base # Base is a special name, which indicates that no modules are installed, like with linux-mono on ubuntu
+          # - linux-il2cpp
           - windows-mono
           - mac-mono
           - ios
