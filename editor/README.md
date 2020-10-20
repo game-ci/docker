@@ -15,7 +15,7 @@ docker run -it --rm unity-ci/editor bash
 Run the editor 
 
 ```bash
-unity help
+unity-editor help
 ```
 
 ## License
