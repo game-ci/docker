@@ -85,6 +85,7 @@ jobs:
       matrix:
         targetPlatform:
           # This list of target platforms is based on Ubuntu as a base platform
+          - base
 
           # Linux Build Support
           # - linux-mono # May not exist in newer versions / May be default for Ubuntu
