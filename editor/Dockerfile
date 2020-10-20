@@ -29,7 +29,6 @@ COPY --from=builder /opt/unity/editors/$version/ "$UNITY_PATH/"
 # Add a file containing the version for this build
 RUN echo $version > "$UNITY_PATH/version"
 
-# Alias to "editor" or "unity" with default params
-RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/editor \
- && chmod +x /usr/bin/editor \
- && ln -s /usr/bin/editor /usr/bin/unity
+# Alias to "unity-editor" with default params
+RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/unity-editor \
+ && chmod +x /usr/bin/unity-editor
