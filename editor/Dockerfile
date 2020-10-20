@@ -14,7 +14,7 @@ RUN unity-hub install --version "$version" --changeset "$changeSet" | grep 'Erro
 
 # Install modules for that editor
 ARG module="non-existent-module"
-RUN if [[ "$module" == "base" ]] ; then \
+RUN if [ "$module" == "base" ] ; then \
       echo "running default modules for this baseOs" ; exit 0 ; \
     else \
       unity-hub install-modules --version "$version" --module "$module" --childModules | grep 'Missing module' | exit $(wc -l) ; \
