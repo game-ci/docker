@@ -1,73 +1,32 @@
-# docker-linux
-Proof of concept for linux-based unity setup in docker
+# Unity CI - Docker
 
-## Setup
+Source of CI specialised docker images for Unity.
 
-Clone this repo
+## Base
 
-```bash
-git clone git@github.com:unity-ci/docker-linux.git 
-```
+See the [base readme](./base/README.md) for base image usage.
 
-Change directory to clone directory
+## Hub
 
-```bash
-cd docker-linux
-```
+See the [hub readme](./hub/README.md) for hub image usage. 
 
-Build the base image
+## Editor
 
-```bash
-docker build base -t base
-```
+See the [editor readme](./editor/README.md) for editor image usage.
 
-Build hub
+## Contributing
 
-```bash
-docker build hub -t hub
-```
+To contribute, please see the [development readme](./DEVELOPMENT.md) 
+after you agree with our [code of conduct](./CODE_OF_CONDUCT.md) 
+and have read the [contribution guide](./CONTRIBUTING.md).
 
-Build editor
+## Todo
 
-```bash
-docker build editor -t editor
-```
+Move these deps from base to hub image if possible
 
-## Editor usage
-
-Run the editor image using an interactive shell
-
-```bash
-docker run -it --rm editor bash
-```
-
-## Hub usage
-
-Run the hub image using an interactive shell
-
-```bash
-docker run -it --rm hub bash
-```
-
-#### help
-
-Run the help command
-
-```bash
-unity-hub help
-```
-
-#### install
-
-Get a link from the [archive](https://unity3d.com/get-unity/download/archive).
-
-The link `unityhub://2020.1.4f1/fa717bb873ec` holds version `2020.1.4f1` and hash `fa717bb873ec`.
-
-Since we want to install android build support, we'll add `--module android`.
-
-```bash
-unity-hub install --version 2020.1.4f1 --changeset fa717bb873ec --module android
-```
+- xz-utils 
+- cpio
+- lsb-release
 
 ## License
 

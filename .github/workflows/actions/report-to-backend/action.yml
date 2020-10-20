@@ -1,0 +1,58 @@
+name: 'Report to backend'
+description: 'Report the build status to Unity CI versioning backend'
+inputs:
+  # Always required
+  token:
+    description: 'Authentication token to make requests to the versioning backend'
+    required: true
+  jobId:
+    description: 'The unique identifier for the job that scheduled this build'
+    required: true
+  status:
+    description: 'The type of report to send: [ started | failed | published ]'
+    required: true
+
+  # Started
+  imageType:
+    description: 'The type of the image: [ base | hub | editor ]'
+    required: false
+  baseOs:
+    description: 'The base os within the docker image'
+    required: false
+  repoVersion:
+    description: 'The version of this repository (passed by build job)'
+    required: false
+  editorVersion:
+    description: 'The version of the Unity editor, or "none" in case of non-editor images'
+    required: false
+    default: 'none'
+  targetPlatform:
+    description: 'The platform that the image targets its builds for, or "none" in case of non-editor images'
+    required: false
+    default: 'none'
+
+  # Failed
+  reason:
+    description: 'A (hopefully) descriptive reason as to what happened during the failure'
+    required: false
+
+  # Published
+  imageRepo:
+    description: 'The name of the host of the docker repository (i.e. `unityci`)'
+    required: false
+  imageName:
+    description: 'The name of the image (i.e. `hub`)'
+    required: false
+  friendlyTag:
+    description: 'The most friendly but unambiguous tag possible (i.e. excludes baseOs and patch level version)'
+    required: false
+  specificTag:
+    description: 'The most specific tag possible'
+    required: false
+  digest:
+    description: 'The digest hash of the published image'
+    required: false
+
+runs:
+  using: 'node12'
+  main: 'index.js'

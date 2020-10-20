@@ -1,0 +1,142 @@
+name: New Hub Version ⚙
+
+on:
+  repository_dispatch:
+    types: [new_hub_image_requested]
+
+# Further reading:
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
+# https://docs.github.com/en/free-pro-team@latest/rest/reference/repos#create-a-repository-dispatch-event
+# https://developer.github.com/webhooks/event-payloads/#repository_dispatch
+
+jobs:
+  build:
+    name: "🛠 Build unityci/hub"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      ###########################
+      #        Variables        #
+      ###########################
+      - name: Show hook input
+        run: |
+          echo "Event ${{ github.event.event_type }}"
+          echo "jobId: ${{ github.event.client_payload.jobId }}"
+          echo "repoVersion (full): ${{ github.event.client_payload.repoVersionFull }}"
+          echo "repoVersion (only minor and major): ${{ github.event.client_payload.repoVersionMinor }}"
+          echo "repoVersion (only major): ${{ github.event.client_payload.repoVersionMajor }}"
+      - name: Report new build
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: started
+          # Build info
+          imageType: hub
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+      ###########################
+      #          Setup          #
+      ###########################
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Check if image not already exists
+        run: |
+          # Source: https://stackoverflow.com/a/39731444/3593896
+          function docker_tag_exists() {
+            curl --silent -f -lSL https://index.docker.io/v1/repositories/$1/tags/$2 > /dev/null
+          }
+
+          if docker_tag_exists unityci/hub ubuntu-${{ github.event.client_payload.repoVersionFull }} ; then
+            echo "Image already exists. Exiting."
+            exit 1
+          fi
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-hub-${{ github.sha }}
+          restore-keys: |
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-hub
+            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-
+      ###########################
+      #   Pull previous images  #
+      ###########################
+      - name: Pull base image (must exist)
+        run: docker pull unityci/base:${{ github.event.client_payload.repoVersionFull }}
+      ###########################
+      #        Hub image        #
+      ###########################
+      - name: Build and publish
+        uses: docker/build-push-action@v2
+        id: build_hub_image
+        with:
+          context: .
+          file: ./hub/Dockerfile
+          build-args: baseImage=unityci/base:${{ github.event.client_payload.repoVersionFull }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          push: true
+          tags: |
+            unityci/hub:ubuntu-${{ github.event.client_payload.repoVersionFull }}
+            unityci/hub:${{ github.event.client_payload.repoVersionFull }}
+            unityci/hub:ubuntu-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/hub:${{ github.event.client_payload.repoVersionMinor }}
+            unityci/hub:ubuntu-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/hub:${{ github.event.client_payload.repoVersionMajor }}
+            unityci/hub:ubuntu-latest
+            unityci/hub:latest
+      - name: Inspect
+        run: |
+          docker buildx imagetools inspect unityci/hub:ubuntu-${{ github.event.client_payload.repoVersionFull }}
+      - name: Image digest
+        run: echo ${{ steps.build_hub_image.outputs.digest }}
+      - name: Update DockerHub description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: unityci/hub
+          short-description: $(cat ./hub/100-characters-dockerhub-description.txt)
+          readme-filepath: ./hub/README.md
+      ###########################
+      #        reporting        #
+      ###########################
+      - name: Report publication
+        if: ${{ success() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: published
+          # Build info
+          imageType: hub
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          # Publication info
+          imageRepo: unityci
+          imageName: hub
+          friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
+          specificTag: ubuntu-${{ github.event.client_payload.repoVersionFull }}
+          digest: ${{ steps.build_hub_image.outputs.digest }}
+      - name: Report failure
+        if: ${{ failure() || cancelled() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ github.event.client_payload.jobId }}
+          status: failed
+          # Build info
+          imageType: hub
+          baseOs: ubuntu
+          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          # Failure info
+          reason: ${{ job.status }}
