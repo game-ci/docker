@@ -2,7 +2,7 @@ name: New Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [new_editor_image_requested]
+    types: [new_legacy_editor_image_requested]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -18,7 +18,7 @@ jobs:
       matrix:
         targetPlatform:
           - base # Base is a special name, which indicates that no modules are installed, like with linux-mono on ubuntu
-          - linux-il2cpp
+          # - linux-il2cpp
           - windows-mono
           - mac-mono
           - ios
@@ -39,18 +39,6 @@ jobs:
           echo "repoVersion (full): ${{ github.event.client_payload.repoVersionFull }}"
           echo "repoVersion (only minor and major): ${{ github.event.client_payload.repoVersionMinor }}"
           echo "repoVersion (only major): ${{ github.event.client_payload.repoVersionMajor }}"
-      - name: Special tactics
-        run: |
-          editorVersion="${{ github.event.client_payload.editorVersion }}"
-
-          # For any editor version before 2019.3.0
-          if [[ "$editorVersion" == 201* ]] && [[ "$editorVersion" != 2019.3.* ]] && [[ "$editorVersion" != 2019.4.* ]] ; then
-
-            # skip linux-il2cpp build
-            if [[ "${{ matrix.targetPlatform }}" == "linux-il2cpp" ]] ; then
-              exit 0;
-            fi
-          fi
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
