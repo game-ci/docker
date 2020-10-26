@@ -27,6 +27,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Update DockerHub description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: unityci/editor
+          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
+          readme-filepath: ./editor/README.md
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
