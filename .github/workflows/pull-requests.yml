@@ -33,7 +33,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: unityci/editor
-          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
+#          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
           readme-filepath: ./editor/README.md
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
