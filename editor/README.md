@@ -9,8 +9,14 @@ Dockerised Unity Editor made for continuous integration.
 Run the editor image using an interactive shell
 
 ```bash
-docker run -it --rm unity-ci/editor bash
+docker run -it --rm unityci/editor:TAG bash
 ```
+example
+
+```bash
+docker run -it --rm unityci/editor:ubuntu-2018.4.18f1-android-0.3.0 bash
+```
+
 
 Run the editor 
 
