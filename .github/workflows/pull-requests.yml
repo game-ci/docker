@@ -6,6 +6,7 @@ on:
 jobs:
   rewardPRWithCat:
     name: You get a reward
+    runs-on: ubuntu-latest
     steps:
       - name: Action Cats
         uses: ruairidhwm/action-cats@1.0.1
