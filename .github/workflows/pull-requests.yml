@@ -4,9 +4,9 @@ on:
   pull_request: {}
 
 jobs:
-  rewardPRWithCat:
+  aCatForCreatingThePullRequest:
     if: github.event_name == 'pull_request' && github.event.event_type == 'opened'
-    name: You get a reward
+    name: A cat for your effort!
     runs-on: ubuntu-latest
     steps:
       - name: Action Cats
