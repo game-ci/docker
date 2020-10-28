@@ -5,6 +5,7 @@ on:
 
 jobs:
   rewardPRWithCat:
+    if: github.event_name == 'pull_request' && github.event.event_type == 'opened'
     name: You get a reward
     runs-on: ubuntu-latest
     steps:
