@@ -4,6 +4,12 @@ on:
   pull_request: {}
 
 jobs:
+  rewardPRWithCat:
+    name: You get a reward
+    steps:
+      - name: Action Cats
+        uses: ruairidhwm/action-cats@1.0.1
+
   reportingTest:
     name: "🧪 Test reporting system (${{ matrix.imageType }})"
     runs-on: ubuntu-latest
@@ -27,13 +33,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - run: |
+          echo ::set-env name=SHORT_DESCRIPTION::$(cat ./editor/100-characters-dockerhub-description.txt)
       - name: Update DockerHub description
         uses: peter-evans/dockerhub-description@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_LEGACY_PASSWORD }}
           repository: unityci/editor
-          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
+          short-description: ${{ env.SHORT_DESCRIPTION }}
           readme-filepath: ./editor/README.md
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
