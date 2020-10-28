@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Action Cats
         uses: ruairidhwm/action-cats@1.0.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   reportingTest:
     name: "🧪 Test reporting system (${{ matrix.imageType }})"
