@@ -4,16 +4,6 @@ on:
   pull_request: {}
 
 jobs:
-  aCatForCreatingThePullRequest:
-    if: github.event_name == 'pull_request' && github.event.event_type == 'opened'
-    name: A cat for your effort!
-    runs-on: ubuntu-latest
-    steps:
-      - name: Action Cats
-        uses: ruairidhwm/action-cats@1.0.1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   reportingTest:
     name: "🧪 Test reporting system (${{ matrix.imageType }})"
     runs-on: ubuntu-latest
@@ -37,16 +27,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - run: |
-          echo "SHORT_DESCRIPTION=$(cat ./editor/100-characters-dockerhub-description.txt)" >> $GITHUB_ENV
-      - name: Update DockerHub description
-        uses: peter-evans/dockerhub-description@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_LEGACY_PASSWORD }}
-          repository: unityci/editor
-          short-description: ${{ env.SHORT_DESCRIPTION }}
-          readme-filepath: ./editor/README.md
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:

@@ -1,0 +1,30 @@
+name: Docs 📚
+
+on:
+  pull_request: {}
+  push: { branches: [main] }
+
+jobs:
+  update descriptions:
+    name: "📚 Update ${{ matrix.imageType }} description on dockerhub"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        imageType:
+          - base
+          - hub
+          - editor
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - run: |
+          echo "SHORT_DESCRIPTION=$(cat ./${{ matrix.imageType }}/100-characters-dockerhub-description.txt)" >> $GITHUB_ENV
+      - name: Update DockerHub description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_LEGACY_PASSWORD }}
+          repository: unityci/${{ matrix.imageType }}
+          short-description: ${{ env.SHORT_DESCRIPTION }}
+          readme-filepath: ./${{ matrix.imageType }}/README.md
