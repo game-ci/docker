@@ -5,7 +5,7 @@ on:
   push: { branches: [main] }
 
 jobs:
-  update descriptions:
+  updateDescriptions:
     name: "📚 Update ${{ matrix.imageType }} description on dockerhub"
     runs-on: ubuntu-latest
     strategy:
