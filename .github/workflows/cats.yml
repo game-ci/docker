@@ -1,0 +1,15 @@
+name: Cats 😺
+
+on:
+  pull_request: {}
+
+jobs:
+  aCatForCreatingThePullRequest:
+    if: github.event_name == 'pull_request' && github.event.event_type == 'opened'
+    name: A cat for your effort!
+    runs-on: ubuntu-latest
+    steps:
+      - name: Action Cats
+        uses: ruairidhwm/action-cats@1.0.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
