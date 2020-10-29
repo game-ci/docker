@@ -128,14 +128,6 @@ jobs:
           docker buildx imagetools inspect unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
       - name: Image digest
         run: echo ${{ steps.build_editor_image.outputs.digest }}
-      - name: Update DockerHub description
-        uses: peter-evans/dockerhub-description@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: unityci/editor
-          short-description: $(cat ./editor/100-characters-dockerhub-description.txt)
-          readme-filepath: ./editor/README.md
       ###########################
       #        reporting        #
       ###########################

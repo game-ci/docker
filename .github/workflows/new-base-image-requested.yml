@@ -93,14 +93,6 @@ jobs:
           docker buildx imagetools inspect unityci/base:ubuntu-${{ github.event.client_payload.repoVersionFull }}
       - name: Image digest
         run: echo ${{ steps.build_base_image.outputs.digest }}
-      - name: Update DockerHub description
-        uses: peter-evans/dockerhub-description@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: unityci/base
-          short-description: $(cat ./base/100-characters-dockerhub-description.txt)
-          readme-filepath: ./base/README.md
       ###########################
       #        reporting        #
       ###########################
