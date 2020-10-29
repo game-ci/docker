@@ -18,6 +18,7 @@ RUN apt-get -q update \
  wget \
  xvfb \
  xz-utils \
+ libglu1 \
  && apt-get clean
 
 # Support forward compatibility for unity activation
