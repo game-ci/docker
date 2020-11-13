@@ -6,9 +6,11 @@ RUN apt-get -q update \
  && apt-get -q install -y --no-install-recommends --allow-downgrades \
  ca-certificates \
  libasound2 \
+ libc6-dev \
  libgconf-2-4 \
  libglu1 \
  libgtk-3-0 \
+ libncurses5 \
  libnss3 \
  libxtst6 \
  libxss1 \
