@@ -31,7 +31,7 @@ RUN apt-get -q update \
  && apt-get clean
 
 # Support forward compatibility for unity activation
-RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && ln -sf /etc/machine-id /var/lib/dbus/machine-id
+RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && mkdir -p /var/lib/dbus/ && ln -sf /etc/machine-id /var/lib/dbus/machine-id
 
 # Used by Unity editor in "modules.json" and must not end with a slash.
 ENV UNITY_PATH="/opt/unity"
