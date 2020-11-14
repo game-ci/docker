@@ -30,6 +30,9 @@ RUN apt-get -q update \
  wget \
  && apt-get clean
 
+# Disable default sound card, which removes ALSA warnings
+ADD config/asound.conf /etc/
+
 # Support forward compatibility for unity activation
 RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && mkdir -p /var/lib/dbus/ && ln -sf /etc/machine-id /var/lib/dbus/machine-id
 
