@@ -1,11 +1,13 @@
 name: Cats 😺
 
 on:
-  pull_request: {}
+  pull_request:
+    types:
+      - opened
+      - reopened
 
 jobs:
   aCatForCreatingThePullRequest:
-    if: github.event_name == 'pull_request' && github.event.event_type == 'opened'
     name: A cat for your effort!
     runs-on: ubuntu-latest
     steps:
