@@ -9,9 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo ${{ github.event.event_type }}
           echo ${{ github.event_name }}
-          echo ${{ github.event.name }}
+          echo ${{ github.event_type }}
   aCatForCreatingThePullRequest:
     if: github.event.event_type == 'opened'
     name: A cat for your effort!
