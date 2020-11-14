@@ -1,18 +1,12 @@
 name: Cats 😺
 
 on:
-  pull_request: {}
+  pull_request:
+    types:
+      - opened
 
 jobs:
-  echoVars:
-    name: echo vars
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo ${{ github.event_name }}
-          echo ${{ github.event_type }}
   aCatForCreatingThePullRequest:
-    if: github.event.event_type == 'opened'
     name: A cat for your effort!
     runs-on: ubuntu-latest
     steps:
