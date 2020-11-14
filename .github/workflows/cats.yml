@@ -4,8 +4,16 @@ on:
   pull_request: {}
 
 jobs:
+  echoVars:
+    name: echo vars
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo ${{ github.event.event_type }}
+          echo ${{ github.event_name }}
+          echo ${{ github.event.name }}
   aCatForCreatingThePullRequest:
-    if: github.event_name == 'pull_request' && github.event.event_type == 'opened'
+    if: github.event.event_type == 'opened'
     name: A cat for your effort!
     runs-on: ubuntu-latest
     steps:
