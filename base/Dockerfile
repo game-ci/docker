@@ -30,6 +30,9 @@ RUN apt-get -q update \
  wget \
  && apt-get clean
 
+# Install Git LFS
+RUN git lfs install --system --skip-repo
+
 # Disable default sound card, which removes ALSA warnings
 ADD config/asound.conf /etc/
 
