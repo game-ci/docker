@@ -7,6 +7,7 @@ RUN apt-get -q update \
  ca-certificates \
  libasound2 \
  libc6-dev \
+ libcap2 \
  libgconf-2-4 \
  libglu1 \
  libgtk-3-0 \
