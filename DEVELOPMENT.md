@@ -5,13 +5,13 @@
 Clone this repo
 
 ```bash
-git clone git@github.com:unity-ci/docker-linux.git 
+git clone git@github.com:game-ci/docker.git 
 ```
 
 Change directory to clone directory
 
 ```bash
-cd docker-linux
+cd docker
 ```
 
 Build the base image

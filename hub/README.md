@@ -1,4 +1,4 @@
-# Unity-CI image of the Unity Hub
+# GameCI image providing Unity Hub
 
 #### `unity-ci/hub`
 
@@ -34,4 +34,4 @@ unity-hub install --version 2020.1.4f1 --changeset fa717bb873ec --module android
 
 ## License
 
-[MIT license](https://github.com/Unity-CI/docker/blob/main/LICENSE)
+[MIT license](https://github.com/game-ci/docker/blob/main/LICENSE)

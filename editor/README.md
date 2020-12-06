@@ -26,5 +26,5 @@ unity-editor help
 
 ## License
 
-[MIT license](https://github.com/Unity-CI/docker/blob/main/LICENSE)
+[MIT license](https://github.com/game-ci/docker/blob/main/LICENSE)
 
