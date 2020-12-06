@@ -1,5 +1,5 @@
 name: 'Report to backend'
-description: 'Report the build status to Unity CI versioning backend'
+description: 'Report the build status to GameCI versioning backend'
 inputs:
   # Always required
   token:

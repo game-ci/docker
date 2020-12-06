@@ -1,4 +1,4 @@
-# Unity-CI base image
+# GameCI base image for Unity images
 
 #### `unity-ci/base`
 

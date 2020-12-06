@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Unity CI",
+  "author": "GameCI",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.6",

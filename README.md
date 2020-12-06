@@ -1,6 +1,8 @@
-# Unity CI - Docker
+# Docker images for Unity
 
-Source of CI specialised docker images for Unity.
+(Not affiliated with Unity Technologies)
+
+Source of CI specialised docker images for Unity, free to use for everyone.
 
 ## Base
 
@@ -17,7 +19,7 @@ See the [editor readme](./editor/README.md) for editor image usage.
 ## Community
 
 Feel free to join us on
-<a href="http://unity-ci.com/discord"><img height="30" src="media/Discord-Logo.svg" alt="Discord" /></a>
+<a href="http://game.ci/discord"><img height="30" src="media/Discord-Logo.svg" alt="Discord" /></a>
 and engage with the community.
 
 ## Contributing
