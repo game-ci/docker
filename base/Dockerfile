@@ -40,3 +40,7 @@ RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && mkdir -p /var/l
 
 # Used by Unity editor in "modules.json" and must not end with a slash.
 ENV UNITY_PATH="/opt/unity"
+
+# Fixes a Gradle crash while building for Android on Unity 2019 when there are accented characters in environment variables
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
