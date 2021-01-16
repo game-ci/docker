@@ -53,3 +53,15 @@ RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
     clang \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+#=======================================================================================
+# [2019.3.x-linux-il2cpp] IL2CPP_ADDITIONAL_ARGS='--sysroot-path=/ --tool-chain-path=/'
+# https://forum.unity.com/threads/unity-2019-3-linux-il2cpp-player-can-only-be-built-with-linux-error.822210/#post-5633977
+#=======================================================================================
+RUN [ `echo $version-$module | grep -v '^2019.3.*-linux-il2cpp'` ] && exit 0 || : \
+  && { \
+    echo '#!/bin/bash'; \
+    echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"'; \
+    echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
+  } > /usr/bin/unity-editor \
+  && chmod +x /usr/bin/unity-editor
