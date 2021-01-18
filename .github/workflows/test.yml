@@ -1,0 +1,235 @@
+# [Required secrets]
+#   UNITY_LICENSE: Contents of an Unity license file (*.ulf)
+name: Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "**/Dockerfile"
+      - .github/workflows/test.yml
+      - reference-project-test/*
+  pull_request:
+    types:
+      - "opened"
+      - "synchronize"
+    paths:
+      - "**/Dockerfile"
+      - .github/workflows/test.yml
+      - reference-project-test/*
+
+jobs:
+  ###########################
+  #    Build base and hub   #
+  ###########################
+  base-and-hub:
+    name: Base and hub
+    runs-on: ubuntu-18.04
+    outputs:
+      versions: ${{ steps.setup.outputs.versions }}
+      excludes: ${{ steps.setup.outputs.excludes }}
+    steps:
+      ###########################
+      #          Setup          #
+      ###########################
+      - uses: actions/checkout@v2
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+        with:
+          driver: docker
+
+      ###########################
+      #   Build base and hub    #
+      ###########################
+      - name: Build base
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: base/Dockerfile
+          tags: base:dev
+      - name: Build hub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: hub/Dockerfile
+          build-args: baseImage=base:dev
+          tags: hub:dev
+
+      ###########################
+      #   Save images for next  #
+      ###########################
+      - name: Save images for next
+        run: |
+          docker images
+          docker save -o base-and-hub.tar base:dev hub:dev
+      - uses: actions/upload-artifact@v2
+        with:
+          path: base-and-hub.tar
+
+      ###########################
+      #    Setup build matrix   #
+      ###########################
+      - name: "Setup build matrix"
+        id: setup
+        run: |
+          # Get the Unity versions for test. (The latest patch versions for each minor version.)
+          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2018.3`
+          echo "Versions: $VERSIONS"
+          echo "::set-output name=versions::$VERSIONS"
+
+          # Exclude linux-il2cpp for Unity 2019.2 or earlier
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
+
+          # Exclude android for Unity 2019.2 or earlier
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"android\"} ]'`"
+
+          EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
+          echo "Excludes: $EXCLUDES"
+          echo "::set-output name=excludes::$EXCLUDES"
+
+  ###########################
+  #  Build editor and test  #
+  ###########################
+  editor:
+    needs: base-and-hub
+    name: Editor (${{ matrix.version }}, ${{ matrix.module }})
+    runs-on: ubuntu-18.04
+    env:
+      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # The latest patch versions for each minor version.
+        version: ${{ fromJson(needs.base-and-hub.outputs.versions) }}
+        module:
+          - base
+          - linux-il2cpp
+          - windows-mono
+          - mac-mono
+          - ios
+          - android
+          - webgl
+        include:
+          - module: base
+            platform: StandaloneLinux64
+          - module: linux-il2cpp
+            platform: StandaloneLinux64
+          - module: windows-mono
+            platform: StandaloneWindows
+          - module: mac-mono
+            platform: StandaloneOSX
+          - module: ios
+            platform: iOS
+          - module: android
+            platform: Android
+          - module: webgl
+            platform: WebGL
+        exclude: ${{ fromJson(needs.base-and-hub.outputs.excludes) }}
+
+    steps:
+      ###########################
+      #          Setup          #
+      ###########################
+      - uses: actions/checkout@v2
+      - uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-buildx-action@v1
+        with:
+          driver: docker
+      - name: Free disk space
+        run: .github/workflows/scripts/free_disk_space.sh
+
+      ###########################
+      #   Restore base and hub  #
+      ###########################
+      - uses: actions/download-artifact@v2
+      - name: Restore base and hub
+        run: |
+          docker load -i artifact/base-and-hub.tar
+          rm -rf artifact
+
+      ###########################
+      #      Setup to build     #
+      ###########################
+      - name: Setup to build
+        run: |
+          # The changeset for unity version
+          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> $GITHUB_ENV
+
+      ###########################
+      #       Build editor      #
+      ###########################
+      - name: Build
+        # if: steps.build-1.outcome == 'failure'
+        uses: docker/build-push-action@v2
+        id: build-1
+        continue-on-error: true
+        timeout-minutes: 40
+        with:
+          context: .
+          file: editor/Dockerfile
+          build-args: |
+            baseImage=base:dev
+            hubImage=hub:dev
+            version=${{ matrix.version }}
+            changeSet=${{ env.CHANGESET }}
+            module=${{ matrix.module }}
+          tags: editor:dev
+
+      ###########################
+      #   Build editor (retry)  #
+      ###########################
+      - name: Sleep for retry
+        if: steps.build-1.outcome == 'failure'
+        run: sleep 120
+
+      - name: Build (Retry)
+        if: steps.build-1.outcome == 'failure'
+        uses: docker/build-push-action@v2
+        id: build-2
+        # continue-on-error: true
+        timeout-minutes: 40
+        with:
+          context: .
+          file: editor/Dockerfile
+          build-args: |
+            baseImage=base:dev
+            hubImage=hub:dev
+            version=${{ matrix.version }}
+            changeSet=${{ env.CHANGESET }}
+            module=${{ matrix.module }}
+          tags: editor:dev
+
+      ###########################
+      #      Setup to test      #
+      ###########################
+      - name: Show image size
+        run: docker images
+      - name: Setup to test
+        run: |
+          # For 'linux-il2cpp' module, switch the script backend to 'IL2CPP'
+          if [ "${{ matrix.module }}" = "linux-il2cpp" ] ; then
+            mv -f reference-project-test/ProjectSettings/ProjectSettings_il2cpp.asset reference-project-test/ProjectSettings/ProjectSettings.asset
+          fi
+
+      ###########################
+      #          Build          #
+      ###########################
+      - name: Build project
+        uses: game-ci/unity-builder@main
+        with:
+          unityVersion: ${{ matrix.version }}
+          customImage: editor:dev
+          projectPath: reference-project-test
+          targetPlatform: ${{ matrix.platform }}
+          allowDirtyBuild: true
+
+      ###########################
+      #           Test          #
+      ###########################
+      - name: Test project
+        uses: game-ci/unity-test-runner@main
+        with:
+          unityVersion: ${{ matrix.version }}
+          customImage: editor:dev
+          projectPath: reference-project-test
+          customParameters: -nographics -buildTarget ${{ matrix.platform }}
