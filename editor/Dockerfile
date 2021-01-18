@@ -28,6 +28,7 @@ FROM $baseImage
 
 # Always put "Editor" and "modules.json" directly in $UNITY_PATH
 ARG version
+ARG module
 COPY --from=builder /opt/unity/editors/$version/ "$UNITY_PATH/"
 
 # Add a file containing the version for this build
@@ -36,3 +37,19 @@ RUN echo $version > "$UNITY_PATH/version"
 # Alias to "unity-editor" with default params
 RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/unity-editor \
  && chmod +x /usr/bin/unity-editor
+
+###########################
+#       Extra steps       #
+###########################
+
+#=======================================================================================
+# [webgl, il2cpp] python build-essential clang
+#=======================================================================================
+RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    python \
+    build-essential \
+    clang \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
