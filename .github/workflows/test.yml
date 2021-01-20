@@ -153,7 +153,7 @@ jobs:
           echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> $GITHUB_ENV
 
           # For 2019.3 or later, non-il2cpp would also be possible to build with il2cpp image.
-          if [ `echo "${{ matrix.version }}" | grep -v '\(2018|2019.1|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
+          if [ `echo "${{ matrix.version }}" | grep -v '\(2018\|2019.1\|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
             echo "MODULE=linux-il2cpp" >> $GITHUB_ENV
           else
             echo "MODULE=${{ matrix.module }}" >> $GITHUB_ENV
