@@ -63,3 +63,15 @@ RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
     clang \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+#=======================================================================================
+# [2019.1.x] libnotify4 libunwind-dev libssl1.0
+#=======================================================================================
+RUN [ `echo $version | grep -v '^2019.1.'` ] && exit 0 || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    libnotify4 \
+    libunwind-dev \
+    libssl1.0  \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
