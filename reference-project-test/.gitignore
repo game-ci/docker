@@ -1,0 +1,28 @@
+# Windows
+Thumbs.db
+Desktop.ini
+*.csproj
+*.sln
+
+# macOS
+.DS_Store
+
+# Vim
+*.swp
+
+# Unity
+Logs/
+Library/
+Temp/
+
+# VS
+.vs/
+.vscode/
+obj/
+bin/
+.idea/
+
+CodeCoverage/
+build*/
+build*
+*.ulf
