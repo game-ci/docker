@@ -9,7 +9,7 @@ on:
       - "**/Dockerfile"
       - .github/workflows/test.yml
       - reference-project-test/*
-  pull_request:
+  pull_request_target:
     paths:
       - "**/Dockerfile"
       - .github/workflows/test.yml
