@@ -62,6 +62,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: base-and-hub.tar
+          retention-days: 1
 
       ###########################
       #    Setup build matrix   #
