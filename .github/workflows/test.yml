@@ -12,7 +12,6 @@ on:
   pull_request_target:
     paths:
       - "**/Dockerfile"
-      - .github/workflows/test.yml
       - reference-project-test/*
 
 jobs:
