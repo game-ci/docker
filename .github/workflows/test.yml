@@ -27,9 +27,21 @@ jobs:
       excludes: ${{ steps.setup.outputs.excludes }}
     steps:
       ###########################
+      #         Checkout        #
+      ###########################
+      - name: Checkout (default)
+        uses: actions/checkout@v2
+        if: github.event.event_type != 'pull_request_target'
+      - name: Checkout (pull_request_target)
+        uses: actions/checkout@v2
+        if: github.event.event_type == 'pull_request_target'
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      ###########################
       #          Setup          #
       ###########################
-      - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
         with:
