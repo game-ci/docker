@@ -12,7 +12,6 @@ on:
   pull_request_target:
     paths:
       - "**/Dockerfile"
-      - .github/workflows/test.yml
       - reference-project-test/*
 
 jobs:
@@ -27,9 +26,21 @@ jobs:
       excludes: ${{ steps.setup.outputs.excludes }}
     steps:
       ###########################
+      #         Checkout        #
+      ###########################
+      - name: Checkout (default)
+        uses: actions/checkout@v2
+        if: github.event.event_type != 'pull_request_target'
+      - name: Checkout (pull_request_target)
+        uses: actions/checkout@v2
+        if: github.event.event_type == 'pull_request_target'
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      ###########################
       #          Setup          #
       ###########################
-      - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
         with:
@@ -92,8 +103,6 @@ jobs:
     needs: base-and-hub
     name: Editor (${{ matrix.version }}, ${{ matrix.module }})
     runs-on: ubuntu-18.04
-    env:
-      UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
     strategy:
       fail-fast: false
       matrix:
@@ -227,6 +236,8 @@ jobs:
           projectPath: reference-project-test
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
 
       ###########################
       #           Test          #
@@ -238,3 +249,5 @@ jobs:
           customImage: editor:dev
           projectPath: reference-project-test
           customParameters: -nographics -buildTarget ${{ matrix.platform }}
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
