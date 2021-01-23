@@ -129,3 +129,13 @@ RUN [ `echo $version | grep -v '^2019.1.'` ] && exit 0 || : \
     libssl1.0  \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+#=======================================================================================
+# [2021.x-linux-il2cpp] lld
+#=======================================================================================
+RUN [ `echo $version-$module | grep -v '^2021.*-linux-il2cpp'` ] && exit 0 || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    lld \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
