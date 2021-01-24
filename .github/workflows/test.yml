@@ -72,7 +72,7 @@ jobs:
         id: setup
         run: |
           # Get the Unity versions for test. (The latest patch versions for each minor version.)
-          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2018.3`
+          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2018.3 --all`
           echo "Versions: $VERSIONS"
           echo "::set-output name=versions::$VERSIONS"
 
