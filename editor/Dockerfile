@@ -53,6 +53,60 @@ RUN { \
 ###########################
 
 #=======================================================================================
+# [2018.x-android] Install 'Android SDK 26.1.1' and 'Android NDK 16.1.4479499'
+#=======================================================================================
+RUN [ `echo $version-$module | grep -v '^2018.*-android'` ] && exit 0 || : \
+  \
+  # Versions
+  && export ANDROID_BUILD_TOOLS_VERSION=28.0.3 \
+  && export ANDROID_NDK_VERSION=16.1.4479499 \
+  \
+  # Environment Variables
+  && export ANDROID_INSTALL_LOCATION=${UNITY_PATH}/Editor/Data/PlaybackEngines/AndroidPlayer \
+  && export ANDROID_SDK_ROOT=${ANDROID_INSTALL_LOCATION}/SDK \
+  && export ANDROID_HOME=${ANDROID_SDK_ROOT} \
+  && export ANDROID_NDK_HOME=${ANDROID_SDK_ROOT}/ndk/${ANDROID_NDK_VERSION} \
+  && export JAVA_HOME=${UNITY_PATH}/Editor/Data/PlaybackEngines/AndroidPlayer/Tools/OpenJDK/Linux \
+  && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
+  \
+  # Download Android SDK (commandline tools) 26.1.1
+  && apt-get update -qq \
+  && apt-get install -qq -y --no-install-recommends unzip \
+  && mkdir -p ${ANDROID_SDK_ROOT} \
+  && chown -R 777 ${ANDROID_INSTALL_LOCATION} \
+  && wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O /tmp/android-sdk.zip \
+  && unzip -q /tmp/android-sdk.zip -d ${ANDROID_SDK_ROOT} \
+  \
+  # Install platform-tools, NDK 16.1.4479499 and build-tools 28.0.3
+  && yes | sdkmanager \
+    "platform-tools" \
+    "ndk;${ANDROID_NDK_VERSION}" \
+    "build-tools;${ANDROID_BUILD_TOOLS_VERSION}" \
+    > /dev/null \
+  \
+  # Accept licenses
+  && yes | sdkmanager --licenses \
+  \
+  # Clean up
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  && rm -rf /tmp/* \
+  \
+  # Update alias 'unity-editor'
+  && { \
+    echo '#!/bin/bash'; \
+    echo ''; \
+    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
+    echo "export JAVA_HOME=${JAVA_HOME}"; \
+    echo "export PATH=${PATH}"; \
+    echo ''; \
+    echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
+  } > /usr/bin/unity-editor \
+  && chmod +x /usr/bin/unity-editor
+
+#=======================================================================================
 # [webgl, il2cpp] python build-essential clang
 #=======================================================================================
 RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \

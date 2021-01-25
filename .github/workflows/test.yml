@@ -89,9 +89,6 @@ jobs:
           # Exclude linux-il2cpp for Unity 2019.2 or earlier
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
 
-          # Exclude android for Unity 2019.2 or earlier
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"android\"} ]'`"
-
           EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
           echo "Excludes: $EXCLUDES"
           echo "::set-output name=excludes::$EXCLUDES"
