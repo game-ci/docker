@@ -7,12 +7,16 @@ on:
   push:
     paths:
       - "**/Dockerfile"
-      - .github/workflows/test.yml
-      - reference-project-test/*
-  pull_request_target:
+      - ".github/workflows/test.yml"
+      - "reference-project-test/**"
+  pull_request:
     paths:
       - "**/Dockerfile"
-      - reference-project-test/*
+      - ".github/workflows/test.yml"
+      - "reference-project-test/**"
+
+env:
+  UNITY_LICENSE: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>\n    <License id=\"Terms\">\n        <MachineBindings>\n            <Binding Key=\"1\" Value=\"9a3fce69af4f420ea8c4e6faeebd4b23\"/>\n            <Binding Key=\"2\" Value=\"9a3fce69af4f420ea8c4e6faeebd4b23\"/>\n        </MachineBindings>\n        <MachineID Value=\"6YxfhvJBMsxQhj6wRgKzWUZAMjI=\"/>\n        <SerialHash Value=\"5cf6718e34617652360e25684c6919782b1cd366\"/>\n        <Features>\n            <Feature Value=\"33\"/>\n            <Feature Value=\"1\"/>\n            <Feature Value=\"12\"/>\n            <Feature Value=\"2\"/>\n            <Feature Value=\"24\"/>\n            <Feature Value=\"3\"/>\n            <Feature Value=\"36\"/>\n            <Feature Value=\"17\"/>\n            <Feature Value=\"19\"/>\n            <Feature Value=\"62\"/>\n        </Features>\n        <DeveloperData Value=\"AQAAAEY0LUNSVFMtOFFONS04UzVQLUpGUFktTkRBRg==\"/>\n        <SerialMasked Value=\"F4-CRTS-8QN5-8S5P-JFPY-XXXX\"/>\n        <StartDate Value=\"2018-01-30T00:00:00\"/>\n        <UpdateDate Value=\"2021-02-08T08:48:20\"/>\n        <InitialActivationDate Value=\"2018-01-30T11:37:46\"/>\n        <LicenseVersion Value=\"6.x\"/>\n        <ClientProvidedVersion Value=\"2018.4.30f1\"/>\n        <AlwaysOnline Value=\"false\"/>\n        <Entitlements>\n            <Entitlement Ns=\"unity_editor\" Tag=\"UnityPersonal\" Type=\"EDITOR\" ValidTo=\"9999-12-31T00:00:00\"/>\n            <Entitlement Ns=\"unity_editor\" Tag=\"DarkSkin\" Type=\"EDITOR_FEATURE\" ValidTo=\"9999-12-31T00:00:00\"/>\n        </Entitlements>\n    </License>\n<Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/><SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\"/><Reference URI=\"#Terms\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"/><DigestValue>6KSm7Wxv2+jZVaZFrSBPqIVBCa0=</DigestValue></Reference></SignedInfo><SignatureValue>d/sPlaUOBr+VA9JlS4oe1iVquikd0ti6A6ftVWBNqSWQLgFsrvOsxWIT+xpP1XNmNgcAtPRLBtE3\ng6bisiItUp07hEz8tAhR+p52NxtU0CXBUvRFpJ78KwDi2q+GCsXeS+ue0ACeIL1PnLhbSxMTO8QK\nCrEtoj18Tpuw+Quq9yc2OWbsZrKlEi7bQDQtkS+okeUvD51jK0vZKdQ1DFhvSmVpVMvkP8Sb6VWR\nXydmx2nR9pl+jUQ6JZIvptZBWoTAaRrOWNZVqXD3BIjXmLldecBz+iJCTJypFamMSSNAI4l7As/x\n2RFQZljyymhShG1RDqjddhisTz3yCd/oefocig==</SignatureValue></Signature></root>"
 
 jobs:
   ###########################
@@ -26,21 +30,9 @@ jobs:
       excludes: ${{ steps.setup.outputs.excludes }}
     steps:
       ###########################
-      #         Checkout        #
-      ###########################
-      - name: Checkout (default)
-        uses: actions/checkout@v2
-        if: github.event.event_type != 'pull_request_target'
-      - name: Checkout (pull_request_target)
-        uses: actions/checkout@v2
-        if: github.event.event_type == 'pull_request_target'
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-
-      ###########################
       #          Setup          #
       ###########################
+      - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
         with:
@@ -166,6 +158,9 @@ jobs:
             echo "MODULE=${{ matrix.module }}" >> $GITHUB_ENV
           fi
 
+          # Change machine-id for test.
+          echo -e '\n\nRUN echo 9a3fce69af4f420ea8c4e6faeebd4b23 > /etc/machine-id' >> editor/Dockerfile
+
       ###########################
       #       Build editor      #
       ###########################
@@ -233,8 +228,6 @@ jobs:
           projectPath: reference-project-test
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
 
       ###########################
       #           Test          #
@@ -246,5 +239,3 @@ jobs:
           customImage: editor:dev
           projectPath: reference-project-test
           customParameters: -nographics -buildTarget ${{ matrix.platform }}
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
