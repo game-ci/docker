@@ -39,9 +39,11 @@ RUN { \
     echo '#!/bin/bash'; \
     echo ''; \
     \
-    [ `echo $version-$module | grep -e '^2019.3.*-linux-il2cpp'` ] \
-        && echo '# [2019.3.x-linux-il2cpp] https://forum.unity.com/threads/unity-2019-3-linux-il2cpp-player-can-only-be-built-with-linux-error.822210/#post-5633977' \
-        && echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"' \
+    [ `echo $version-$module | grep -e '^\(2019.3\|2019.4.0\).*-linux-il2cpp'` ] \
+        && echo '# [2019.3.x/2019.4.0-linux-il2cpp] https://forum.unity.com/threads/unity-2019-3-linux-il2cpp-player-can-only-be-built-with-linux-error.822210/#post-5633977' \
+        && [ `echo $version | grep -e '2019.3.[0-5]f'` ] \
+          && echo 'export IL2CPP_ADDITIONAL_ARGS="--tool-chain-path=/"' \
+          || echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"' \
         && echo ''; \
     \
     [ `echo $version-$module | grep -e '^\(2020.1\|2020.2.0\|2020.2.1\).*-webgl'` ] \
