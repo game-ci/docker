@@ -225,6 +225,40 @@ jobs:
           allowDirtyBuild: true
 
       ###########################
+      #       Build (GZip)      #
+      ###########################
+      - name: "⚙️ Setup (GZip)"
+        if: env.MODULE == 'webgl'
+        run: |
+          sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 1/' reference-project-test/ProjectSettings/ProjectSettings.asset
+      - name: Build project (GZip)
+        if: env.MODULE == 'webgl'
+        uses: game-ci/unity-builder@main
+        with:
+          unityVersion: ${{ matrix.version }}
+          customImage: editor:dev
+          projectPath: reference-project-test
+          targetPlatform: ${{ matrix.platform }}
+          allowDirtyBuild: true
+
+      ###########################
+      #       Build (Brotli)      #
+      ###########################
+      - name: "⚙️ Setup (Brotli)"
+        if: env.MODULE == 'webgl'
+        run: |
+          sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 0/' reference-project-test/ProjectSettings/ProjectSettings.asset
+      - name: Build project (Brotli)
+        if: env.MODULE == 'webgl'
+        uses: game-ci/unity-builder@main
+        with:
+          unityVersion: ${{ matrix.version }}
+          customImage: editor:dev
+          projectPath: reference-project-test
+          targetPlatform: ${{ matrix.platform }}
+          allowDirtyBuild: true
+
+      ###########################
       #           Test          #
       ###########################
       - name: Test project
