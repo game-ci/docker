@@ -112,12 +112,13 @@ RUN [ `echo $version-$module | grep -v '^2018.*-android'` ] && exit 0 || : \
   && chmod +x /usr/bin/unity-editor
 
 #=======================================================================================
-# [webgl, il2cpp] python build-essential clang
+# [webgl, il2cpp] python python-setuptools build-essential clang
 #=======================================================================================
 RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
   && apt-get -q update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     python \
+    python-setuptools \
     build-essential \
     clang \
   && apt-get clean \
@@ -134,3 +135,11 @@ RUN [ `echo $version | grep -v '^2019.1.'` ] && exit 0 || : \
     libssl1.0  \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+#=======================================================================================
+# [2018.x/2019.x/2020.1.x-webgl] support brotli compression for linux
+#=======================================================================================
+RUN [ `echo $version-$module | grep -v '^\(2018\|2019\|2020.1\).*-webgl'` ] && exit 0 || : \
+  && cp \
+    $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-linux-x86_64.egg \
+    $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-macosx-10.10-x86_64.egg
