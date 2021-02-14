@@ -44,6 +44,11 @@ RUN { \
         && echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"' \
         && echo ''; \
     \
+    [ `echo $version-$module | grep -e '^\(2020.1\|2020.2.0\|2020.2.1\).*-webgl'` ] \
+        && echo '# [2020.x/2020.2.0/2020.2.1-webgl] Support GZip compression: https://github.com/game-ci/docker/issues/75' \
+        && echo 'export GZIP=-f' \
+        && echo ''; \
+    \
     echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
   } > /usr/bin/unity-editor \
   && chmod +x /usr/bin/unity-editor
