@@ -112,6 +112,36 @@ jobs:
             unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
           ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
+      ###########################
+      #     Retry the above     #
+      ###########################
+      - name: Build and publish (retry)
+        uses: docker/build-push-action@v2
+        if: steps.build_editor_image.outcome=='failure'
+        id: build_editor_image_retry
+        with:
+          context: .
+          file: ./editor/Dockerfile
+          build-args: |
+            hubImage=unityci/hub:${{ github.event.client_payload.repoVersionFull }}
+            baseImage=unityci/base:${{ github.event.client_payload.repoVersionFull }}
+            version=${{ github.event.client_payload.editorVersion }}
+            changeSet=${{ github.event.client_payload.changeSet }}
+            module=${{ github.event.client_payload.targetPlatform }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          push: true
+          tags: |
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+          ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
+          ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
+      ###########################
+      #   Inspect publication   #
+      ###########################
       - name: Inspect
         run: |
           docker buildx imagetools inspect unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
