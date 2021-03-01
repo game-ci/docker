@@ -122,6 +122,39 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
   && chmod +x /usr/bin/unity-editor
 
 #=======================================================================================
+# [2019.x/2020.x/2021.x-android] Support usage of installed Android SDKs outside of editor
+#=======================================================================================
+RUN [ `echo $version-$module | grep -v '^20(?!18).*-android'` ] && exit 0 || : \
+  \
+  # Environment Variables
+  && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id == "android-sdk-platform-tools")).destination' $UNITY_PATH/modules.json) \
+  && export ANDROID_SDK_ROOT=${RAW_ANDROID_SDK_ROOT/'{UNITY_PATH}'/$UNITY_PATH} \
+  && export RAW_ANDROID_NDK_ROOT=$(jq -cr '(.[] | select(.id == "android-ndk")).destination' $UNITY_PATH/modules.json) \
+  && export ANDROID_NDK_ROOT=${RAW_ANDROID_NDK_ROOT/'{UNITY_PATH}'/$UNITY_PATH} \
+  && export RAW_JAVA_HOME=$(jq -cr '(.[] | select(.id == "android-open-jdk")).destination' $UNITY_PATH/modules.json) \
+  && export JAVA_HOME=${RAW_JAVA_HOME/'{UNITY_PATH}'/$UNITY_PATH} \
+  && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
+  && { \
+    echo '#!/bin/bash'; \
+    echo ''; \
+    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}"; \
+    echo "export JAVA_HOME=${JAVA_HOME}"; \
+    echo "export PATH=${PATH}"; \
+    echo ''; \
+    echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
+  } > /usr/bin/unity-editor \
+  && chmod +x /usr/bin/unity-editor \
+  && { \
+    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}"; \
+    echo "export JAVA_HOME=${JAVA_HOME}"; \
+    echo "export PATH=${PATH}"; \
+  } > ~/.bashrc
+
+#=======================================================================================
 # [webgl, il2cpp] python python-setuptools build-essential clang
 #=======================================================================================
 RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
