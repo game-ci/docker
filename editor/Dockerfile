@@ -122,7 +122,7 @@ RUN [ `echo $version-$module | grep -v '^2018.*-android'` ] && exit 0 || : \
   && chmod +x /usr/bin/unity-editor
 
 #=======================================================================================
-# [2019.x/2020.x/2021.x-android] Set Environment Variables for Android compatibility
+# [2019.x/2020.x/2021.x-android] Support usage of installed Android SDKs outside of editor
 #=======================================================================================
 RUN [ `echo $version-$module | grep -v '^20(?!18).*-android'` ] && exit 0 || : \
   \
