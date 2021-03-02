@@ -161,7 +161,7 @@ RUN [ `echo $module | grep -v 'webgl'` ] && exit 0 || : \
   && apt-get update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     ffmpeg \
-  && apt-get clean
+  && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
