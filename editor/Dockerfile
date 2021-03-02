@@ -70,7 +70,7 @@ RUN echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' >
 #=======================================================================================
 # [2018.x-android] Install 'Android SDK 26.1.1' and 'Android NDK 16.1.4479499'
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exit 0 || : \
+RUN [ `echo $version-$module | grep -v '^2018.*-android'` ] && exit 0 || : \
   \
   # Versions
   && export ANDROID_BUILD_TOOLS_VERSION=28.0.3 \
@@ -100,7 +100,7 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
     > /dev/null \
   \
   # Accept licenses
-  && yes | sdkmanager --licenses \
+  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
   \
   # Clean up
   && apt-get clean \
@@ -134,6 +134,11 @@ RUN [ `echo $version-$module | grep -v '^20(?!18).*-android'` ] && exit 0 || : \
   && export RAW_JAVA_HOME=$(jq -cr '(.[] | select(.id == "android-open-jdk")).destination' $UNITY_PATH/modules.json) \
   && export JAVA_HOME=${RAW_JAVA_HOME/'{UNITY_PATH}'/$UNITY_PATH} \
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
+  \
+  # Accept licenses
+  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
+  \
+  # Update alias 'unity-editor'
   && { \
     echo '#!/bin/bash'; \
     echo ''; \
