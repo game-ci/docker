@@ -155,6 +155,16 @@ RUN [ `echo $version-$module | grep -v '^20(?!18).*-android'` ] && exit 0 || : \
   } > ~/.bashrc
 
 #=======================================================================================
+# [webgl] Support audio using ffmpeg (~99MB)
+#=======================================================================================
+RUN [ `echo $module | grep -v 'webgl'` ] && exit 0 || : \
+  && apt-get update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    ffmpeg \
+  && apt-get clean
+  && rm -rf /var/lib/apt/lists/*
+
+#=======================================================================================
 # [webgl, il2cpp] python python-setuptools build-essential clang
 #=======================================================================================
 RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
