@@ -74,16 +74,6 @@ jobs:
             echo "Image already exists. Exiting."
             exit 1
           fi
-      - name: Cache Docker layers
-        uses: actions/cache@v2.1.4
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.sha }}
-          restore-keys: |
-            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-
-            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-${{ github.event.client_payload.editorVersion }}-
-            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-editor-
-            ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-
       ###########################
       #    Free disk space   #
       ###########################
