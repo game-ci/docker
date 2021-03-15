@@ -100,7 +100,7 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
     > /dev/null \
   \
   # Accept licenses
-  && yes | sdkmanager --licenses \
+  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
   \
   # Clean up
   && apt-get clean \
@@ -134,6 +134,11 @@ RUN [ `echo $version-$module | grep -v '^20(?!18).*-android'` ] && exit 0 || : \
   && export RAW_JAVA_HOME=$(jq -cr '(.[] | select(.id == "android-open-jdk")).destination' $UNITY_PATH/modules.json) \
   && export JAVA_HOME=${RAW_JAVA_HOME/'{UNITY_PATH}'/$UNITY_PATH} \
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
+  \
+  # Accept licenses
+  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
+  \
+  # Update alias 'unity-editor'
   && { \
     echo '#!/bin/bash'; \
     echo ''; \
