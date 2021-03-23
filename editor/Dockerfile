@@ -120,6 +120,7 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
     echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
   } > /usr/bin/unity-editor \
   && chmod +x /usr/bin/unity-editor \
+  # Update '~/.bashrc' to enable using variables when logging in
   && { \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
     echo "export ANDROID_HOME=${ANDROID_HOME}"; \
@@ -139,6 +140,7 @@ RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : 
   \
   # Environment Variables
   && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id == "android-sdk-platform-tools")).destination' $UNITY_PATH/modules.json) \
+  # We need to replace some characters common to paths that will break the sed expression when expanded
   && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
   && export ANDROID_SDK_ROOT=$(echo $RAW_ANDROID_SDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
   && export ANDROID_HOME=${ANDROID_SDK_ROOT} \
@@ -149,6 +151,7 @@ RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : 
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
   \
   # Clean up
+  && apt-get remove -y jq \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   \
@@ -168,6 +171,7 @@ RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : 
     echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
   } > /usr/bin/unity-editor \
   && chmod +x /usr/bin/unity-editor \
+  # Update '~/.bashrc' to enable using variables when logging in
   && { \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
     echo "export ANDROID_HOME=${ANDROID_HOME}"; \
