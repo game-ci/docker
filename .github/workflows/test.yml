@@ -279,4 +279,4 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: editor:dev
-          run: bash -l -c "java -version && sdkmanager --version && cat $ANDROID_NDK_HOME/source.properties"
+          run: bash -l -c 'java -version && sdkmanager --version && cat $ANDROID_NDK_HOME/source.properties'
