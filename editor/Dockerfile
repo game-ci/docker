@@ -119,21 +119,43 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
     echo ''; \
     echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
   } > /usr/bin/unity-editor \
-  && chmod +x /usr/bin/unity-editor
+  && chmod +x /usr/bin/unity-editor \
+  # Update '~/.bashrc' to enable using variables when logging in
+  && { \
+    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
+    echo "export JAVA_HOME=${JAVA_HOME}"; \
+    echo "export PATH=${PATH}"; \
+  } > ~/.bashrc
 
 #=======================================================================================
 # [2019.x/2020.x/2021.x-android] Support usage of installed Android SDKs outside of editor
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^20(?!18).*-android'` ] && exit 0 || : \
+RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : \
+  \
+  # Install jq
+  && apt-get update -qq \
+  && apt-get install -qq -y --no-install-recommends jq \
   \
   # Environment Variables
   && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id == "android-sdk-platform-tools")).destination' $UNITY_PATH/modules.json) \
-  && export ANDROID_SDK_ROOT=${RAW_ANDROID_SDK_ROOT/'{UNITY_PATH}'/$UNITY_PATH} \
+  # We need to replace some characters common to paths that will break the sed expression when expanded
+  && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
+  && export ANDROID_SDK_ROOT=$(echo $RAW_ANDROID_SDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  && export ANDROID_HOME=${ANDROID_SDK_ROOT} \
   && export RAW_ANDROID_NDK_ROOT=$(jq -cr '(.[] | select(.id == "android-ndk")).destination' $UNITY_PATH/modules.json) \
-  && export ANDROID_NDK_ROOT=${RAW_ANDROID_NDK_ROOT/'{UNITY_PATH}'/$UNITY_PATH} \
+  && export ANDROID_NDK_HOME=$(echo $RAW_ANDROID_NDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
   && export RAW_JAVA_HOME=$(jq -cr '(.[] | select(.id == "android-open-jdk")).destination' $UNITY_PATH/modules.json) \
-  && export JAVA_HOME=${RAW_JAVA_HOME/'{UNITY_PATH}'/$UNITY_PATH} \
+  && export ESCAPED_JAVA_HOME=$(echo $RAW_JAVA_HOME | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  # Unity 2019.x doesn't have the jdk in the modules, so put in a fallback. sdkmanager will fail if invaild
+  && export JAVA_HOME=${ESCAPED_JAVA_HOME:-$UNITY_PATH/Editor/Data/PlaybackEngines/AndroidPlayer/Tools/OpenJDK/Linux} \
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
+  \
+  # Clean up
+  && apt-get remove -y jq \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
   \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
@@ -143,18 +165,19 @@ RUN [ `echo $version-$module | grep -v '^20(?!18).*-android'` ] && exit 0 || : \
     echo '#!/bin/bash'; \
     echo ''; \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_HOME=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
     echo "export JAVA_HOME=${JAVA_HOME}"; \
     echo "export PATH=${PATH}"; \
     echo ''; \
     echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
   } > /usr/bin/unity-editor \
   && chmod +x /usr/bin/unity-editor \
+  # Update '~/.bashrc' to enable using variables when logging in
   && { \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_HOME=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
     echo "export JAVA_HOME=${JAVA_HOME}"; \
     echo "export PATH=${PATH}"; \
   } > ~/.bashrc
