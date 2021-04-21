@@ -224,3 +224,13 @@ RUN [ `echo $version-$module | grep -v '^\(2018\|2019\|2020.1\).*-webgl'` ] && e
   && cp \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-linux-x86_64.egg \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-macosx-10.10-x86_64.egg
+
+#=======================================================================================
+# [2021.x-linux-il2cpp] lld
+#=======================================================================================
+RUN [ `echo $version-$module | grep -v '^2021.*-linux-il2cpp'` ] && exit 0 || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    lld \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
