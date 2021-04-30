@@ -17,7 +17,7 @@ RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3
  && mv $UNITY_PATH/AppRun $UNITY_PATH/UnityHub
 
 # Alias to "unity-hub" with default params
-RUN echo '#!/bin/bash\nAPPIMAGE_SILENT_INSTALL=true APPDIR='$UNITY_PATH' xvfb-run -ae /dev/stdout '$UNITY_PATH'/UnityHub --no-sandbox --headless "$@"' > /usr/bin/unity-hub \
+RUN echo '#!/bin/bash\nAPPIMAGE_SILENT_INSTALL=true APPDIR=$UNITY_PATH xvfb-run -ae /dev/stdout $UNITY_PATH/UnityHub --no-sandbox --headless "$@"' > /usr/bin/unity-hub \
  && chmod +x /usr/bin/unity-hub
 
 # Configure
