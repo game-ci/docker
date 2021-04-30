@@ -29,7 +29,7 @@ FROM $baseImage
 # Always put "Editor" and "modules.json" directly in $UNITY_PATH
 ARG version
 ARG module
-COPY --from=builder /opt/unity/editors/$version/ "$UNITY_PATH/"
+COPY --from=builder $UNITY_PATH/editors/$version/ "$UNITY_PATH/"
 
 # Add a file containing the version for this build
 RUN echo $version > "$UNITY_PATH/version"
@@ -85,8 +85,8 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
   \
   # Download Android SDK (commandline tools) 26.1.1
-  && apt-get update -qq \
-  && apt-get install -qq -y --no-install-recommends unzip \
+  && sudo apt-get update -qq \
+  && sudo apt-get install -qq -y --no-install-recommends unzip \
   && mkdir -p ${ANDROID_SDK_ROOT} \
   && chown -R 777 ${ANDROID_INSTALL_LOCATION} \
   && wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O /tmp/android-sdk.zip \
@@ -103,8 +103,8 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
   \
   # Clean up
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
+  && sudo apt-get clean \
+  && sudo rm -rf /var/lib/apt/lists/* \
   && rm -rf /tmp/* \
   \
   # Update alias 'unity-editor'
@@ -135,8 +135,8 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
 RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : \
   \
   # Install jq
-  && apt-get update -qq \
-  && apt-get install -qq -y --no-install-recommends jq \
+  && sudo apt-get update -qq \
+  && sudo apt-get install -qq -y --no-install-recommends jq \
   \
   # Environment Variables
   && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id == "android-sdk-platform-tools")).destination' $UNITY_PATH/modules.json) \
@@ -153,9 +153,9 @@ RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : 
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
   \
   # Clean up
-  && apt-get remove -y jq \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
+  && sudo apt-get remove -y jq \
+  && sudo apt-get clean \
+  && sudo rm -rf /var/lib/apt/lists/* \
   \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
@@ -186,36 +186,36 @@ RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : 
 # [webgl] Support audio using ffmpeg (~99MB)
 #=======================================================================================
 RUN [ `echo $module | grep -v 'webgl'` ] && exit 0 || : \
-  && apt-get update \
-  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+  && sudo apt-get update \
+  && sudo apt-get -q install -y --no-install-recommends --allow-downgrades \
     ffmpeg \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && sudo apt-get clean \
+  && sudo rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
 # [webgl, il2cpp] python python-setuptools build-essential clang
 #=======================================================================================
 RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
-  && apt-get -q update \
-  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+  && sudo apt-get -q update \
+  && sudo apt-get -q install -y --no-install-recommends --allow-downgrades \
     python \
     python-setuptools \
     build-essential \
     clang \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && sudo apt-get clean \
+  && sudo rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
 # [2019.x] libnotify4 libunwind-dev libssl1.0
 #=======================================================================================
 RUN [ `echo $version | grep -v '^2019.'` ] && exit 0 || : \
-  && apt-get -q update \
-  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+  && sudo apt-get -q update \
+  && sudo apt-get -q install -y --no-install-recommends --allow-downgrades \
     libnotify4 \
     libunwind-dev \
     libssl1.0  \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && sudo apt-get clean \
+  && sudo rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
 # [2018.x/2019.x/2020.1.x-webgl] support brotli compression for linux
@@ -229,8 +229,8 @@ RUN [ `echo $version-$module | grep -v '^\(2018\|2019\|2020.1\).*-webgl'` ] && e
 # [2021.x-linux-il2cpp] lld
 #=======================================================================================
 RUN [ `echo $version-$module | grep -v '^2021.*-linux-il2cpp'` ] && exit 0 || : \
-  && apt-get -q update \
-  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+  && sudo apt-get -q update \
+  && sudo apt-get -q install -y --no-install-recommends --allow-downgrades \
     lld \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && sudo apt-get clean \
+  && sudo rm -rf /var/lib/apt/lists/*
