@@ -90,7 +90,7 @@ jobs:
       #       Editor image      #
       ###########################
       - name: Build and publish
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v2.4.0
         id: build_editor_image
         continue-on-error: true
         with:
@@ -118,7 +118,7 @@ jobs:
       #     Retry the above     #
       ###########################
       - name: Build and publish (retry)
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v2.4.0
         if: steps.build_editor_image.outcome=='failure'
         id: build_editor_image_retry
         with:

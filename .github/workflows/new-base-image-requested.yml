@@ -71,7 +71,7 @@ jobs:
       #        Base image       #
       ###########################
       - name: Build and publish
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v2.4.0
         id: build_base_image
         with:
           context: .
