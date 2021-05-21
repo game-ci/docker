@@ -1,5 +1,13 @@
 FROM ubuntu:18.04
 
+# Fixes a Gradle crash while building for Android on Unity 2019 when there are accented characters in environment variables
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+
+# Set frontend to Noninteractive in Debian configuration.
+# https://github.com/phusion/baseimage-docker/issues/58#issuecomment-47995343
+RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
 # Global dependencies
 RUN apt-get -q update \
  && apt-get -q install -y --no-install-recommends apt-utils \
@@ -12,6 +20,7 @@ RUN apt-get -q update \
  libglu1 \
  libgtk-3-0 \
  libncurses5 \
+ libnotify4 \
  libnss3 \
  libxtst6 \
  libxss1 \
@@ -40,7 +49,3 @@ RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && mkdir -p /var/l
 
 # Used by Unity editor in "modules.json" and must not end with a slash.
 ENV UNITY_PATH="/opt/unity"
-
-# Fixes a Gradle crash while building for Android on Unity 2019 when there are accented characters in environment variables
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
