@@ -14,11 +14,13 @@ RUN unity-hub install --version "$version" --changeset "$changeSet" | tee /var/l
 
 # Install modules for that editor
 ARG module="non-existent-module"
-RUN if [ "$module" = "base" ] ; then \
-      echo "running default modules for this baseOs" ; exit 0 ; \
-    else \
-      unity-hub install-modules --version "$version" --module "$module" --childModules | tee /var/log/install-module-${module}.log && grep 'Missing module' /var/log/install-module-${module}.log | exit $(wc -l); \
-    fi
+RUN for mod in $module; do \
+      if [ "$mod" = "base" ] ; then \
+        echo "running default modules for this baseOs"; \
+      else \
+        unity-hub install-modules --version "$version" --module "$mod" --childModules | tee /var/log/install-module-${mod}.log && grep 'Missing module' /var/log/install-module-${mod}.log | exit $(wc -l); \
+      fi \
+    done
 
 ###########################
 #          Editor         #
