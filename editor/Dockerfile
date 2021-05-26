@@ -167,6 +167,9 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
   \
+  # Let other users to run sdkmanager as well
+  && chmod 755 "${ANDROID_HOME}/tools/bin/sdkmanager" \
+  \
   # Update alias 'unity-editor'
   && { \
     echo '#!/bin/bash'; \
