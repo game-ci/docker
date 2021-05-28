@@ -121,13 +121,7 @@ RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
     echo "export PATH=${PATH}"; \
   } > /usr/bin/unity-editor.d/android-2018.3-4.sh \
   # Update '~/.bashrc' to enable using variables when logging in
-  && { \
-    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
-    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
-    echo "export JAVA_HOME=${JAVA_HOME}"; \
-    echo "export PATH=${PATH}"; \
-  } > ~/.bashrc
+  && echo ". /usr/bin/unity-editor.d/android-2018.3-4.sh" >> ~/.bashrc
 
 #=======================================================================================
 # [2019.x/2020.x/2021.x-android] Support usage of installed Android SDKs outside of editor
@@ -173,13 +167,7 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
     echo "export PATH=${PATH}"; \
   } > /usr/bin/unity-editor.d/android-2019+.sh \
   # Update '~/.bashrc' to enable using variables when logging in
-  && { \
-    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
-    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
-    echo "export JAVA_HOME=${JAVA_HOME}"; \
-    echo "export PATH=${PATH}"; \
-  } > ~/.bashrc
+  && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
 
 #=======================================================================================
 # [webgl] Support audio using ffmpeg (~99MB)
