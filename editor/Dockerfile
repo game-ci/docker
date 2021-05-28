@@ -41,31 +41,30 @@ RUN echo $version > "$UNITY_PATH/version"
 #  Alias to unity-editor  #
 ###########################
 
-RUN echo '#!/bin/bash' > /usr/bin/unity-editor \
-  && chmod +x /usr/bin/unity-editor
+ADD editor/unity-editor /usr/bin/unity-editor
+RUN chmod 755 /usr/bin/unity-editor \
+  && mkdir /usr/bin/unity-editor.d
 
 #=======================================================================================
 # [2019.3.[0-5]-linux-il2cpp] https://github.com/game-ci/docker/issues/76
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -v '^2019.3.[0-5]f.*linux-il2cpp' \
   && exit 0 \
-  || echo 'export IL2CPP_ADDITIONAL_ARGS=--tool-chain-path=/' >> /usr/bin/unity-editor
+  || echo 'export IL2CPP_ADDITIONAL_ARGS=--tool-chain-path=/' >> /usr/bin/unity-editor.d/linux-il2cpp-2019.3.5.and.older.sh
 
 #=======================================================================================
 # [2019.3.6+/2019.4.0-linux-il2cpp] https://forum.unity.com/threads/unity-2019-3-linux-il2cpp-player-can-only-be-built-with-linux-error.822210/#post-5633977
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -v '^\(2019.3.[6-9]f\|2019.3.1[0-9]f\|2019.4.0\).*linux-il2cpp' \
   && exit 0 \
-  || echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"' >> /usr/bin/unity-editor
+  || echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"' >> /usr/bin/unity-editor.d/linux-il2cpp-2019.3-4.sh
 
 #=======================================================================================
 # [2020.x/2020.2.0/2020.2.1-webgl] Support GZip compression: https://github.com/game-ci/docker/issues/75
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -v '^\(2020.1\|2020.2.0f\|2020.2.1f\).*-webgl' \
   && exit 0 \
-  || echo 'export GZIP=-f' >> /usr/bin/unity-editor
-
-RUN echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' >> /usr/bin/unity-editor
+  || echo 'export GZIP=-f' >> /usr/bin/unity-editor.d/webgl-2020.1-2.sh
 
 
 ###########################
@@ -115,17 +114,12 @@ RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
   \
   # Update alias 'unity-editor'
   && { \
-    echo '#!/bin/bash'; \
-    echo ''; \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
     echo "export ANDROID_HOME=${ANDROID_HOME}"; \
     echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
     echo "export JAVA_HOME=${JAVA_HOME}"; \
     echo "export PATH=${PATH}"; \
-    echo ''; \
-    echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
-  } > /usr/bin/unity-editor \
-  && chmod +x /usr/bin/unity-editor \
+  } > /usr/bin/unity-editor.d/android-2018.3-4.sh \
   # Update '~/.bashrc' to enable using variables when logging in
   && { \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
@@ -172,17 +166,12 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   \
   # Update alias 'unity-editor'
   && { \
-    echo '#!/bin/bash'; \
-    echo ''; \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
     echo "export ANDROID_HOME=${ANDROID_HOME}"; \
     echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
     echo "export JAVA_HOME=${JAVA_HOME}"; \
     echo "export PATH=${PATH}"; \
-    echo ''; \
-    echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
-  } > /usr/bin/unity-editor \
-  && chmod +x /usr/bin/unity-editor \
+  } > /usr/bin/unity-editor.d/android-2019+.sh \
   # Update '~/.bashrc' to enable using variables when logging in
   && { \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ -d /usr/bin/unity-editor.d ] ; then
+    for i in /usr/bin/unity-editor.d/*.sh; do
+      if [ -r $i ]; then
+        . $i
+      fi
+    done
+fi
+
+xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"
