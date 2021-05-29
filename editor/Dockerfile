@@ -88,7 +88,7 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
   && apt-get update -qq \
   && apt-get install -qq -y --no-install-recommends unzip \
   && mkdir -p ${ANDROID_SDK_ROOT} \
-  && chown -R 777 ${ANDROID_INSTALL_LOCATION} \
+  && chmod -R 777 ${ANDROID_INSTALL_LOCATION} \
   && wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O /tmp/android-sdk.zip \
   && unzip -q /tmp/android-sdk.zip -d ${ANDROID_SDK_ROOT} \
   \
