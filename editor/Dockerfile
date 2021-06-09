@@ -43,7 +43,8 @@ RUN echo $version > "$UNITY_PATH/version"
 
 ADD editor/unity-editor /usr/bin/unity-editor
 RUN chmod 755 /usr/bin/unity-editor \
-  && mkdir /usr/bin/unity-editor.d
+  && mkdir /usr/bin/unity-editor.d \
+  && echo > ~/.bashrc # start from empty to keep "Validate Android Utils" CI step happy.
 
 #=======================================================================================
 # [2019.3.[0-5]-linux-il2cpp] https://github.com/game-ci/docker/issues/76
