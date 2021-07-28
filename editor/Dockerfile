@@ -41,8 +41,18 @@ RUN echo $version > "$UNITY_PATH/version"
 #  Alias to unity-editor  #
 ###########################
 
-ADD editor/unity-editor /usr/bin/unity-editor
-RUN chmod 755 /usr/bin/unity-editor \
+RUN /bin/echo -e '#!/bin/bash\n\
+\n\
+if [ -d /usr/bin/unity-editor.d ] ; then\n\
+  for i in /usr/bin/unity-editor.d/*.sh; do\n\
+    if [ -r $i ]; then\n\
+      . $i\n\
+    fi\n\
+  done\n\
+fi\n\
+\n\
+xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/unity-editor \
+  && chmod 755 /usr/bin/unity-editor \
   && mkdir /usr/bin/unity-editor.d \
   && echo > ~/.bashrc # start from empty to keep "Validate Android Utils" CI step happy.
 
