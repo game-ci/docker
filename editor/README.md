@@ -24,6 +24,8 @@ Run the editor
 unity-editor help
 ```
 
+⚠ Note that the `help`-command currently does not work, but other commands do.
+
 ## License
 
 [MIT license](https://github.com/game-ci/docker/blob/main/LICENSE)
