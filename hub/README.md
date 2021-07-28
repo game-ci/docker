@@ -20,6 +20,8 @@ Run the help command
 unity-hub help
 ```
 
+⚠ Note that the `help`-command currently does not work, but other commands do.
+
 #### install editors
 
 Get a link from the [archive](https://unity3d.com/get-unity/download/archive).
