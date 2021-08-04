@@ -10,15 +10,17 @@ FROM $hubImage AS builder
 # Install editor
 ARG version
 ARG changeSet
-RUN unity-hub install --version "$version" --changeset "$changeSet" | grep 'Error' | exit $(wc -l)
+RUN unity-hub install --version "$version" --changeset "$changeSet" | tee /var/log/install-editor.log && grep 'Error' /var/log/install-editor.log | exit $(wc -l)
 
 # Install modules for that editor
 ARG module="non-existent-module"
-RUN if [ "$module" = "base" ] ; then \
-      echo "running default modules for this baseOs" ; exit 0 ; \
-    else \
-      unity-hub install-modules --version "$version" --module "$module" --childModules | grep 'Missing module' | exit $(wc -l) ; \
-    fi
+RUN for mod in $module; do \
+      if [ "$mod" = "base" ] ; then \
+        echo "running default modules for this baseOs"; \
+      else \
+        unity-hub install-modules --version "$version" --module "$mod" --childModules | tee /var/log/install-module-${mod}.log && grep 'Missing module' /var/log/install-module-${mod}.log | exit $(wc -l); \
+      fi \
+    done
 
 ###########################
 #          Editor         #
@@ -39,28 +41,41 @@ RUN echo $version > "$UNITY_PATH/version"
 #  Alias to unity-editor  #
 ###########################
 
-RUN echo '#!/bin/bash' > /usr/bin/unity-editor \
-  && chmod +x /usr/bin/unity-editor
+RUN /bin/echo -e '#!/bin/bash\n\
+\n\
+if [ -d /usr/bin/unity-editor.d ] ; then\n\
+  for i in /usr/bin/unity-editor.d/*.sh; do\n\
+    if [ -r $i ]; then\n\
+      . $i\n\
+    fi\n\
+  done\n\
+fi\n\
+\n\
+xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/unity-editor \
+  && chmod 755 /usr/bin/unity-editor \
+  && mkdir /usr/bin/unity-editor.d \
+  && echo > ~/.bashrc # start from empty to keep "Validate Android Utils" CI step happy.
 
 #=======================================================================================
 # [2019.3.[0-5]-linux-il2cpp] https://github.com/game-ci/docker/issues/76
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^2019.3.[0-5]f.*-linux-il2cpp'` ] && exit 0 || : \
-  && echo 'export IL2CPP_ADDITIONAL_ARGS=--tool-chain-path=/' >> /usr/bin/unity-editor
+RUN echo "$version-$module" | grep -q -v '^2019.3.[0-5]f.*linux-il2cpp' \
+  && exit 0 \
+  || echo 'export IL2CPP_ADDITIONAL_ARGS=--tool-chain-path=/' >> /usr/bin/unity-editor.d/linux-il2cpp-2019.3.5.and.older.sh
 
 #=======================================================================================
 # [2019.3.6+/2019.4.0-linux-il2cpp] https://forum.unity.com/threads/unity-2019-3-linux-il2cpp-player-can-only-be-built-with-linux-error.822210/#post-5633977
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^\(2019.3.[6-9]f\|2019.3.1[0-9]f\|2019.4.0\).*-linux-il2cpp'` ] && exit 0 || : \
-  && echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"' >> /usr/bin/unity-editor
+RUN echo "$version-$module" | grep -q -v '^\(2019.3.[6-9]f\|2019.3.1[0-9]f\|2019.4.0\).*linux-il2cpp' \
+  && exit 0 \
+  || echo 'export IL2CPP_ADDITIONAL_ARGS="--sysroot-path=/ --tool-chain-path=/"' >> /usr/bin/unity-editor.d/linux-il2cpp-2019.3-4.sh
 
 #=======================================================================================
 # [2020.x/2020.2.0/2020.2.1-webgl] Support GZip compression: https://github.com/game-ci/docker/issues/75
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^\(2020.1\|2020.2.0f\|2020.2.1f\).*-webgl'` ] && exit 0 || : \
-  && echo 'export GZIP=-f' >> /usr/bin/unity-editor
-
-RUN echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' >> /usr/bin/unity-editor
+RUN echo "$version-$module" | grep -q -v '^\(2020.1\|2020.2.0f\|2020.2.1f\).*-webgl' \
+  && exit 0 \
+  || echo 'export GZIP=-f' >> /usr/bin/unity-editor.d/webgl-2020.1-2.sh
 
 
 ###########################
@@ -70,8 +85,9 @@ RUN echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' >
 #=======================================================================================
 # [2018.x-android] Install 'Android SDK 26.1.1' and 'Android NDK 16.1.4479499'
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exit 0 || : \
-  \
+RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
+  && exit 0 \
+  || : \
   # Versions
   && export ANDROID_BUILD_TOOLS_VERSION=28.0.3 \
   && export ANDROID_NDK_VERSION=16.1.4479499 \
@@ -109,31 +125,21 @@ RUN [ `echo $version-$module | grep -v '^\(2018.3\|2018.4\).*-android'` ] && exi
   \
   # Update alias 'unity-editor'
   && { \
-    echo '#!/bin/bash'; \
-    echo ''; \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
     echo "export ANDROID_HOME=${ANDROID_HOME}"; \
     echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
     echo "export JAVA_HOME=${JAVA_HOME}"; \
     echo "export PATH=${PATH}"; \
-    echo ''; \
-    echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
-  } > /usr/bin/unity-editor \
-  && chmod +x /usr/bin/unity-editor \
+  } > /usr/bin/unity-editor.d/android-2018.3-4.sh \
   # Update '~/.bashrc' to enable using variables when logging in
-  && { \
-    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
-    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
-    echo "export JAVA_HOME=${JAVA_HOME}"; \
-    echo "export PATH=${PATH}"; \
-  } > ~/.bashrc
+  && echo ". /usr/bin/unity-editor.d/android-2018.3-4.sh" >> ~/.bashrc
 
 #=======================================================================================
 # [2019.x/2020.x/2021.x-android] Support usage of installed Android SDKs outside of editor
 #=======================================================================================
-RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : \
-  \
+RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
+  && exit 0 \
+  || : \
   # Install jq
   && apt-get update -qq \
   && apt-get install -qq -y --no-install-recommends jq \
@@ -160,32 +166,26 @@ RUN [ `echo $version-$module | grep -vP '^20(?!18).*-android'` ] && exit 0 || : 
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
   \
+  # Let other users to run sdkmanager as well
+  && chmod 755 "${ANDROID_HOME}/tools/bin/sdkmanager" \
+  \
   # Update alias 'unity-editor'
   && { \
-    echo '#!/bin/bash'; \
-    echo ''; \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
     echo "export ANDROID_HOME=${ANDROID_HOME}"; \
     echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
     echo "export JAVA_HOME=${JAVA_HOME}"; \
     echo "export PATH=${PATH}"; \
-    echo ''; \
-    echo 'xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"'; \
-  } > /usr/bin/unity-editor \
-  && chmod +x /usr/bin/unity-editor \
+  } > /usr/bin/unity-editor.d/android-2019+.sh \
   # Update '~/.bashrc' to enable using variables when logging in
-  && { \
-    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
-    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
-    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
-    echo "export JAVA_HOME=${JAVA_HOME}"; \
-    echo "export PATH=${PATH}"; \
-  } > ~/.bashrc
+  && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
 
 #=======================================================================================
 # [webgl] Support audio using ffmpeg (~99MB)
 #=======================================================================================
-RUN [ `echo $module | grep -v 'webgl'` ] && exit 0 || : \
+RUN echo "$module" | grep -q -v 'webgl' \
+  && exit 0 \
+  || : \
   && apt-get update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     ffmpeg \
@@ -195,7 +195,9 @@ RUN [ `echo $module | grep -v 'webgl'` ] && exit 0 || : \
 #=======================================================================================
 # [webgl, il2cpp] python python-setuptools build-essential clang
 #=======================================================================================
-RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
+RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
+  && exit 0 \
+  || : \
   && apt-get -q update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     python \
@@ -208,7 +210,9 @@ RUN [ `echo $module | grep -v '\(webgl\|linux-il2cpp\)'` ] && exit 0 || : \
 #=======================================================================================
 # [2019.x] libnotify4 libunwind-dev libssl1.0
 #=======================================================================================
-RUN [ `echo $version | grep -v '^2019.'` ] && exit 0 || : \
+RUN echo "$version" | grep -q -v '^2019.' \
+  && exit 0 \
+  || : \
   && apt-get -q update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     libnotify4 \
@@ -220,7 +224,9 @@ RUN [ `echo $version | grep -v '^2019.'` ] && exit 0 || : \
 #=======================================================================================
 # [2018.x/2019.x/2020.1.x-webgl] support brotli compression for linux
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^\(2018\|2019\|2020.1\).*-webgl'` ] && exit 0 || : \
+RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020.1\).*webgl' \
+  && exit 0 \
+  || : \
   && cp \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-linux-x86_64.egg \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-macosx-10.10-x86_64.egg
@@ -228,7 +234,9 @@ RUN [ `echo $version-$module | grep -v '^\(2018\|2019\|2020.1\).*-webgl'` ] && e
 #=======================================================================================
 # [2021.x-linux-il2cpp] lld
 #=======================================================================================
-RUN [ `echo $version-$module | grep -v '^2021.*-linux-il2cpp'` ] && exit 0 || : \
+RUN echo "$version-$module" | grep -q -v '^2021.*linux-il2cpp' \
+  && exit 0 \
+  || : \
   && apt-get -q update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     lld \
