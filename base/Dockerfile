@@ -1,4 +1,5 @@
-FROM ubuntu:18.04
+ARG ubuntuImage="ubuntu:18.04"
+FROM $ubuntuImage
 
 # Fixes a Gradle crash while building for Android on Unity 2019 when there are accented characters in environment variables
 ENV LANG C.UTF-8
