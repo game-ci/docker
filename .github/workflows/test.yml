@@ -154,9 +154,9 @@ jobs:
             echo "MODULE=${{ matrix.module }}" >> $GITHUB_ENV
           fi
 
-      ####################
-      #   Build editor   #
-      ####################
+      ###########################
+      #   Build Ubuntu editor   #
+      ###########################
       - name: Build
         # if: steps.build-1.outcome == 'failure'
         uses: docker/build-push-action@v2
@@ -173,9 +173,9 @@ jobs:
             module=${{ env.MODULE }}
           tags: editor:ubuntu-dev
 
-      ############################
-      #   Build editor (retry)   #
-      ############################
+      ###################################
+      #   Build Ubuntu editor (retry)   #
+      ###################################
       - name: Sleep for retry
         if: steps.build-1.outcome == 'failure'
         run: sleep 120
@@ -221,9 +221,9 @@ jobs:
           allowDirtyBuild: true
 
       ###########################
-      #       Build (GZip)      #
+      #   Build (Ubuntu GZip)   #
       ###########################
-      - name: "⚙️ Setup (GZip)"
+      - name: "⚙️ Setup (Ubuntu GZip)"
         if: env.MODULE == 'webgl'
         run: |
           # Set WebGL compression format to gzip
@@ -238,10 +238,10 @@ jobs:
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
 
-      ######################
-      #   Build (Brotli)   #
-      ######################
-      - name: "⚙️ Setup (Brotli)"
+      #############################
+      #   Build (Ubuntu Brotli)   #
+      #############################
+      - name: "⚙️ Setup (Ubuntu Brotli)"
         if: env.MODULE == 'webgl'
         run: |
           # Set WebGL compression format to brotli

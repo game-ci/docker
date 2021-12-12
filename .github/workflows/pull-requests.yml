@@ -121,9 +121,9 @@ jobs:
           # - monodevelop # MonoDevelop / Unity Debugger
 
     steps:
-      ###########################
-      #          Setup          #
-      ###########################
+      #############
+      #   Setup   #
+      #############
       - name: Checkout
         uses: actions/checkout@v2
       - name: Set up QEMU
@@ -142,15 +142,15 @@ jobs:
             ${{ runner.os }}-buildx-${{ matrix.targetPlatform }}
             ${{ runner.os }}-buildx-
 
-      ###########################
-      #    Free disk space   #
-      ###########################
+      #######################
+      #   Free disk space   #
+      #######################
       - name: Free disk space
         run: .github/workflows/scripts/free_disk_space.sh
 
-      ###########################
-      #        Base image       #
-      ###########################
+      ##################
+      #   Base image   #
+      ##################
       - name: Build base image # and push
         uses: docker/build-push-action@v2
         id: build_ubuntu_base_image
@@ -165,9 +165,9 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/base:latest
 
-      ###########################
-      #        Hub image        #
-      ###########################
+      #################
+      #   Hub image   #
+      #################
       - name: Build hub image # and push
         uses: docker/build-push-action@v2
         id: build_ubuntu_hub_image
@@ -184,9 +184,9 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/hub:latest
 
-      ###########################
-      #       Editor image      #
-      ###########################
+      ####################
+      #   Editor image   #
+      ####################
       - name: Build editor image # and push
         uses: docker/build-push-action@v2
         id: build_editor_image
@@ -207,9 +207,9 @@ jobs:
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/editor:latest
 
-      ###########################
-      #         Metrics         #
-      ###########################
+      ###############
+      #   Metrics   #
+      ###############
       - name: Disk space after
         if: always()
         run: df -h

@@ -16,9 +16,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      ###########################
-      #        Variables        #
-      ###########################
+      #################
+      #   Variables   #
+      #################
       - name: Show hook input
         run: |
           echo "Event ${{ github.event.event_type }}"
@@ -36,9 +36,9 @@ jobs:
           imageType: hub
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
-      ###########################
-      #          Setup          #
-      ###########################
+      #############
+      #   Setup   #
+      #############
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -67,14 +67,14 @@ jobs:
           restore-keys: |
             ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-hub
             ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-
-      ###########################
-      #   Pull previous images  #
-      ###########################
+      ############################
+      #   Pull previous images   #
+      ############################
       - name: Pull base image (must exist)
         run: docker pull unityci/base:${{ github.event.client_payload.repoVersionFull }}
-      ###########################
-      #        Hub image        #
-      ###########################
+      #################
+      #   Hub image   #
+      #################
       - name: Build and publish
         uses: docker/build-push-action@v2
         id: build_ubuntu_hub_image
@@ -98,9 +98,9 @@ jobs:
           docker buildx imagetools inspect unityci/hub:ubuntu-${{ github.event.client_payload.repoVersionFull }}
       - name: Image digest
         run: echo ${{ steps.build_ubuntu_hub_image.outputs.digest }}
-      ###########################
-      #        reporting        #
-      ###########################
+      #################
+      #   reporting   #
+      #################
       - name: Report publication
         if: ${{ success() }}
         uses: ./.github/workflows/actions/report-to-backend
