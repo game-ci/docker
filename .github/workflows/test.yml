@@ -17,9 +17,9 @@ env:
   UNITY_LICENSE: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>\n    <License id=\"Terms\">\n        <MachineBindings>\n            <Binding Key=\"1\" Value=\"576562626572264761624c65526f7578\"/>\n            <Binding Key=\"2\" Value=\"576562626572264761624c65526f7578\"/>\n        </MachineBindings>\n        <MachineID Value=\"D7nTUnjNAmtsUMcnoyrqkgIbYdM=\"/>\n        <SerialHash Value=\"2033b8ac3e6faa3742ca9f0bfae44d18f2a96b80\"/>\n        <Features>\n            <Feature Value=\"33\"/>\n            <Feature Value=\"1\"/>\n            <Feature Value=\"12\"/>\n            <Feature Value=\"2\"/>\n            <Feature Value=\"24\"/>\n            <Feature Value=\"3\"/>\n            <Feature Value=\"36\"/>\n            <Feature Value=\"17\"/>\n            <Feature Value=\"19\"/>\n            <Feature Value=\"62\"/>\n        </Features>\n        <DeveloperData Value=\"AQAAAEY0LUJHUlgtWEQ0RS1aQ1dWLUM1SlctR0RIQg==\"/>\n        <SerialMasked Value=\"F4-BGRX-XD4E-ZCWV-C5JW-XXXX\"/>\n        <StartDate Value=\"2021-02-08T00:00:00\"/>\n        <UpdateDate Value=\"2021-02-09T00:34:57\"/>\n        <InitialActivationDate Value=\"2021-02-08T00:34:56\"/>\n        <LicenseVersion Value=\"6.x\"/>\n        <ClientProvidedVersion Value=\"2018.4.30f1\"/>\n        <AlwaysOnline Value=\"false\"/>\n        <Entitlements>\n            <Entitlement Ns=\"unity_editor\" Tag=\"UnityPersonal\" Type=\"EDITOR\" ValidTo=\"9999-12-31T00:00:00\"/>\n            <Entitlement Ns=\"unity_editor\" Tag=\"DarkSkin\" Type=\"EDITOR_FEATURE\" ValidTo=\"9999-12-31T00:00:00\"/>\n        </Entitlements>\n    </License>\n<Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/><SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\"/><Reference URI=\"#Terms\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"/><DigestValue>m0Db8UK+ktnOLJBtHybkfetpcKo=</DigestValue></Reference></SignedInfo><SignatureValue>o/pUbSQAukz7+ZYAWhnA0AJbIlyyCPL7bKVEM2lVqbrXt7cyey+umkCXamuOgsWPVUKBMkXtMH8L\n5etLmD0getWIhTGhzOnDCk+gtIPfL4jMo9tkEuOCROQAXCci23VFscKcrkB+3X6h4wEOtA2APhOY\nB+wvC794o8/82ffjP79aVAi57rp3Wmzx+9pe9yMwoJuljAy2sc2tIMgdQGWVmOGBpQm3JqsidyzI\nJWG2kjnc7pDXK9pwYzXoKiqUqqrut90d+kQqRyv7MSZXR50HFqD/LI69h68b7P8Bjo3bPXOhNXGR\n9YCoemH6EkfCJxp2gIjzjWW+l2Hj2EsFQi8YXw==</SignatureValue></Signature></root>"
 
 jobs:
-  ###########################
-  #    Build base and hub   #
-  ###########################
+  ##########################
+  #   Build base and hub   #
+  ##########################
   ubuntu-base-and-hub:
     name: Base and hub
     runs-on: ubuntu-18.04
@@ -27,18 +27,18 @@ jobs:
       versions: ${{ steps.setup.outputs.versions }}
       excludes: ${{ steps.setup.outputs.excludes }}
     steps:
-      ###########################
-      #          Setup          #
-      ###########################
+      #############
+      #   Setup   #
+      #############
       - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
         with:
           driver: docker
 
-      ##################################
-      #   Build Ubuntu base and hub    #
-      ##################################
+      #################################
+      #   Build Ubuntu base and hub   #
+      #################################
       - name: Build base
         uses: docker/build-push-action@v2
         with:
@@ -51,9 +51,9 @@ jobs:
           build-args: baseImage=base:ubuntu-dev
           tags: hub:ubuntu-dev
 
-      #####################################################
-      #    Save images for later steps in the workflow    #
-      #####################################################
+      ###################################################
+      #   Save images for later steps in the workflow   #
+      ###################################################
       - name: Save images
         run: |
           docker images
@@ -63,9 +63,9 @@ jobs:
           path: ubuntu-base-and-hub.tar
           retention-days: 1
 
-      ###########################
-      #    Setup build matrix   #
-      ###########################
+      ##########################
+      #   Setup build matrix   #
+      ##########################
       - name: "Setup build matrix"
         id: setup
         run: |
@@ -81,9 +81,9 @@ jobs:
           echo "Excludes: $EXCLUDES"
           echo "::set-output name=excludes::$EXCLUDES"
 
-  ###########################
-  #  Build editor and test  #
-  ###########################
+  #############################
+  #   Build editor and test   #
+  #############################
   editor:
     needs: ubuntu-base-and-hub
     name: Editor (${{ matrix.version }}, ${{ matrix.module }})
@@ -119,9 +119,9 @@ jobs:
         exclude: ${{ fromJson(needs.ubuntu-base-and-hub.outputs.excludes) }}
 
     steps:
-      ###########################
-      #          Setup          #
-      ###########################
+      #############
+      #   Setup   #
+      #############
       - uses: actions/checkout@v2
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
@@ -130,18 +130,18 @@ jobs:
       - name: Free disk space
         run: .github/workflows/scripts/free_disk_space.sh
 
-      ###########################
-      #   Restore base and hub  #
-      ###########################
+      ############################
+      #   Restore base and hub   #
+      ############################
       - uses: actions/download-artifact@v2
       - name: Restore base and hub
         run: |
           docker load -i artifact/ubuntu-base-and-hub.tar
           rm -rf artifact
 
-      ###########################
-      #      Setup to build     #
-      ###########################
+      ######################
+      #   Setup to build   #
+      ######################
       - name: Setup to build
         run: |
           # The changeset for unity version
@@ -154,9 +154,9 @@ jobs:
             echo "MODULE=${{ matrix.module }}" >> $GITHUB_ENV
           fi
 
-      ###########################
-      #       Build editor      #
-      ###########################
+      ####################
+      #   Build editor   #
+      ####################
       - name: Build
         # if: steps.build-1.outcome == 'failure'
         uses: docker/build-push-action@v2
@@ -173,9 +173,9 @@ jobs:
             module=${{ env.MODULE }}
           tags: editor:ubuntu-dev
 
-      ###########################
-      #   Build editor (retry)  #
-      ###########################
+      ############################
+      #   Build editor (retry)   #
+      ############################
       - name: Sleep for retry
         if: steps.build-1.outcome == 'failure'
         run: sleep 120
@@ -196,9 +196,9 @@ jobs:
             module=${{ env.MODULE }}
           tags: editor:ubuntu-dev
 
-      ###########################
-      #      Setup to test      #
-      ###########################
+      #####################
+      #   Setup to test   #
+      #####################
       - name: Show image size
         run: docker images
       - name: Setup to test
@@ -208,9 +208,9 @@ jobs:
             mv -f reference-project-test/ProjectSettings/ProjectSettings_il2cpp.asset reference-project-test/ProjectSettings/ProjectSettings.asset
           fi
 
-      ###########################
-      #          Build          #
-      ###########################
+      #############
+      #   Build   #
+      #############
       - name: Build project
         uses: game-ci/unity-builder@main
         with:
@@ -238,9 +238,9 @@ jobs:
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
 
-      ###########################
-      #       Build (Brotli)      #
-      ###########################
+      ######################
+      #   Build (Brotli)   #
+      ######################
       - name: "⚙️ Setup (Brotli)"
         if: env.MODULE == 'webgl'
         run: |
@@ -256,9 +256,9 @@ jobs:
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
 
-      ###########################
-      #           Test          #
-      ###########################
+      ############
+      #   Test   #
+      ############
       - name: Test project
         uses: game-ci/unity-test-runner@main
         with:
@@ -267,9 +267,9 @@ jobs:
           projectPath: reference-project-test
           customParameters: -nographics -buildTarget ${{ matrix.platform }}
 
-      ###########################
-      # Validate Android Utils  #
-      ###########################
+      ##############################
+      #   Validate Android Utils   #
+      ##############################
       - name: Validate Android Utils
         if: env.MODULE == 'android'
         uses: addnab/docker-run-action@v3
