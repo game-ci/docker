@@ -20,7 +20,7 @@ jobs:
   ###########################
   #    Build base and hub   #
   ###########################
-  base-and-hub:
+  ubuntu-base-and-hub:
     name: Base and hub
     runs-on: ubuntu-18.04
     outputs:
@@ -36,33 +36,31 @@ jobs:
         with:
           driver: docker
 
-      ###########################
-      #   Build base and hub    #
-      ###########################
+      ##################################
+      #   Build Ubuntu base and hub    #
+      ##################################
       - name: Build base
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: base/Dockerfile
-          tags: base:dev
+          file: ./images/ubuntu/base/Dockerfile
+          tags: base:ubuntu-dev
       - name: Build hub
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: hub/Dockerfile
-          build-args: baseImage=base:dev
-          tags: hub:dev
+          file: ./images/ubuntu/hub/Dockerfile
+          build-args: baseImage=base:ubuntu-dev
+          tags: hub:ubuntu-dev
 
-      ###########################
-      #   Save images for next  #
-      ###########################
-      - name: Save images for next
+      #####################################################
+      #    Save images for later steps in the workflow    #
+      #####################################################
+      - name: Save images
         run: |
           docker images
-          docker save -o base-and-hub.tar base:dev hub:dev
+          docker save -o ubuntu-base-and-hub.tar base:ubuntu-dev hub:ubuntu-dev
       - uses: actions/upload-artifact@v2
         with:
-          path: base-and-hub.tar
+          path: ubuntu-base-and-hub.tar
           retention-days: 1
 
       ###########################
@@ -87,14 +85,14 @@ jobs:
   #  Build editor and test  #
   ###########################
   editor:
-    needs: base-and-hub
+    needs: ubuntu-base-and-hub
     name: Editor (${{ matrix.version }}, ${{ matrix.module }})
     runs-on: ubuntu-18.04
     strategy:
       fail-fast: false
       matrix:
         # The latest patch versions for each minor version.
-        version: ${{ fromJson(needs.base-and-hub.outputs.versions) }}
+        version: ${{ fromJson(needs.ubuntu-base-and-hub.outputs.versions) }}
         module:
           - base
           - linux-il2cpp
@@ -118,7 +116,7 @@ jobs:
             platform: Android
           - module: webgl
             platform: WebGL
-        exclude: ${{ fromJson(needs.base-and-hub.outputs.excludes) }}
+        exclude: ${{ fromJson(needs.ubuntu-base-and-hub.outputs.excludes) }}
 
     steps:
       ###########################
@@ -138,7 +136,7 @@ jobs:
       - uses: actions/download-artifact@v2
       - name: Restore base and hub
         run: |
-          docker load -i artifact/base-and-hub.tar
+          docker load -i artifact/ubuntu-base-and-hub.tar
           rm -rf artifact
 
       ###########################
@@ -166,15 +164,14 @@ jobs:
         continue-on-error: true
         timeout-minutes: 40
         with:
-          context: .
-          file: editor/Dockerfile
+          file: ./images/ubuntu/editor/Dockerfile
           build-args: |
-            baseImage=base:dev
-            hubImage=hub:dev
+            baseImage=base:ubuntu-dev
+            hubImage=hub:ubuntu-dev
             version=${{ matrix.version }}
             changeSet=${{ env.CHANGESET }}
             module=${{ env.MODULE }}
-          tags: editor:dev
+          tags: editor:ubuntu-dev
 
       ###########################
       #   Build editor (retry)  #
@@ -190,15 +187,14 @@ jobs:
         # continue-on-error: true
         timeout-minutes: 40
         with:
-          context: .
-          file: editor/Dockerfile
+          file: ./images/ubuntu/editor/Dockerfile
           build-args: |
-            baseImage=base:dev
-            hubImage=hub:dev
+            baseImage=base:ubuntu-dev
+            hubImage=hub:ubuntu-dev
             version=${{ matrix.version }}
             changeSet=${{ env.CHANGESET }}
             module=${{ env.MODULE }}
-          tags: editor:dev
+          tags: editor:ubuntu-dev
 
       ###########################
       #      Setup to test      #
@@ -219,7 +215,7 @@ jobs:
         uses: game-ci/unity-builder@main
         with:
           unityVersion: ${{ matrix.version }}
-          customImage: editor:dev
+          customImage: editor:ubuntu-dev
           projectPath: reference-project-test
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
@@ -237,7 +233,7 @@ jobs:
         uses: game-ci/unity-builder@main
         with:
           unityVersion: ${{ matrix.version }}
-          customImage: editor:dev
+          customImage: editor:ubuntu-dev
           projectPath: reference-project-test
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
@@ -255,7 +251,7 @@ jobs:
         uses: game-ci/unity-builder@main
         with:
           unityVersion: ${{ matrix.version }}
-          customImage: editor:dev
+          customImage: editor:ubuntu-dev
           projectPath: reference-project-test
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
@@ -267,7 +263,7 @@ jobs:
         uses: game-ci/unity-test-runner@main
         with:
           unityVersion: ${{ matrix.version }}
-          customImage: editor:dev
+          customImage: editor:ubuntu-dev
           projectPath: reference-project-test
           customParameters: -nographics -buildTarget ${{ matrix.platform }}
 
@@ -278,5 +274,5 @@ jobs:
         if: env.MODULE == 'android'
         uses: addnab/docker-run-action@v3
         with:
-          image: editor:dev
+          image: editor:ubuntu-dev
           run: bash -l -c 'java -version && sdkmanager --version && cat $ANDROID_NDK_HOME/source.properties'

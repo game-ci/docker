@@ -1,8 +1,8 @@
-name: Retry Building Editor Version 🗔
+name: Retry Building Ubuntu Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [retry_editor_image_requested]
+    types: [retry_editor_image_requested, retry_ubuntu_editor_image_requested]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -81,11 +81,10 @@ jobs:
       ###########################
       - name: Build and publish
         uses: docker/build-push-action@v2
-        id: build_editor_image
+        id: build_ubuntu_editor_image
         continue-on-error: true
         with:
-          context: .
-          file: ./editor/Dockerfile
+          file: ./images/ubuntu/editor/Dockerfile
           build-args: |
             hubImage=unityci/hub:${{ github.event.client_payload.repoVersionFull }}
             baseImage=unityci/base:${{ github.event.client_payload.repoVersionFull }}
@@ -108,11 +107,10 @@ jobs:
       ###########################
       - name: Build and publish (retry)
         uses: docker/build-push-action@v2
-        if: steps.build_editor_image.outcome=='failure'
-        id: build_editor_image_retry
+        if: steps.build_ubuntu_editor_image.outcome=='failure'
+        id: build_ubuntu_editor_image_retry
         with:
-          context: .
-          file: ./editor/Dockerfile
+          file: ./images/ubuntu/editor/Dockerfile
           build-args: |
             hubImage=unityci/hub:${{ github.event.client_payload.repoVersionFull }}
             baseImage=unityci/base:${{ github.event.client_payload.repoVersionFull }}
@@ -139,8 +137,8 @@ jobs:
       - name: Image digest
         id: image-digest
         run: |
-          [ '${{ steps.build_editor_image.outcome }}'       = 'success' ] && echo "::set-output name=digest::${{ steps.build_editor_image.outputs.digest }}" || :
-          [ '${{ steps.build_editor_image_retry.outcome }}' = 'success' ] && echo "::set-output name=digest::${{ steps.build_editor_image_retry.outputs.digest }}" || :
+          [ '${{ steps.build_ubuntu_editor_image.outcome }}'       = 'success' ] && echo "::set-output name=digest::${{ steps.build_ubuntu_editor_image.outputs.digest }}" || :
+          [ '${{ steps.build_ubuntu_editor_image_retry.outcome }}' = 'success' ] && echo "::set-output name=digest::${{ steps.build_ubuntu_editor_image_retry.outputs.digest }}" || :
       ###########################
       #        reporting        #
       ###########################

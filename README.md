@@ -11,15 +11,15 @@ for any related
 
 ## Base
 
-See the [base readme](./base/README.md) for base image usage.
+See the [base readme](images/ubuntu/base/README.md) for base image usage.
 
 ## Hub
 
-See the [hub readme](./hub/README.md) for hub image usage. 
+See the [hub readme](images/ubuntu/hub/README.md) for hub image usage. 
 
 ## Editor
 
-See the [editor readme](./editor/README.md) for editor image usage.
+See the [editor readme](images/ubuntu/editor/README.md) for editor image usage.
 
 ## Community
 
