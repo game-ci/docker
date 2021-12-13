@@ -4,7 +4,7 @@
 
 Base image used to produce hub and editor images.
 
-Not indended for external use per se.
+Not intended for external use per se.
 
 ## License
 

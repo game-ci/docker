@@ -1,7 +1,7 @@
 name: Docs 📚
 
 on:
-  push: { branches: [main] }
+  push: { branches: [ main ] }
 
 jobs:
   updateDescriptions:
@@ -17,8 +17,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      # Caveat - Currently we use the ubuntu readme as we do not have a catch-all readme (yet?)
       - run: |
-          echo "SHORT_DESCRIPTION=$(cat ./${{ matrix.imageType }}/100-characters-dockerhub-description.txt)" >> $GITHUB_ENV
+          echo "SHORT_DESCRIPTION=$(cat ./images/ubuntu/${{ matrix.imageType }}/100-characters-dockerhub-description.txt)" >> $GITHUB_ENV
       - name: Update DockerHub description
         uses: peter-evans/dockerhub-description@v2
         with:
@@ -26,4 +27,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_LEGACY_PASSWORD }}
           repository: unityci/${{ matrix.imageType }}
           short-description: ${{ env.SHORT_DESCRIPTION }}
-          readme-filepath: ./${{ matrix.imageType }}/README.md
+          readme-filepath: ./images/ubuntu/${{ matrix.imageType }}/README.md
