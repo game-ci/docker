@@ -17,19 +17,19 @@ cd docker
 Build the base image
 
 ```bash
-docker build -t base -f base/Dockerfile .
+docker build images/ubuntu/base -t base
 ```
 
 Build hub
 
 ```bash
-docker build -t hub -f hub/Dockerfile .
+docker build images/ubuntu/hub -t hub
 ```
 
 Build editor
 
 ```bash
-docker build -t editor -f editor/Dockerfile .
+docker build images/ubuntu/editor -t editor
 ```
 
 
