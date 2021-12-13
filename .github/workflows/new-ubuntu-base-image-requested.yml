@@ -1,8 +1,8 @@
-name: New Base Version ⛭
+name: New Ubuntu Base Version ⛭
 
 on:
   repository_dispatch:
-    types: [new_base_image_requested]
+    types: [new_base_image_requested, new_ubuntu_base_image_requested]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -16,9 +16,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      ###########################
-      #        Variables        #
-      ###########################
+      #################
+      #   Variables   #
+      #################
       - name: Show hook input
         run: |
           echo "Event ${{ github.event.event_type }}"
@@ -36,9 +36,9 @@ jobs:
           imageType: base
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
-      ###########################
-      #          Setup          #
-      ###########################
+      #############
+      #   Setup   #
+      #############
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -67,15 +67,14 @@ jobs:
           restore-keys: |
             ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-base
             ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-
-      ###########################
-      #        Base image       #
-      ###########################
+      ##################
+      #   Base image   #
+      ##################
       - name: Build and publish
         uses: docker/build-push-action@v2
-        id: build_base_image
+        id: build_ubuntu_base_image
         with:
-          context: .
-          file: ./base/Dockerfile
+          file: ./images/ubuntu/base/Dockerfile
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
@@ -92,10 +91,10 @@ jobs:
         run: |
           docker buildx imagetools inspect unityci/base:ubuntu-${{ github.event.client_payload.repoVersionFull }}
       - name: Image digest
-        run: echo ${{ steps.build_base_image.outputs.digest }}
-      ###########################
-      #        reporting        #
-      ###########################
+        run: echo ${{ steps.build_ubuntu_base_image.outputs.digest }}
+      #################
+      #   reporting   #
+      #################
       - name: Report publication
         if: ${{ success() }}
         uses: ./.github/workflows/actions/report-to-backend
@@ -112,7 +111,7 @@ jobs:
           imageName: base
           friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
           specificTag: ubuntu-${{ github.event.client_payload.repoVersionFull }}
-          digest: ${{ steps.build_base_image.outputs.digest }}
+          digest: ${{ steps.build_ubuntu_base_image.outputs.digest }}
       - name: Report failure
         if: ${{ failure() || cancelled() }}
         uses: ./.github/workflows/actions/report-to-backend

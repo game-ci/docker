@@ -1,8 +1,8 @@
-name: New Editor Version 🗔
+name: Retry Building Ubuntu Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [new_2019_3_plus_editor_image_requested]
+    types: [ retry_editor_image_requested, retry_ubuntu_editor_image_requested ]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -11,29 +11,19 @@ on:
 
 jobs:
   buildImage:
-    name: "🛠 Build unityci/editor (${{ matrix.targetPlatform }})"
+    name: "🛠 Retry unityci/editor (${{ github.event.client_payload.targetPlatform }})"
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        targetPlatform:
-          - base # Base is a special name, which indicates that no modules are installed, like with linux-mono on ubuntu
-          - linux-il2cpp
-          - windows-mono
-          - mac-mono
-          - ios
-          - android
-          - webgl
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      ###########################
-      #        Variables        #
-      ###########################
+      #################
+      #   Variables   #
+      #################
       - name: Show hook input
         run: |
           echo "Event ${{ github.event.event_type }}"
           echo "jobId: ${{ github.event.client_payload.jobId }}"
+          echo "Target platform to retry: ${{ github.event.client_payload.targetPlatform }}"
           echo "Unity editor version: ${{ github.event.client_payload.editorVersion }}"
           echo "Unity changeset: ${{ github.event.client_payload.changeSet }}"
           echo "repoVersion (full): ${{ github.event.client_payload.repoVersionFull }}"
@@ -50,10 +40,10 @@ jobs:
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
           editorVersion: ${{ github.event.client_payload.editorVersion }}
-          targetPlatform: ${{ matrix.targetPlatform }}
-      ###########################
-      #          Setup          #
-      ###########################
+          targetPlatform: ${{ github.event.client_payload.targetPlatform }}
+      #############
+      #   Setup   #
+      #############
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -70,76 +60,72 @@ jobs:
             curl --silent -f -lSL https://index.docker.io/v1/repositories/$1/tags/$2 > /dev/null
           }
 
-          if docker_tag_exists unityci/editor ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} ; then
+          if docker_tag_exists unityci/editor ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} ; then
             echo "Image already exists. Exiting."
             exit 1
           fi
-      ###########################
-      #    Free disk space   #
-      ###########################
+      #######################
+      #   Free disk space   #
+      #######################
       - name: Free disk space
         run: .github/workflows/scripts/free_disk_space.sh
-      ###########################
-      #   Pull previous images  #
-      ###########################
+      ############################
+      #   Pull previous images   #
+      ############################
       - name: Pull base image (must exist)
         run: docker pull unityci/base:${{ github.event.client_payload.repoVersionFull }}
       - name: Pull hub image (must exist)
         run: docker pull unityci/hub:${{ github.event.client_payload.repoVersionFull }}
-      ###########################
-      #       Editor image      #
-      ###########################
+      ####################
+      #   Editor image   #
+      ####################
       - name: Build and publish
         uses: docker/build-push-action@v2
-        id: build_editor_image
+        id: build_ubuntu_editor_image
         continue-on-error: true
         with:
-          context: .
-          file: ./editor/Dockerfile
+          file: ./images/ubuntu/editor/Dockerfile
           build-args: |
             hubImage=unityci/hub:${{ github.event.client_payload.repoVersionFull }}
             baseImage=unityci/base:${{ github.event.client_payload.repoVersionFull }}
             version=${{ github.event.client_payload.editorVersion }}
             changeSet=${{ github.event.client_payload.changeSet }}
-            module=${{ matrix.targetPlatform }}
+            module=${{ github.event.client_payload.targetPlatform }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
           tags: |
-            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
-            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
-            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
-            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
-            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
-            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
           ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
-      ###########################
-      #     Retry the above     #
-      ###########################
+      #######################
+      #   Retry the above   #
+      #######################
       - name: Build and publish (retry)
         uses: docker/build-push-action@v2
-        if: steps.build_editor_image.outcome=='failure'
-        id: build_editor_image_retry
+        if: steps.build_ubuntu_editor_image.outcome=='failure'
+        id: build_ubuntu_editor_image_retry
         with:
-          context: .
-          file: ./editor/Dockerfile
+          file: ./images/ubuntu/editor/Dockerfile
           build-args: |
             hubImage=unityci/hub:${{ github.event.client_payload.repoVersionFull }}
             baseImage=unityci/base:${{ github.event.client_payload.repoVersionFull }}
             version=${{ github.event.client_payload.editorVersion }}
             changeSet=${{ github.event.client_payload.changeSet }}
-            module=${{ matrix.targetPlatform }}
+            module=${{ github.event.client_payload.targetPlatform }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
           push: true
           tags: |
-            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
-            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
-            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
-            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
-            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
-            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/editor:${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }}
+            unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
           ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
       ###########################
@@ -147,15 +133,15 @@ jobs:
       ###########################
       - name: Inspect
         run: |
-          docker buildx imagetools inspect unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ matrix.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+          docker buildx imagetools inspect unityci/editor:ubuntu-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
       - name: Image digest
         id: image-digest
         run: |
-          [ '${{ steps.build_editor_image.outcome }}'       = 'success' ] && echo "::set-output name=digest::${{ steps.build_editor_image.outputs.digest }}" || :
-          [ '${{ steps.build_editor_image_retry.outcome }}' = 'success' ] && echo "::set-output name=digest::${{ steps.build_editor_image_retry.outputs.digest }}" || :
-      ###########################
-      #        reporting        #
-      ###########################
+          [ '${{ steps.build_ubuntu_editor_image.outcome }}'       = 'success' ] && echo "::set-output name=digest::${{ steps.build_ubuntu_editor_image.outputs.digest }}" || :
+          [ '${{ steps.build_ubuntu_editor_image_retry.outcome }}' = 'success' ] && echo "::set-output name=digest::${{ steps.build_ubuntu_editor_image_retry.outputs.digest }}" || :
+      #################
+      #   reporting   #
+      #################
       - name: Report publication
         if: ${{ success() }}
         uses: ./.github/workflows/actions/report-to-backend
@@ -168,7 +154,7 @@ jobs:
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
           editorVersion: ${{ github.event.client_payload.editorVersion }}
-          targetPlatform: ${{ matrix.targetPlatform }}
+          targetPlatform: ${{ github.event.client_payload.targetPlatform }}
           # Publication info
           imageRepo: unityci
           imageName: editor
@@ -187,12 +173,12 @@ jobs:
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
           editorVersion: ${{ github.event.client_payload.editorVersion }}
-          targetPlatform: ${{ matrix.targetPlatform }}
+          targetPlatform: ${{ github.event.client_payload.targetPlatform }}
           # Failure info
           reason: ${{ job.status }}
-      ###########################
-      #         Metrics         #
-      ###########################
+      ###############
+      #   Metrics   #
+      ###############
       - name: Disk space after
         if: always()
         run: df -h
