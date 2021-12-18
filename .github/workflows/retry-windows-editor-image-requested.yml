@@ -2,7 +2,7 @@ name: Retry Building Windows Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [ retry_editor_image_requested, retry_windows_editor_image_requested ]
+    types: [ retry_windows_editor_image_requested ]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
