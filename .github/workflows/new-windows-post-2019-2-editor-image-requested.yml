@@ -161,7 +161,7 @@ jobs:
           # Publication info
           imageRepo: unityci
           imageName: editor
-          friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
+          friendlyTag: windows-${{ github.event.client_payload.repoVersionMinor }}
           specificTag: windows-${{ github.event.client_payload.repoVersionFull }}
           digest: ${{ steps.image-digest.outputs.digest }}
       
