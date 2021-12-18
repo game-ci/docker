@@ -2,7 +2,7 @@ name: New Windows Hub Version ⚙
 
 on:
   repository_dispatch:
-    types: [ new_hub_image_requested, new_windows_hub_image_requested ]
+    types: [ new_windows_hub_image_requested ]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
