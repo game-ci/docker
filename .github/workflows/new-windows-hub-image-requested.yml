@@ -115,7 +115,7 @@ jobs:
           # Publication info
           imageRepo: unityci
           imageName: hub
-          friendlyTag: ${{ github.event.client_payload.repoVersionMinor }}
+          friendlyTag: windows-${{ github.event.client_payload.repoVersionMinor }}
           specificTag: windows-${{ github.event.client_payload.repoVersionFull }}
           digest: ${{ steps.build_windows_hub_image.outputs.digest }}
       
