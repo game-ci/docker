@@ -1,0 +1,1 @@
+Base image used to produce windows-based hub and editor images.

@@ -83,7 +83,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         run: docker login --username $Env:username --password $Env:password
-
       - name: Check if image not already exists
         run: |
           # Source: https://stackoverflow.com/a/39731444/3593896

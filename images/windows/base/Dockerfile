@@ -7,7 +7,7 @@ FROM $windowsDllSourceImage as dll-source
 # We use the .net framework servercore image because we will need the .net support
 # anyway and there is no real benefit to try and make this smaller by
 # basing on the blank windowsservercore because only the .net version is
-# cached on the github actions runner. 
+# cached on the github actions runner.
 FROM $windowsImage
 
 SHELL ["cmd", "/C"]

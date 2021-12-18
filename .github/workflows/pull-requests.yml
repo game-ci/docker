@@ -248,7 +248,6 @@ jobs:
               docker build ./images/windows/base/ `
                 --tag localhost:5000/unityci/base:windows-latest `
                 --push
-
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/base:windows-latest
@@ -263,7 +262,6 @@ jobs:
                 --build-arg baseImage=localhost:5000/unityci/base:windows-latest
                 --tag localhost:5000/unityci/hub:windows-latest `
                 --push
-
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/hub:windows-latest
