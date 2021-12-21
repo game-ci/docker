@@ -72,7 +72,7 @@ jobs:
           specificTag: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
 
-  build:
+  build-ubuntu:
     name: "🧪 Test build (${{ matrix.targetPlatform }})"
     runs-on: ubuntu-latest
     services:
@@ -210,6 +210,85 @@ jobs:
       - name: Disk space after
         if: always()
         run: df -h
+
+  build-windows:
+    name: "🧪 Test build (${{ matrix.targetPlatform }})"
+    runs-on: windows-2019
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - windows-il2cpp
+
+    steps:
+      #############
+      #   Setup   #
+      #############
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      #######################
+      #   Free disk space   #
+      #######################
+      # TODO: Determine what we can free on windows
+      ##################
+      #   Base image   #
+      ##################
+      - name: Build Windows Base Image # and push
+        id: build_windows_base_image
+        run: |
+              docker build ./images/windows/base/ `
+                --tag localhost:5000/unityci/base:windows-latest `
+                --push
+      
+      - name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/unityci/base:windows-latest
+
+      #################
+      #   Hub image   #
+      #################
+      - name: Build Windows Hub Image # and push
+        id: build_windows_hub_image
+        run: |
+              docker build ./images/windows/hub/ `
+                --build-arg baseImage=localhost:5000/unityci/base:windows-latest
+                --tag localhost:5000/unityci/hub:windows-latest `
+                --push
+      
+      - name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/unityci/hub:windows-latest
+
+      ####################
+      #   Editor image   #
+      ####################
+      - name: Build Windows Editor Image # and push
+        id: build_windows_editor_image
+        run: |
+              docker build ./images/windows/editor/ `
+                --build-arg baseImage=localhost:5000/unityci/base:windows-latest
+                --build-arg hubImage=localhost:5000/unityci/hub:windows-latest
+                --build-arg version=2020.1.4f1
+                --build-arg changeSet=fa717bb873ec
+                --tag localhost:5000/unityci/editor:windows-latest `
+                --push
+
+      - name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/unityci/editor:windows-latest
+
+      ###############
+      #   Metrics   #
+      ###############
+      - name: Disk space after
+        if: always()
+        run: get-PSDrive
 
   testImages:
     name: 🧪 Test images
