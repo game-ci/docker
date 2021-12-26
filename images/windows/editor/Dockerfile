@@ -8,28 +8,23 @@ ARG hubImage="unityci/hub:windows-latest"
 FROM $hubImage as Builder
 
 # Install Editor
-# The portion after the & is to change the exit code to 0 if we exited 1 from 
+# The portion after the & is to change the exit code to 0 if we exited 1 from
 # the installation. Otherwise docker believes there was an error
-# TODO: This isn't quite on parity with the linux side. Ideally we install the
-# editor first, then add modules, however it doesn't appear that the --add-modules
-# command works on windows so we have to install the module when installing the
-# editor
 ARG version
 ARG changeSet
+RUN "C:/Program Files/Unity Hub/Unity Hub.exe" -- --headless install \
+                                               --version %version% \
+                                               --changeset %changeSet% \
+                                               & if %ERRORLEVEL% EQU 1 exit 0
+
 ARG module
-RUN IF %module% == "base" ( \
-    "C:/Program Files/Unity Hub/Unity Hub.exe" -- --headless install \
+RUN IF NOT %module% == "base" ( \
+    "C:/Program Files/Unity Hub/Unity Hub.exe" -- --headless install-modules \
                                                --version %version% \
-                                               --changeset %changeSet% \
-                                               & if %ERRORLEVEL% EQU 1 exit 0 \
-    ) ELSE ( \
-    "C:/Program Files/Unity Hub/Unity Hub.exe" -- --headless install \
-                                               --version %version% \
-                                               --changeset %changeSet% \
                                                --module %module% \
+                                               --childModules \
                                                & if %ERRORLEVEL% EQU 1 exit 0 \
     )
-
 
 ############
 #  Editor  #

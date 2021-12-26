@@ -2,7 +2,7 @@ name: New Windows Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [ new_windows_post_2019_2_editor_image_requested ]
+    types: [ new_windows_legacy_editor_image_requested ]
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -18,10 +18,9 @@ jobs:
       matrix:
         targetPlatform:
           - base
-          - windows-il2cpp
+          # - windows-il2cpp
           - universal-windows-platform
           - appletv
-          # - lumin # TODO: Determine if we can build for lumin. Requires 3rd party SDK with several versions
 
     steps:
       - name: Checkout
