@@ -3,6 +3,24 @@ name: New Windows Hub Version ⚙
 on:
   repository_dispatch:
     types: [ new_windows_hub_image_requested ]
+  workflow_dispatch:
+    inputs:
+      jobId:
+        description: 'Job ID'
+        required: true
+        default: 'dryRun'
+      repoVersionFull:
+        description: 'Docker Repo Version Full'
+        required: true
+        default: '0.15'
+      repoVersionMinor:
+        description: 'Docker Repo Version Minor'
+        required: true
+        default: '15'
+      repoVersionMajor:
+        description: 'Docker Repo Version Major'
+        required: true
+        default: '0'
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
@@ -16,29 +34,48 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
+
       #################
       #   Variables   #
       #################
+      - name: Setup Build Parameters
+        id: buildParameters
+        run: |
+              if (${{ github.event.inputs.jobId }})
+              {
+                # Workflow Dispatch
+                echo '::set-output jobId=${{ github.event.inputs.jobId }}'
+                echo '::set-output repoVersionFull=${{ github.event.inputs.repoVersionFull }}'
+                echo '::set-output repoVersionMinor=${{ github.event.inputs.repoVersionMinor }}'
+                echo '::set-output repoVersionMajor=${{ github.event.inputs.repoVersionMajor }}'
+              } else
+              {
+                # Repo Dispatch
+                echo '::set-output jobId=${{ github.event.client_payload.jobId }}'
+                echo '::set-output repoVersionFull=${{ github.event.client_payload.repoVersionFull }}'
+                echo '::set-output repoVersionMinor=${{ github.event.client_payload.repoVersionMinor }}'
+                echo '::set-output repoVersionMajor=${{ github.event.client_payload.repoVersionMajor }}'
+              }
+
       - name: Show hook input
         run: |
           echo "Event ${{ github.event.event_type }}"
-          echo "jobId: ${{ github.event.client_payload.jobId }}"
-          echo "repoVersion (full): ${{ github.event.client_payload.repoVersionFull }}"
-          echo "repoVersion (only minor and major): ${{ github.event.client_payload.repoVersionMinor }}"
-          echo "repoVersion (only major): ${{ github.event.client_payload.repoVersionMajor }}"
-        
+          echo "jobId: ${{ steps.buildParameters.outputs.jobId }}"
+          echo "repoVersion (full): ${{ steps.buildParameters.outputs.repoVersionFull }}"
+          echo "repoVersion (only minor and major): ${{ steps.buildParameters.outputs.repoVersionMinor }}"
+          echo "repoVersion (only major): ${{ steps.buildParameters.outputs.repoVersionMajor }}"
+
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
-          jobId: ${{ github.event.client_payload.jobId }}
+          jobId: ${{ steps.buildParameters.outputs.jobId }}
           status: started
           # Build info
           imageType: hub
           baseOs: windows
-          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
-      
+          repoVersion: ${{ steps.buildParameters.outputs.repoVersionFull }}
+
       #############
       #   Setup   #
       #############
@@ -47,7 +84,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         run: docker login --username $Env:username --password $Env:password
-      
+
       - name: Check if image not already exists
         run: |
           # Source: https://stackoverflow.com/a/39731444/3593896
@@ -62,20 +99,20 @@ jobs:
             return $?
           }
 
-          if( (Docker-Tag-Exists -Repository unityci/base -Tag windows-${{ github.event.client_payload.repoVersionFull }}) ) {
+          if( (Docker-Tag-Exists -Repository unityci/base -Tag windows-${{ steps.buildParameters.outputs.repoVersionFull }}) ) {
             echo "Image already exists. Exiting."
             exit 1
           }
-      
+
       # TODO: Cache layers, currently not supported on windows
 
-      
+
       ############################
       #   Pull previous images   #
       ############################
       - name: Pull base image (must exist)
-        run: docker pull unityci/base:windows-${{ github.event.client_payload.repoVersionFull }}
-      
+        run: docker pull unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+
       #################
       #   Hub image   #
       #################
@@ -83,21 +120,21 @@ jobs:
         id: build_windows_hub_image
         run: |
               docker build ./images/windows/hub/ `
-                --tag unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }} `
-                --tag unityci/hub:windows-${{ github.event.client_payload.repoVersionMinor }} `
-                --tag unityci/hub:windows-${{ github.event.client_payload.repoVersionMajor }} `
+                --tag unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
+                --tag unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionMinor }} `
+                --tag unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionMajor }} `
                 --tag unityci/hub:windows-latest `
                 --push
-              $imageDetails = docker buildx imagetools inspect unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }} | ConvertFrom-Json
+              $imageDetails = docker buildx imagetools inspect unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
               echo '::set-output digest=$imageDetails.config.digest'
 
       - name: Inspect
         run: |
-          docker buildx imagetools inspect unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }}
-        
+          docker buildx imagetools inspect unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+
       - name: Image digest
         run: echo ${{ steps.build_windows_hub_image.outputs.digest }}
-      
+
       #################
       #   reporting   #
       #################
@@ -106,29 +143,29 @@ jobs:
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
-          jobId: ${{ github.event.client_payload.jobId }}
+          jobId: ${{ steps.buildParameters.outputs.jobId }}
           status: published
           # Build info
           imageType: hub
           baseOs: windows
-          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          repoVersion: ${{ steps.buildParameters.outputs.repoVersionFull }}
           # Publication info
           imageRepo: unityci
           imageName: hub
-          friendlyTag: windows-${{ github.event.client_payload.repoVersionMinor }}
-          specificTag: windows-${{ github.event.client_payload.repoVersionFull }}
+          friendlyTag: windows-${{ steps.buildParameters.outputs.repoVersionMinor }}
+          specificTag: windows-${{ steps.buildParameters.outputs.repoVersionFull }}
           digest: ${{ steps.build_windows_hub_image.outputs.digest }}
-      
+
       - name: Report failure
         if: ${{ failure() || cancelled() }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
-          jobId: ${{ github.event.client_payload.jobId }}
+          jobId: ${{ steps.buildParameters.outputs.jobId }}
           status: failed
           # Build info
           imageType: hub
           baseOs: windows
-          repoVersion: ${{ github.event.client_payload.repoVersionFull }}
+          repoVersion: ${{ steps.buildParameters.outputs.repoVersionFull }}
           # Failure info
           reason: ${{ job.status }}
