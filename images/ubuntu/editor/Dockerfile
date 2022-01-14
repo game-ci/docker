@@ -163,10 +163,10 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   \
-  # Let other users to run sdkmanager as well
-  && chmod 755 "${ANDROID_HOME}/tools/bin/sdkmanager" \
-  && chmod 755 "${JAVA_HOME}/bin/java" \
-  && chmod 755 "${ANDROID_HOME}/tools/android" \
+  # Set execute permissions for Android SDK, NDK, Java
+  && chmod -R 755 "${ANDROID_HOME}" \
+  && chmod -R 755 "${JAVA_HOME}" \
+  && chmod -R 755 "${ANDROID_NDK_HOME}" \
   \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \  
