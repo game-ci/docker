@@ -1,28 +1,23 @@
 ARG baseImage="unityci/base"
 FROM $baseImage
+ARG hubVersion="3.0.0"
 
 # Hub dependencies
 RUN apt-get -q update \
- && apt-get -q install -y --no-install-recommends --allow-downgrades zenity \
+ && apt-get -q install -y --no-install-recommends --allow-downgrades zenity libgbm1 gnupg \
  && apt-get clean
 
-# Download & extract AppImage
-RUN wget --no-verbose -O /tmp/UnityHub.AppImage "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage" \
- && chmod +x /tmp/UnityHub.AppImage \
- && cd /tmp \
- && /tmp/UnityHub.AppImage --appimage-extract \
- && cp -R /tmp/squashfs-root/* / \
- && rm -rf /tmp/squashfs-root /tmp/UnityHub.AppImage \
- && mkdir -p "$UNITY_PATH" \
- && mv /AppRun /opt/unity/UnityHub
+# Install Unity Hub
+# https://docs.unity3d.com/hub/manual/InstallHub.html#install-hub-linux
+RUN sh -c 'echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/sources.list.d/unityhub.list' \
+ && wget -qO - https://hub.unity3d.com/linux/keys/public | apt-key add - \
+ && apt-get -q update \
+ && apt-get -q install -y "unityhub=$hubVersion" \
+ && apt-get clean
 
 # Alias to "unity-hub" with default params
-RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout /opt/unity/UnityHub --no-sandbox --headless "$@"' > /usr/bin/unity-hub \
+RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout /opt/unityhub/unityhub-bin --no-sandbox --headless "$@"' > /usr/bin/unity-hub \
  && chmod +x /usr/bin/unity-hub
-
-# Accept
-RUN mkdir -p "/root/.config/Unity Hub" \
- && touch "/root/.config/Unity Hub/eulaAccepted"
 
 # Configure
 RUN mkdir -p "${UNITY_PATH}/editors" \

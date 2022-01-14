@@ -163,11 +163,13 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   \
-  # Accept licenses
-  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
+  # Set execute permissions for Android SDK, NDK, Java
+  && chmod -R 755 "${ANDROID_HOME}" \
+  && chmod -R 755 "${JAVA_HOME}" \
+  && chmod -R 755 "${ANDROID_NDK_HOME}" \
   \
-  # Let other users to run sdkmanager as well
-  && chmod 755 "${ANDROID_HOME}/tools/bin/sdkmanager" \
+  # Accept licenses
+  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \  
   \
   # Update alias 'unity-editor'
   && { \
