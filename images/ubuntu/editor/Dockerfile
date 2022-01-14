@@ -165,6 +165,7 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   \
   # Let other users to run sdkmanager as well
   && chmod 755 "${ANDROID_HOME}/tools/bin/sdkmanager" \
+  && chmod 755 "${JAVA_HOME}/bin/java" \
   \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \  
