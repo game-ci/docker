@@ -20,7 +20,9 @@ RUN for mod in $module; do \
       else \
         unity-hub install-modules --version "$version" --module "$mod" --childModules | tee /var/log/install-module-${mod}.log && grep 'Missing module' /var/log/install-module-${mod}.log | exit $(wc -l); \
       fi \
-    done
+    done \
+	# Set execute permissions for modules
+	&& chmod -R 755 /opt/unity/editors/$version/Editor/Data/PlaybackEngines
 
 ###########################
 #          Editor         #
@@ -162,12 +164,6 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && apt-get remove -y jq \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
-  \
-  # Set execute permissions for Android SDK, NDK, Java
-  && chmod -R 755 "${ANDROID_HOME}" \
-  && chmod -R 755 "${JAVA_HOME}" \
-  && chmod -R 755 "${ANDROID_NDK_HOME}" \
-  \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \  
   \
