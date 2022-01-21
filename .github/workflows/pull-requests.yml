@@ -223,7 +223,10 @@ jobs:
       fail-fast: false
       matrix:
         targetPlatform:
+          - base
           - windows-il2cpp
+          - universal-windows-platform
+          - appletv
 
     steps:
       #############
@@ -245,7 +248,7 @@ jobs:
               docker build ./images/windows/base/ `
                 --tag localhost:5000/unityci/base:windows-latest `
                 --push
-      
+
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/base:windows-latest
@@ -260,7 +263,7 @@ jobs:
                 --build-arg baseImage=localhost:5000/unityci/base:windows-latest
                 --tag localhost:5000/unityci/hub:windows-latest `
                 --push
-      
+
       - name: Inspect
         run: |
           docker buildx imagetools inspect localhost:5000/unityci/hub:windows-latest
@@ -276,6 +279,7 @@ jobs:
                 --build-arg hubImage=localhost:5000/unityci/hub:windows-latest
                 --build-arg version=2020.1.4f1
                 --build-arg changeSet=fa717bb873ec
+                --build-arg module=${{ matrix.targetPlatform }}
                 --tag localhost:5000/unityci/editor:windows-latest `
                 --push
 
@@ -290,9 +294,9 @@ jobs:
         if: always()
         run: get-PSDrive
 
-  testImages:
+  testImages-ubuntu:
     name: 🧪 Test images
-    needs: [ build ]
+    needs: [ build-ubuntu ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
