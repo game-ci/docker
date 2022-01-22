@@ -2,7 +2,9 @@ name: New Windows Base Version ⛭
 
 on:
   repository_dispatch:
-    types: [new_windows_base_image_requested]
+    types:
+      - new_base_images_requested
+      - new_windows_base_image_requested
   workflow_dispatch:
     inputs:
       jobId:
@@ -10,17 +12,14 @@ on:
         required: true
         default: 'dryRun'
       repoVersionFull:
-        description: 'Docker Repo Version Full'
+        description: 'All digits of the latest tag of this repository, e.g. `1.23.45`'
         required: true
-        default: '0.15'
       repoVersionMinor:
-        description: 'Docker Repo Version Minor'
+        description: 'Minor digit of that tag, e.g. `23`'
         required: true
-        default: '15'
       repoVersionMajor:
-        description: 'Docker Repo Version Major'
+        description: 'Major digit of that tag, e.g. `1`'
         required: true
-        default: '0'
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
