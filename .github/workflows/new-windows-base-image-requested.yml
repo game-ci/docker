@@ -2,7 +2,9 @@ name: New Windows Base Version ⛭
 
 on:
   repository_dispatch:
-    types: [new_windows_base_image_requested]
+    types:
+      - new_base_images_requested
+      - new_windows_base_image_requested
   workflow_dispatch:
     inputs:
       jobId:

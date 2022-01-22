@@ -2,7 +2,8 @@ name: New Ubuntu Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [ new_legacy_editor_image_requested, new_ubuntu_legacy_editor_image_requested ]
+    types:
+      - new_ubuntu_legacy_editor_image_requested
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch

@@ -2,7 +2,8 @@ name: New Windows Editor Version 🗔
 
 on:
   repository_dispatch:
-    types: [ new_windows_legacy_editor_image_requested ]
+    types:
+      - new_windows_legacy_editor_image_requested
   workflow_dispatch:
     inputs:
       jobId:
