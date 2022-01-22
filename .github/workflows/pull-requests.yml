@@ -73,7 +73,7 @@ jobs:
           digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
 
   build-ubuntu:
-    name: "🧪 Test build (${{ matrix.targetPlatform }})"
+    name: "🧪 Test Build Ubuntu (${{ matrix.targetPlatform }})"
     runs-on: ubuntu-latest
     services:
       registry:
@@ -212,13 +212,8 @@ jobs:
         run: df -h
 
   build-windows:
-    name: "🧪 Test build (${{ matrix.targetPlatform }})"
+    name: "🧪 Test Build Windows (${{ matrix.targetPlatform }})"
     runs-on: windows-2019
-    services:
-      registry:
-        image: registry:2
-        ports:
-          - 5000:5000
     strategy:
       fail-fast: false
       matrix:
@@ -250,7 +245,7 @@ jobs:
                 --push
       - name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/unityci/base:windows-latest
+          docker inspect unityci/base:windows-latest
 
       #################
       #   Hub image   #
@@ -264,7 +259,7 @@ jobs:
                 --push
       - name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/unityci/hub:windows-latest
+          docker inspect unityci/hub:windows-latest
 
       ####################
       #   Editor image   #
@@ -273,17 +268,16 @@ jobs:
         id: build_windows_editor_image
         run: |
               docker build ./images/windows/editor/ `
-                --build-arg baseImage=localhost:5000/unityci/base:windows-latest
-                --build-arg hubImage=localhost:5000/unityci/hub:windows-latest
-                --build-arg version=2020.1.4f1
-                --build-arg changeSet=fa717bb873ec
-                --build-arg module=${{ matrix.targetPlatform }}
-                --tag localhost:5000/unityci/editor:windows-latest `
-                --push
+                --build-arg baseImage=unityci/base:windows-latest `
+                --build-arg hubImage=unityci/hub:windows-latest `
+                --build-arg version=2020.1.4f1 `
+                --build-arg changeSet=fa717bb873ec `
+                --build-arg module=${{ matrix.targetPlatform }} `
+                --tag unityci/editor:windows-latest
 
       - name: Inspect
         run: |
-          docker buildx imagetools inspect localhost:5000/unityci/editor:windows-latest
+          docker inspect unityci/editor:windows-latest
 
       ###############
       #   Metrics   #
