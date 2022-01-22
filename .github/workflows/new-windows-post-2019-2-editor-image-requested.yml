@@ -19,17 +19,14 @@ on:
         required: true
         default: '79c78de19888'
       repoVersionFull:
-        description: 'Docker Repo Version Full'
+        description: 'All digits of the latest tag of this repository, e.g. `1.23.45`'
         required: true
-        default: '0.15'
       repoVersionMinor:
-        description: 'Docker Repo Version Minor'
+        description: 'Minor digit of that tag, e.g. `23`'
         required: true
-        default: '15'
       repoVersionMajor:
-        description: 'Docker Repo Version Major'
+        description: 'Major digit of that tag, e.g. `1`'
         required: true
-        default: '0'
 
 # Further reading:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
