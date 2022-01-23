@@ -108,17 +108,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         run: docker login --username $Env:username --password $Env:password
-      - name: Check if image not already exists
+      - name: Check if image does not already exist
         run: |
-          # Source: https://stackoverflow.com/a/39731444/3593896
+          # Source: https://gist.github.com/webbertakken/1789a4683a99e2a62b975ff436a85382
           function Docker-Tag-Exists {
             [CmdletBinding()]
-            param(
-                [string] $Repository,
-                [string] $Tag
-            )
-            $Image = $Repository+":"+$Tag
-            docker manifest inspect $Image | Out-Null
+            param([string] $Repository, [string] $Tag)
+
+            Try {
+              Invoke-RestMethod "https://index.docker.io/v1/repositories/$Repository/tags/$Tag"
+            } Catch {} # Assume image does not exist on erroneous response
+
             return $?
           }
 

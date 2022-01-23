@@ -50,17 +50,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         run: docker login --username $Env:username --password $Env:password
-      - name: Check if image not already exists
+      - name: Check if image does not already exist
         run: |
-          # Source: https://stackoverflow.com/a/39731444/3593896
+          # Source: https://gist.github.com/webbertakken/1789a4683a99e2a62b975ff436a85382
           function Docker-Tag-Exists {
             [CmdletBinding()]
-            param(
-                [string] $Repository,
-                [string] $Tag
-            )
-            $Image = $Repository+":"+$Tag
-            docker manifest inspect $Image | Out-Null
+            param([string] $Repository, [string] $Tag)
+
+            Try {
+              Invoke-RestMethod "https://index.docker.io/v1/repositories/$Repository/tags/$Tag"
+            } Catch {} # Assume image does not exist on erroneous response
+
             return $?
           }
 
@@ -68,6 +68,7 @@ jobs:
             echo "Image already exists. Exiting."
             exit 1
           }
+
       #######################
       #   Free disk space   #
       #######################
@@ -89,15 +90,15 @@ jobs:
         id: build_windows_editor_image
         continue-on-error: true
         run: |
-              docker build ./images/windows/editor/ `
-                --build-arg hubImage=unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }} `
-                --build-arg baseImage=unityci/base:windows-${{ github.event.client_payload.repoVersionFull }} `
-                --build-arg version=${{ github.event.client_payload.editorVersion }} `
-                --build-arg changeSet=${{ github.event.client_payload.changeSet }} `
-                --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }} `
-                --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }} `
-                --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} `
-                --push
+          docker build ./images/windows/editor/ `
+            --build-arg hubImage=unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }} `
+            --build-arg baseImage=unityci/base:windows-${{ github.event.client_payload.repoVersionFull }} `
+            --build-arg version=${{ github.event.client_payload.editorVersion }} `
+            --build-arg changeSet=${{ github.event.client_payload.changeSet }} `
+            --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }} `
+            --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }} `
+            --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} `
+            --push
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
           ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
       #######################
@@ -107,15 +108,15 @@ jobs:
         if: steps.build_windows_editor_image.outcome=='failure'
         id: build_windows_editor_image_retry
         run: |
-              docker build ./images/windows/editor/ `
-                --build-arg hubImage=unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }} `
-                --build-arg baseImage=unityci/base:windows-${{ github.event.client_payload.repoVersionFull }} `
-                --build-arg version=${{ github.event.client_payload.editorVersion }} `
-                --build-arg changeSet=${{ github.event.client_payload.changeSet }} `
-                --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }} `
-                --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }} `
-                --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} `
-                --push
+          docker build ./images/windows/editor/ `
+            --build-arg hubImage=unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }} `
+            --build-arg baseImage=unityci/base:windows-${{ github.event.client_payload.repoVersionFull }} `
+            --build-arg version=${{ github.event.client_payload.editorVersion }} `
+            --build-arg changeSet=${{ github.event.client_payload.changeSet }} `
+            --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }} `
+            --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }} `
+            --tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} `
+            --push
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
           ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
 
@@ -129,8 +130,8 @@ jobs:
         id: image-digest
         if: ${{ success() }}
         run: |
-              $imageDetails = docker buildx imagetools inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} | ConvertFrom-Json
-              echo '::set-output digest=$imageDetails.config.digest'
+          $imageDetails = docker buildx imagetools inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} | ConvertFrom-Json
+          echo '::set-output digest=$imageDetails.config.digest'
 
       #################
       #   reporting   #

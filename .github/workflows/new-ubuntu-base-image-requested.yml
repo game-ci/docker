@@ -50,7 +50,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Check if image not already exists
+      - name: Check if image does not already exist
         run: |
           # Source: https://stackoverflow.com/a/39731444/3593896
           function docker_tag_exists() {
