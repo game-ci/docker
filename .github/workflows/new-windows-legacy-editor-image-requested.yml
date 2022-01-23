@@ -56,25 +56,25 @@ jobs:
       - name: Setup Build Parameters
         id: buildParameters
         run: |
-              if (${{ github.event.inputs.jobId }})
-              {
-                # Workflow Dispatch
-                echo '::set-output jobId=${{ github.event.inputs.jobId }}'
-                echo '::set-output editorVersion=${{ github.event.inputs.editorVersion }}'
-                echo '::set-output changeSet=${{ github.event.inputs.changeSet }}'
-                echo '::set-output repoVersionFull=${{ github.event.inputs.repoVersionFull }}'
-                echo '::set-output repoVersionMinor=${{ github.event.inputs.repoVersionMinor }}'
-                echo '::set-output repoVersionMajor=${{ github.event.inputs.repoVersionMajor }}'
-              } else
-              {
-                # Repo Dispatch
-                echo '::set-output jobId=${{ github.event.client_payload.jobId }}'
-                echo '::set-output editorVersion=${{ github.event.client_payload.editorVersion }}'
-                echo '::set-output changeSet=${{ github.event.client_payload.changeSet }}'
-                echo '::set-output repoVersionFull=${{ github.event.client_payload.repoVersionFull }}'
-                echo '::set-output repoVersionMinor=${{ github.event.client_payload.repoVersionMinor }}'
-                echo '::set-output repoVersionMajor=${{ github.event.client_payload.repoVersionMajor }}'
-              }
+          if (${{ github.event.inputs.jobId }})
+          {
+            # Workflow Dispatch
+            echo '::set-output name=jobId::${{ github.event.inputs.jobId }}'
+            echo '::set-output name=editorVersion::${{ github.event.inputs.editorVersion }}'
+            echo '::set-output name=changeSet::${{ github.event.inputs.changeSet }}'
+            echo '::set-output name=repoVersionFull::${{ github.event.inputs.repoVersionFull }}'
+            echo '::set-output name=repoVersionMinor::${{ github.event.inputs.repoVersionMinor }}'
+            echo '::set-output name=repoVersionMajor::${{ github.event.inputs.repoVersionMajor }}'
+          } else
+          {
+            # Repo Dispatch
+            echo '::set-output name=jobId::${{ github.event.client_payload.jobId }}'
+            echo '::set-output name=editorVersion::${{ github.event.client_payload.editorVersion }}'
+            echo '::set-output name=changeSet::${{ github.event.client_payload.changeSet }}'
+            echo '::set-output name=repoVersionFull::${{ github.event.client_payload.repoVersionFull }}'
+            echo '::set-output name=repoVersionMinor::${{ github.event.client_payload.repoVersionMinor }}'
+            echo '::set-output name=repoVersionMajor::${{ github.event.client_payload.repoVersionMajor }}'
+          }
 
       - name: Show hook input
         run: |
