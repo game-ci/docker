@@ -4,7 +4,6 @@ on:
   repository_dispatch:
     types:
       - new_post_2019_2_editor_image_requested
-      - new_windows_post_2019_2_editor_image_requested # deprecated
   workflow_dispatch:
     inputs:
       jobId:

@@ -4,7 +4,6 @@ on:
   repository_dispatch:
     types:
       - new_legacy_editor_image_requested
-      - new_windows_legacy_editor_image_requested # deprecated
   workflow_dispatch:
     inputs:
       jobId:
