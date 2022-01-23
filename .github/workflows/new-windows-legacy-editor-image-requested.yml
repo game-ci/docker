@@ -56,7 +56,7 @@ jobs:
       - name: Setup Build Parameters
         id: buildParameters
         run: |
-          if (${{ github.event.inputs.jobId }})
+          if ("${{ github.event.inputs.jobId }}")
           {
             # Workflow Dispatch
             echo '::set-output name=jobId::${{ github.event.inputs.jobId }}'
