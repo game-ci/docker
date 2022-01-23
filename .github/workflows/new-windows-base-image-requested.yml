@@ -114,7 +114,7 @@ jobs:
             --tag unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
             --tag unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionMajor }} `
-            --tag unityci/base:windows-latest `
+            --tag unityci/base:windows-latest
 
           docker push unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
           docker push unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionMinor }}
