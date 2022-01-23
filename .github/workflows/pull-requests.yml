@@ -212,7 +212,7 @@ jobs:
         run: df -h
 
   build-windows:
-    name: "🧪 Test Build Windows (${{ matrix.targetPlatform }})"
+    name: "🧪 Test build Windows (${{ matrix.targetPlatform }})"
     runs-on: windows-2019
     strategy:
       fail-fast: false
