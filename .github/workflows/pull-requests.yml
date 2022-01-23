@@ -73,7 +73,7 @@ jobs:
           digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
 
   build-ubuntu:
-    name: "🧪 Test Build Ubuntu (${{ matrix.targetPlatform }})"
+    name: "🧪 Test build Ubuntu (${{ matrix.targetPlatform }})"
     runs-on: ubuntu-latest
     services:
       registry:
