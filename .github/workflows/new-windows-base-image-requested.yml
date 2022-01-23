@@ -115,13 +115,18 @@ jobs:
             --tag unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionMajor }} `
             --tag unityci/base:windows-latest `
-            --push
-          $imageDetails = docker buildx imagetools inspect unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
-          echo '::set-output digest=$imageDetails.config.digest'
+
+          docker push unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+          docker push unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionMinor }}
+          docker push unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionMajor }}
+          docker push unityci/base:windows-latest
+
+          $imageDetails = docker inspect unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
+          echo '::set-output name=digest::$imageDetails.config.digest'
 
       - name: Inspect
         run: |
-          docker buildx imagetools inspect unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+          docker inspect unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
 
       - name: Image digest
         run: echo ${{ steps.build_windows_base_image.outputs.digest }}

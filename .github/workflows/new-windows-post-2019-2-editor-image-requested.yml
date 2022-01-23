@@ -156,9 +156,13 @@ jobs:
             --tag windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
             --tag windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }} `
-            --push
+
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
           ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
+
+          docker push windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
+          docker push windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
+          docker push windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }} `
 
       #######################
       #   Retry the above   #
@@ -175,23 +179,27 @@ jobs:
             --tag windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
             --tag windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }} `
-            --push
+
           ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
           ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
+
+          docker push windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
+          docker push windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
+          docker push windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }} `
 
       ###########################
       #   Inspect publication   #
       ###########################
       - name: Inspect
         run: |
-          docker buildx imagetools inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
+          docker inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
 
       - name: Image digest
         id: image-digest
         if: ${{ success() }}
         run: |
-          $imageDetails = docker buildx imagetools inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
-          echo '::set-output digest=$imageDetails.config.digest'
+          $imageDetails = docker inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
+          echo '::set-output name=digest::$imageDetails.config.digest'
 
       #################
       #   reporting   #
