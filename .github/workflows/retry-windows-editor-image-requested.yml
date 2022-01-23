@@ -139,8 +139,9 @@ jobs:
         id: image-digest
         if: ${{ success() }}
         run: |
-          $imageDetails = docker inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} | ConvertFrom-Json
-          echo '::set-output name=digest::$imageDetails.config.digest'
+          $ImageDetails = docker inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} | ConvertFrom-Json
+          $Digest = $ImageDetails.Config.Image
+          echo "::set-output name=digest::$Digest"
 
       #################
       #   reporting   #

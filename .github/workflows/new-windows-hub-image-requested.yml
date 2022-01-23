@@ -128,8 +128,9 @@ jobs:
           docker push unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionMajor }} `
           docker push unityci/hub:windows-latest `
 
-          $imageDetails = docker inspect unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
-          echo '::set-output name=digest::$imageDetails.config.digest'
+          $ImageDetails = docker inspect unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
+          $Digest = $ImageDetails.Config.Image
+          echo "::set-output name=digest::$Digest"
 
       - name: Inspect
         run: |
