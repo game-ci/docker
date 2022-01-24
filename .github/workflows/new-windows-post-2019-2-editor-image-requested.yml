@@ -153,6 +153,7 @@ jobs:
             --build-arg baseImage=unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
             --build-arg version=${{ steps.buildParameters.outputs.editorVersion }} `
             --build-arg changeSet=${{ steps.buildParameters.outputs.changeSet }} `
+            --build-arg module=${{ matrix.targetPlatform }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
@@ -176,6 +177,7 @@ jobs:
             --build-arg baseImage=unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
             --build-arg version=${{ steps.buildParameters.outputs.editorVersion }} `
             --build-arg changeSet=${{ steps.buildParameters.outputs.changeSet }} `
+            --build-arg module=${{ matrix.targetPlatform }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}

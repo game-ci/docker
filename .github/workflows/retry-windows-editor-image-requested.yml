@@ -95,6 +95,7 @@ jobs:
             --build-arg baseImage=unityci/base:windows-${{ github.event.client_payload.repoVersionFull }} `
             --build-arg version=${{ github.event.client_payload.editorVersion }} `
             --build-arg changeSet=${{ github.event.client_payload.changeSet }} `
+            --build-arg module=${{ github.event.client_payload.targetPlatform }} `
             --tag unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }} `
             --tag unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }} `
             --tag unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
@@ -118,6 +119,7 @@ jobs:
             --build-arg baseImage=unityci/base:windows-${{ github.event.client_payload.repoVersionFull }} `
             --build-arg version=${{ github.event.client_payload.editorVersion }} `
             --build-arg changeSet=${{ github.event.client_payload.changeSet }} `
+            --build-arg module=${{ github.event.client_payload.targetPlatform }} `
             --tag unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMinor }} `
             --tag unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionMajor }} `
             --tag unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
