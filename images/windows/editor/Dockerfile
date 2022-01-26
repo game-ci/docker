@@ -52,3 +52,6 @@ RUN powershell -Command foreach ($service in 'nlasvc', 'netprofm') {"Set-Service
 
 # Not needed with the dotnet base image
 # RUN powershell -Command Set-Service 'wmiApSrv' -StartupType Automatic
+
+# Packages/manifest.json could have git dependencies
+RUN choco install git
