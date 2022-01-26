@@ -25,3 +25,6 @@ COPY --from=dll-source c:/windows/system32/BluetoothApis.dll \
 
 # Enable executing powershell scripts
 RUN powershell -Command Set-ExecutionPolicy unrestricted
+
+# Install chocolatey
+RUN powershell -Command Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
