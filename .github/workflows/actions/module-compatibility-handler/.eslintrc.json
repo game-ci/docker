@@ -1,0 +1,19 @@
+{
+  "plugins": ["jest", "@typescript-eslint", "prettier", "unicorn"],
+  "extends": ["plugin:unicorn/recommended", "plugin:github/recommended", "prettier"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 9,
+    "sourceType": "module"
+  },
+  "env": {
+    "node": true,
+    "es6": true,
+    "jest/globals": true
+  },
+  "rules": {
+    "prettier/prettier": "error",
+    "import/no-extraneous-dependencies": 0,
+    "import/no-namespace": "off"
+  }
+}
