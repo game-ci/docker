@@ -206,7 +206,7 @@ RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
   && rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
-# [android, ios] python 2 command support
+# [android, ios] python 3 support
 #=======================================================================================
 RUN echo "$module" | grep -q -v '\(android\|ios\)' \
   && exit 0 \
