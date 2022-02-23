@@ -54,4 +54,4 @@ RUN powershell -Command foreach ($service in 'nlasvc', 'netprofm') {"Set-Service
 # RUN powershell -Command Set-Service 'wmiApSrv' -StartupType Automatic
 
 # Packages/manifest.json could have git dependencies
-RUN choco install git
+RUN choco install git --no-progress -y
