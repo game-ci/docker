@@ -30,7 +30,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
         with:
@@ -122,7 +122,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
         with:
