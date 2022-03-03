@@ -25,8 +25,12 @@ RUN apt-get -q update \
  libnss3 \
  libxtst6 \
  libxss1 \
+ build-essential \
+ clang \
  cpio \
  lsb-release \
+ python-is-python3 \
+ python-setuptools \
  xvfb \
  xz-utils \
  && apt-get clean \
