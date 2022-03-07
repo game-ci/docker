@@ -36,8 +36,8 @@ RUN apt-get -q update \
  && rm -rf /var/lib/apt/lists/*
 
 # Use python3 and pip3 as default
-RUN ln -s /usr/bin/python /usr/bin/python3 \
- && ln -s /usr/bin/pip /usr/bin/pip3
+RUN ln -s /usr/bin/python3 /usr/bin/python \
+ && ln -s /usr/bin/pip3 /usr/bin/pip
 
 # Toolbox
 RUN apt-get -q update \
