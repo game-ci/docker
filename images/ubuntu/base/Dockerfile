@@ -29,12 +29,15 @@ RUN apt-get -q update \
  clang \
  cpio \
  lsb-release \
- python-is-python3 \
  python-setuptools \
  xvfb \
  xz-utils \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
+
+# Use python3 and pip3 as default
+RUN ln -s /usr/bin/python /usr/bin/python3 \
+ && ln -s /usr/bin/pip /usr/bin/pip3
 
 # Toolbox
 RUN apt-get -q update \
