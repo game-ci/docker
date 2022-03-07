@@ -29,6 +29,7 @@ RUN apt-get -q update \
  clang \
  cpio \
  lsb-release \
+ python \
  python-setuptools \
  xvfb \
  xz-utils \
