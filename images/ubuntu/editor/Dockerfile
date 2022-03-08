@@ -24,6 +24,18 @@ RUN for mod in $module; do \
 	# Set execute permissions for modules
 	&& chmod -R 755 /opt/unity/editors/$version/Editor/Data/PlaybackEngines
 
+RUN echo "$version-$module" | grep -q -v '^2021.[2-3].*linux' \
+  && exit 0 \
+  || unity-hub install-modules --version "$version" --module "linux-server" --childModules | tee /var/log/install-module-${linux-server}.log && grep 'Missing module' /var/log/install-module-${linux-server}.log | exit $(wc -l);
+
+RUN echo "$version-$module" | grep -q -v '^2021.[2-3].*mac' \
+  && exit 0 \
+  || unity-hub install-modules --version "$version" --module "mac-server" --childModules | tee /var/log/install-module-${mac-server}.log && grep 'Missing module' /var/log/install-module-${mac-server}.log | exit $(wc -l);
+
+RUN echo "$version-$module" | grep -q -v '^2021.[2-3].*windows' \
+  && exit 0 \
+  || unity-hub install-modules --version "$version" --module "windows-server" --childModules | tee /var/log/install-module-${windows-server}.log && grep 'Missing module' /var/log/install-module-${windows-server}.log | exit $(wc -l);
+
 ###########################
 #          Editor         #
 ###########################
