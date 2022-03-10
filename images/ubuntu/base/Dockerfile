@@ -29,18 +29,18 @@ RUN apt-get -q update \
  clang \
  cpio \
  lsb-release \
- python \
- python-setuptools \
+ python3-pip \
+ python3-setuptools \
  xvfb \
  xz-utils \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
 # Use python3 and pip3 as default
-RUN python --version \
+RUN ln -s /usr/bin/python3 /usr/bin/python \
+ && python --version \
  && ln -s /usr/bin/pip3 /usr/bin/pip \
  && pip --version
-
 # Toolbox
 RUN apt-get -q update \
  && apt-get -q install -y --no-install-recommends --allow-downgrades \
