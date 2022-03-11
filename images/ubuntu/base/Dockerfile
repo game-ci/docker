@@ -29,8 +29,8 @@ RUN apt-get -q update \
  clang \
  cpio \
  lsb-release \
- python3-pip \
- python3-setuptools \
+ python \
+ python-setuptools \
  xvfb \
  xz-utils \
  && apt-get clean \
