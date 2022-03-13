@@ -266,3 +266,16 @@ RUN echo "$version-$module" | grep -q -v '^2021.*linux-il2cpp' \
     lld \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+#=======================================================================================
+# [2021.x] libstdc++ 6 upgrade
+#=======================================================================================
+RUN echo "$version" | grep -q -v '^2021.' \
+  && exit 0 \
+  || : \
+  && apt-get -q update \
+  && apt-get -q install -y software-properties-common \
+  && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
+  && apt-get -y install --only-upgrade libstdc++6 \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
