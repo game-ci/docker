@@ -29,7 +29,8 @@ RUN apt-get -q update \
  lsb-release \
  xvfb \
  xz-utils \
- && apt-get clean
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # Toolbox
 RUN apt-get -q update \
@@ -41,7 +42,8 @@ RUN apt-get -q update \
  openssh-client \
  wget \
  && git lfs install --system --skip-repo \
- && apt-get clean
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # libstdc++6 upgrade
 RUN apt-get -q update \
@@ -50,7 +52,8 @@ RUN apt-get -q update \
  && apt-get -q install -y --only-upgrade libstdc++6 \
  && add-apt-repository -y --remove ppa:ubuntu-toolchain-r/test \ 
  && apt-get -q remove -y --auto-remove software-properties-common \
- && apt-get clean
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # Disable default sound card, which removes ALSA warnings
 RUN /bin/echo -e 'pcm.!default {\n\
