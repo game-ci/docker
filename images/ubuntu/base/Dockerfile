@@ -43,6 +43,15 @@ RUN apt-get -q update \
  && git lfs install --system --skip-repo \
  && apt-get clean
 
+# libstdc++6 upgrade
+RUN apt-get -q update \
+ && apt-get -q install -y --no-install-recommends software-properties-common \
+ && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
+ && apt-get -q install -y --only-upgrade libstdc++6 \
+ && add-apt-repository -y --remove ppa:ubuntu-toolchain-r/test \ 
+ && apt-get -q remove -y --auto-remove software-properties-common \
+ && apt-get clean
+
 # Disable default sound card, which removes ALSA warnings
 RUN /bin/echo -e 'pcm.!default {\n\
     type plug\n\
