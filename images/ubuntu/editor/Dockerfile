@@ -173,7 +173,7 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   # Accept licenses
-  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \  
+  && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
   \
   # Update alias 'unity-editor'
   && { \
@@ -206,20 +206,10 @@ RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
   || : \
   && apt-get -q update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
-    python \
-    python-setuptools \
     build-essential \
     clang \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
-
-#=======================================================================================
-# [android, ios] python 3 support
-#=======================================================================================
-RUN echo "$module" | grep -q -v '\(android\|ios\)' \
-  && exit 0 \
-  || : \
-  && ln -s /usr/bin/python3 /usr/bin/python
 
 #=======================================================================================
 # [2019.x] libnotify4 libunwind-dev libssl1.0
