@@ -25,8 +25,6 @@ RUN apt-get -q update \
  libnss3 \
  libxtst6 \
  libxss1 \
- build-essential \
- clang \
  cpio \
  lsb-release \
  python \
@@ -54,7 +52,7 @@ RUN apt-get -q update \
  && apt-get -q install -y --no-install-recommends software-properties-common \
  && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
  && apt-get -q install -y --only-upgrade libstdc++6 \
- && add-apt-repository -y --remove ppa:ubuntu-toolchain-r/test \ 
+ && add-apt-repository -y --remove ppa:ubuntu-toolchain-r/test \
  && apt-get -q remove -y --auto-remove software-properties-common \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*

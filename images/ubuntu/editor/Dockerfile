@@ -199,6 +199,19 @@ RUN echo "$module" | grep -q -v 'webgl' \
   && rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
+# [webgl, il2cpp] python python-setuptools build-essential clang
+#=======================================================================================
+RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
+  && exit 0 \
+  || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    build-essential \
+    clang \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+#=======================================================================================
 # [2019.x] libnotify4 libunwind-dev libssl1.0
 #=======================================================================================
 RUN echo "$version" | grep -q -v '^2019.' \
