@@ -188,7 +188,7 @@ jobs:
           editorVersion: ${{ github.event.client_payload.editorVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
           # Failure info
-          reason: ${{ job.status }}
+          reason: ${{ job.status }} - ${{ steps.build_ubuntu_editor_image.outputs.metadata }}
       ###############
       #   Metrics   #
       ###############
