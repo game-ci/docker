@@ -128,9 +128,11 @@ jobs:
           docker push unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionMajor }}
           docker push unityci/hub:windows-latest
 
-          $ImageDetails = docker inspect unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }} | ConvertFrom-Json
+          $MetaData = docker inspect unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+          $ImageDetails = $MetaData | ConvertFrom-Json
           $Digest = $ImageDetails.Config.Image
           echo "::set-output name=digest::$Digest"
+          echo "::set-output name=metadata::$MetaData"
 
       - name: Inspect
         run: |
@@ -172,4 +174,4 @@ jobs:
           baseOs: windows
           repoVersion: ${{ steps.buildParameters.outputs.repoVersionFull }}
           # Failure info
-          reason: ${{ job.status }}
+          reason: ${{ job.status }} - ${{ steps.build_windows_hub_image.outputs.metadata }}

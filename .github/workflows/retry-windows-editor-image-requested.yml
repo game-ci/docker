@@ -141,9 +141,11 @@ jobs:
         id: image-digest
         if: ${{ success() }}
         run: |
-          $ImageDetails = docker inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }} | ConvertFrom-Json
+          $MetaData = docker inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
+          $ImageDetails = $MetaData | ConvertFrom-Json
           $Digest = $ImageDetails.Config.Image
           echo "::set-output name=digest::$Digest"
+          echo "::set-output name=metadata::$MetaData"
 
       #################
       #   reporting   #
@@ -182,7 +184,7 @@ jobs:
           editorVersion: ${{ github.event.client_payload.editorVersion }}
           targetPlatform: ${{ github.event.client_payload.targetPlatform }}
           # Failure info
-          reason: ${{ job.status }}
+          reason: ${{ job.status }} - ${{ steps.image-digest.outputs.metadata }}
       ###############
       #   Metrics   #
       ###############

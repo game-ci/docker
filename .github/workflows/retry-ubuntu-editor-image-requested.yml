@@ -176,7 +176,7 @@ jobs:
           editorVersion: ${{ github.event.client_payload.editorVersion }}
           targetPlatform: ${{ github.event.client_payload.targetPlatform }}
           # Failure info
-          reason: ${{ job.status }}
+          reason: ${{ job.status }} - ${{ steps.build_ubuntu_editor_image.outputs.metadata }}
       ###############
       #   Metrics   #
       ###############

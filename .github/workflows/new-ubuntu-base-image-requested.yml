@@ -126,4 +126,4 @@ jobs:
           baseOs: ubuntu
           repoVersion: ${{ github.event.client_payload.repoVersionFull }}
           # Failure info
-          reason: ${{ job.status }}
+          reason: ${{ job.status }} - ${{ steps.build_ubuntu_base_image.outputs.metadata }}
