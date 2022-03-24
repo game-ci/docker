@@ -41,6 +41,7 @@ RUN apt-get -q update \
  curl \
  git \
  git-lfs \
+ jq \
  openssh-client \
  wget \
  && git lfs install --system --skip-repo \
