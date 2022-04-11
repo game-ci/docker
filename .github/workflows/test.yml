@@ -58,7 +58,7 @@ jobs:
         run: |
           docker images
           docker save -o ubuntu-base-and-hub.tar base:ubuntu-dev hub:ubuntu-dev
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ubuntu-base-and-hub.tar
           retention-days: 1
