@@ -133,7 +133,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
       - name: Restore base and hub
         run: |
           docker load -i artifact/ubuntu-base-and-hub.tar
