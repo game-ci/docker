@@ -150,10 +150,6 @@ RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
 RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && exit 0 \
   || : \
-  # Install jq
-  && apt-get update -qq \
-  && apt-get install -qq -y --no-install-recommends jq \
-  \
   # Environment Variables
   && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id == "android-sdk-platform-tools")).destination' $UNITY_PATH/modules.json) \
   # We need to replace some characters common to paths that will break the sed expression when expanded
@@ -168,10 +164,6 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && export JAVA_HOME=${ESCAPED_JAVA_HOME:-$UNITY_PATH/Editor/Data/PlaybackEngines/AndroidPlayer/Tools/OpenJDK/Linux} \
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
   \
-  # Clean up
-  && apt-get remove -y jq \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
   \
