@@ -228,9 +228,9 @@ RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020.1\).*webgl' \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-macosx-10.10-x86_64.egg
 
 #=======================================================================================
-# [2021.x-mac-mono] x64arm64/x64ARM64 case issue https://github.com/game-ci/unity-builder/issues/320
+# [2021.x/2022.x-mac-mono] x64arm64/x64ARM64 case issue https://github.com/game-ci/unity-builder/issues/320
 #=======================================================================================
-RUN echo "$version-$module" | grep -q -v '^2021.*mac-mono' \
+RUN echo "$version-$module" | grep -q -v '^202[12].*mac-mono' \
   && exit 0 \
   || : \
   && ln -s \
