@@ -31,6 +31,7 @@ RUN apt-get -q update \
  python-setuptools \
  xvfb \
  xz-utils \
+ blender \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
