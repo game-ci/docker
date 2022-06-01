@@ -42,7 +42,7 @@ jobs:
       matrix:
         targetPlatform:
           - base
-          # - windows-il2cpp
+          - windows-il2cpp
           - universal-windows-platform
           - appletv
 
@@ -86,7 +86,16 @@ jobs:
           echo "repoVersion (only minor and major): ${{ steps.buildParameters.outputs.repoVersionMinor }}"
           echo "repoVersion (only major): ${{ steps.buildParameters.outputs.repoVersionMajor }}"
 
+      - name: Check Module Compatibility
+        id: moduleCompatibility
+        uses: ./.github/workflows/actions/module-compatibility-handler
+        with:
+          editorVersion: ${{ steps.buildParameters.outputs.editorVersion }}
+          editorChangeset: ${{ steps.buildParameters.outputs.changeSet }}
+          editorModule: ${{ matrix.targetPlatform }}
+
       - name: Report new build
+        if: steps.moduleCompatibility.shouldBuild == 'true'
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
@@ -103,12 +112,14 @@ jobs:
       #   Setup   #
       #############
       - name: Login to DockerHub
+        if: steps.moduleCompatibility.shouldBuild == 'true'
         env:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         run: docker login --username $Env:username --password $Env:password
 
       - name: Check if image does not already exist
+        if: steps.moduleCompatibility.shouldBuild == 'true'
         run: |
           # Source: https://gist.github.com/webbertakken/1789a4683a99e2a62b975ff436a85382
           function Docker-Tag-Exists {
@@ -136,15 +147,18 @@ jobs:
       #   Pull previous images   #
       ############################
       - name: Pull windows base image (must exist)
+        if: steps.moduleCompatibility.shouldBuild == 'true'
         run: docker pull unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
 
       - name: Pull windows hub image (must exist)
+        if: steps.moduleCompatibility.shouldBuild == 'true'
         run: docker pull unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
 
       ############################
       #   Windows Editor image   #
       ############################
       - name: Build and Publish Windows Editor Image
+        if: steps.moduleCompatibility.shouldBuild == 'true'
         id: build_windows_editor_image
         continue-on-error: true
         run: |
@@ -153,7 +167,7 @@ jobs:
             --build-arg baseImage=unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
             --build-arg version=${{ steps.buildParameters.outputs.editorVersion }} `
             --build-arg changeSet=${{ steps.buildParameters.outputs.changeSet }} `
-            --build-arg module=${{ matrix.targetPlatform }} `
+            --build-arg module=${{ steps.moduleCompatibility.moduleRealName }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
@@ -169,7 +183,7 @@ jobs:
       #   Retry the above   #
       #######################
       - name: Build and Publish Windows Editor Image (retry)
-        if: steps.build_windows_editor_image.outcome=='failure'
+        if: ${{ steps.build_windows_editor_image.outcome=='failure' && steps.moduleCompatibility.shouldBuild == 'true' }}
         id: build_windows_editor_image_retry
         run: |
           docker build ./images/windows/editor/ `
@@ -177,7 +191,7 @@ jobs:
             --build-arg baseImage=unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
             --build-arg version=${{ steps.buildParameters.outputs.editorVersion }} `
             --build-arg changeSet=${{ steps.buildParameters.outputs.changeSet }} `
-            --build-arg module=${{ matrix.targetPlatform }} `
+            --build-arg module=${{ steps.moduleCompatibility.moduleRealName }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
             --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
@@ -193,12 +207,13 @@ jobs:
       #   Inspect publication   #
       ###########################
       - name: Inspect
+        if: steps.moduleCompatibility.shouldBuild == 'true'
         run: |
           docker inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
 
       - name: Image digest
         id: image-digest
-        if: ${{ success() }}
+        if: ${{ success() && steps.moduleCompatibility.shouldBuild == 'true' }}
         run: |
           $MetaData = docker inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
           $ImageDetails = $MetaData | ConvertFrom-Json
@@ -210,7 +225,7 @@ jobs:
       #   reporting   #
       #################
       - name: Report publication
-        if: ${{ success() }}
+        if: ${{ success() && steps.moduleCompatibility.shouldBuild == 'true' }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
@@ -230,7 +245,7 @@ jobs:
           digest: ${{ steps.image-digest.outputs.digest }}
 
       - name: Report failure
-        if: ${{ failure() || cancelled() }}
+        if: ${{ (failure() || cancelled()) && steps.moduleCompatibility.shouldBuild == 'true'}}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}

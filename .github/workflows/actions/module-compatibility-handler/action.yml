@@ -1,0 +1,16 @@
+name: 'Module Compatibility Handler'
+description: 'Validates module compatibility for different versions of Unity and provides the real module name'
+inputs:
+  editorVersion:
+    description: 'The version of the Unity editor'
+    required: true
+  editorChangeset:
+    description: 'The changeset of the Unity editor'
+    required: true
+  editorModule:
+    description: 'The module that will be installed with the editor'
+    required: true
+
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
