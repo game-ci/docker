@@ -122,16 +122,6 @@ jobs:
           # - monodevelop # MonoDevelop / Unity Debugger
 
     steps:
-      #######################
-      #   Free disk space   #
-      #######################
-      - name: Maximize build disk space
-        uses: easimon/maximize-build-space@v6
-        with:
-          remove-dotnet: 'true'
-          remove-android: 'true'
-          remove-haskell: 'true'
-
       #############
       #   Setup   #
       #############
@@ -152,6 +142,12 @@ jobs:
             ${{ runner.os }}-buildx-pr-${{ matrix.targetPlatform }}
             ${{ runner.os }}-buildx-${{ matrix.targetPlatform }}
             ${{ runner.os }}-buildx-
+
+      #######################
+      #   Free disk space   #
+      #######################
+      - name: Free disk space
+        run: .github/workflows/scripts/free_disk_space.sh
 
       ##################
       #   Base image   #
