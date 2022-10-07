@@ -10,7 +10,6 @@ echo ""
 # Before
 echo "Disk space before:"
 df -h
-echo ""
 
 # List packages
 #echo "Listing 25 largest packages"
@@ -30,7 +29,6 @@ echo ""
 #echo ""
 #echo "Disk space after apt-get:"
 #df -h
-#echo ""
 
 # Large dirs
 echo "Removing large directories"
@@ -41,14 +39,13 @@ sudo rm -rf /opt/ghc
 echo ""
 echo "Disk space after removing large directories:"
 df -h
-echo ""
 
 # https://github.com/actions/virtual-environments/issues/709#issuecomment-612569242
+echo "Removing preinstalled tools"
 sudo rm -rf "/usr/local/share/boost"
 sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 echo ""
 
 # After
-echo ""
 echo "Disk space after:"
 df -h
