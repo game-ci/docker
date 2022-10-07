@@ -5,29 +5,32 @@
 echo "=============================================================================="
 echo "Freeing up disk space on CI system"
 echo "=============================================================================="
+echo ""
 
 # Before
-echo ""
 echo "Disk space before:"
 df -h
+echo ""
 
 # List packages
-echo "Listing 25 largest packages"
-dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 25
+#echo "Listing 25 largest packages"
+#dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 25
+#echo ""
 
 # Remove packages
-echo ""
-echo "Removing large packages"
-sudo apt-get remove -y '^ghc-8.*'
+#echo ""
+#echo "Removing large packages"
+#sudo apt-get remove -y '^ghc-8.*'
 #sudo apt-get remove -y '^dotnet-.*'
 #sudo apt-get remove -y '^llvm-.*'
-sudo apt-get remove -y 'php.*'
+#sudo apt-get remove -y 'php.*'
 #sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
-sudo apt-get autoremove -y
-sudo apt-get clean
-echo ""
-echo "Disk space after apt-get:"
-df -h
+#sudo apt-get autoremove -y
+#sudo apt-get clean
+#echo ""
+#echo "Disk space after apt-get:"
+#df -h
+#echo ""
 
 # Large dirs
 echo "Removing large directories"
@@ -38,10 +41,12 @@ sudo rm -rf /opt/ghc
 echo ""
 echo "Disk space after removing large directories:"
 df -h
+echo ""
 
 # https://github.com/actions/virtual-environments/issues/709#issuecomment-612569242
 sudo rm -rf "/usr/local/share/boost"
 sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+echo ""
 
 # After
 echo ""
