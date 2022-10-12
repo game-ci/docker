@@ -235,7 +235,10 @@ RUN echo "$version-$module" | grep -q -v '^202[12].*mac-mono' \
   || : \
   && ln -s \
     $UNITY_PATH/Editor/Data/PlaybackEngines/MacStandaloneSupport/Variations/macos_x64arm64_player_nondevelopment_mono \
-    $UNITY_PATH/Editor/Data/PlaybackEngines/MacStandaloneSupport/Variations/macos_x64ARM64_player_nondevelopment_mono
+    $UNITY_PATH/Editor/Data/PlaybackEngines/MacStandaloneSupport/Variations/macos_x64ARM64_player_nondevelopment_mono \
+  && ln -s \
+    $UNITY_PATH/Editor/Data/PlaybackEngines/MacStandaloneSupport/Variations/macos_x64arm64_player_development_mono \
+    $UNITY_PATH/Editor/Data/PlaybackEngines/MacStandaloneSupport/Variations/macos_x64ARM64_player_development_mono
 
 #=======================================================================================
 # [2021.x-linux-il2cpp] lld
