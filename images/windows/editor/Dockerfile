@@ -12,14 +12,14 @@ FROM $hubImage as Builder
 # the installation. Otherwise docker believes there was an error
 ARG version
 ARG changeSet
-RUN "C:/Program Files/Unity Hub/Unity Hub.exe" -- --headless install \
+RUN "C:/Program Files/Unity Hub/Unity Hub.exe" --no-sandbox --headless install \
                                                --version %version% \
                                                --changeset %changeSet% \
                                                & if %ERRORLEVEL% EQU 1 exit 0
 
 ARG module
 RUN IF NOT %module% == "base" ( \
-    "C:/Program Files/Unity Hub/Unity Hub.exe" -- --headless install-modules \
+    "C:/Program Files/Unity Hub/Unity Hub.exe" --no-sandbox --headless install-modules \
                                                --version %version% \
                                                --module %module% \
                                                --childModules \

@@ -208,6 +208,11 @@ jobs:
             mv -f reference-project-test/ProjectSettings/ProjectSettings_il2cpp.asset reference-project-test/ProjectSettings/ProjectSettings.asset
           fi
 
+          # For editors prior to 2020, use built-in packages. Otherwise use the packages.json with the necessary packages.
+          if [[ $(echo $UNITY_VERSION | cut -d '.' -f1) -ge 2020 ]]; then
+              mv -f reference-project-test/Packages_Disabled reference-project-test/Packages
+          fi
+
       #############
       #   Build   #
       #############
