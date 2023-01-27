@@ -209,11 +209,8 @@ jobs:
           fi
 
           # For editors prior to 2020, use built-in packages. Otherwise use the packages.json with the necessary packages.
-          if [[ $(echo $UNITY_VERSION | cut -d '.' -f1) -ge 2020 ]]; then
-              pwd
+          if [[ $(echo ${{ matrix.version }} | cut -d '.' -f1) -ge 2020 ]]; then
               mv -f reference-project-test/Packages_Disabled reference-project-test/Packages
-              ls -lashi
-              ls reference-project-test -lashi
           fi
 
       #############
