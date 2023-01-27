@@ -111,8 +111,6 @@ RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
   && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH} \
   \
   # Download Android SDK (commandline tools) 26.1.1
-  && apt-get update -qq \
-  && apt-get install -qq -y --no-install-recommends unzip \
   && mkdir -p ${ANDROID_SDK_ROOT} \
   && chmod -R 777 ${ANDROID_INSTALL_LOCATION} \
   && wget -q https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip -O /tmp/android-sdk.zip \
@@ -127,11 +125,6 @@ RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
   \
   # Accept licenses
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses \
-  \
-  # Clean up
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /tmp/* \
   \
   # Update alias 'unity-editor'
   && { \
