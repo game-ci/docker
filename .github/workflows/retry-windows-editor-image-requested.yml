@@ -144,8 +144,8 @@ jobs:
           $MetaData = docker inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
           $ImageDetails = $MetaData | ConvertFrom-Json
           $Digest = $ImageDetails.Config.Image
-          echo "::set-output name=digest::$Digest"
-          echo "::set-output name=metadata::$MetaData"
+          echo "digest=$Digest" >> $GITHUB_OUTPUT
+          echo "metadata=$MetaData" >> $GITHUB_OUTPUT
 
       #################
       #   reporting   #
