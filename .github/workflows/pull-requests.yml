@@ -152,7 +152,7 @@ jobs:
       #   Base image   #
       ##################
       - name: Build base image # and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         id: build_ubuntu_base_image
         with:
           file: ./images/ubuntu/base/Dockerfile
@@ -168,7 +168,7 @@ jobs:
       #   Hub image   #
       #################
       - name: Build hub image # and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         id: build_ubuntu_hub_image
         with:
           file: ./images/ubuntu/hub/Dockerfile
@@ -186,7 +186,7 @@ jobs:
       #   Editor image   #
       ####################
       - name: Build editor image # and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         id: build_editor_image
         with:
           file: ./images/ubuntu/editor/Dockerfile

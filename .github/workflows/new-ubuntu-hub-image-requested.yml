@@ -78,7 +78,7 @@ jobs:
       #   Hub image   #
       #################
       - name: Build and publish
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         id: build_ubuntu_hub_image
         with:
           file: ./images/ubuntu/hub/Dockerfile
