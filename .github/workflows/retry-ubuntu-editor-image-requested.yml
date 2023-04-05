@@ -138,8 +138,8 @@ jobs:
       - name: Image digest
         id: image-digest
         run: |
-          [ '${{ steps.build_ubuntu_editor_image.outcome }}'       = 'success' ] && echo "::set-output name=digest::${{ steps.build_ubuntu_editor_image.outputs.digest }}" || :
-          [ '${{ steps.build_ubuntu_editor_image_retry.outcome }}' = 'success' ] && echo "::set-output name=digest::${{ steps.build_ubuntu_editor_image_retry.outputs.digest }}" || :
+          [ '${{ steps.build_ubuntu_editor_image.outcome }}'       = 'success' ] && echo "digest=${{ steps.build_ubuntu_editor_image.outputs.digest }}" >> $GITHUB_OUTPUT || :
+          [ '${{ steps.build_ubuntu_editor_image_retry.outcome }}' = 'success' ] && echo "digest=${{ steps.build_ubuntu_editor_image_retry.outputs.digest }}" >> $GITHUB_OUTPUT || :
       #################
       #   reporting   #
       #################

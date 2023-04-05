@@ -22,7 +22,7 @@ jobs:
   ##########################
   ubuntu-base-and-hub:
     name: Base and hub
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.setup.outputs.versions }}
       excludes: ${{ steps.setup.outputs.excludes }}
@@ -72,14 +72,14 @@ jobs:
           # Get the Unity versions for test. (The latest patch versions for each minor version.)
           VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2018.3`
           echo "Versions: $VERSIONS"
-          echo "::set-output name=versions::$VERSIONS"
+          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
 
           # Exclude linux-il2cpp for Unity 2019.2 or earlier
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
 
           EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
           echo "Excludes: $EXCLUDES"
-          echo "::set-output name=excludes::$EXCLUDES"
+          echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
 
   #############################
   #   Build editor and test   #
@@ -87,7 +87,7 @@ jobs:
   editor:
     needs: ubuntu-base-and-hub
     name: Editor (${{ matrix.version }}, ${{ matrix.module }})
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -206,6 +206,11 @@ jobs:
           # For 'linux-il2cpp' module, switch the script backend to 'IL2CPP'
           if [ "${{ matrix.module }}" = "linux-il2cpp" ] ; then
             mv -f reference-project-test/ProjectSettings/ProjectSettings_il2cpp.asset reference-project-test/ProjectSettings/ProjectSettings.asset
+          fi
+
+          # For editors prior to 2020, use built-in packages. Otherwise use the packages.json with the necessary packages.
+          if [[ $(echo ${{ matrix.version }} | cut -d '.' -f1) -ge 2020 ]]; then
+              mv -f reference-project-test/Packages_Disabled reference-project-test/Packages
           fi
 
       #############
