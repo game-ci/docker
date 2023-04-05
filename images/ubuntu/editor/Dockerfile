@@ -10,7 +10,7 @@ FROM $hubImage AS builder
 # Install editor
 ARG version
 ARG changeSet
-RUN unity-hub install --version "$version" --changeset "$changeSet" | tee /var/log/install-editor.log && grep 'Error' /var/log/install-editor.log | exit $(wc -l)
+RUN unity-hub install --version "$version" --changeset "$changeSet" | tee /var/log/install-editor.log && grep 'Failed to install\|Error while installing an editor' /var/log/install-editor.log | exit $(wc -l)
 
 # Install modules for that editor
 ARG module="non-existent-module"
@@ -95,7 +95,7 @@ RUN echo "$version-$module" | grep -q -v '^\(2020.1\|2020.2.0f\|2020.2.1f\).*-we
 #=======================================================================================
 # [2018.x-android] Install 'Android SDK 26.1.1' and 'Android NDK 16.1.4479499'
 #=======================================================================================
-RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
+RUN echo "$version-$module" | grep -q -v '^2018\.[34].*android' \
   && exit 0 \
   || : \
   # Versions
@@ -137,10 +137,10 @@ RUN echo "$version-$module" | grep -q -v '^\(2018.3\|2018.4\).*android' \
   # Update '~/.bashrc' to enable using variables when logging in
   && echo ". /usr/bin/unity-editor.d/android-2018.3-4.sh" >> ~/.bashrc
 
-#=======================================================================================
-# [2019.x/2020.x/2021.x-android] Support usage of installed Android SDKs outside of editor
-#=======================================================================================
-RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
+#==================================================================================================
+# [2019.x/2020.x/2021.x/2022.1-android] Support usage of installed Android SDKs outside of editor
+#==================================================================================================
+RUN echo "$version-$module" | grep -q -vP '^(20(19|20|21)|2022\.1).*android' \
   && exit 0 \
   || : \
   # Environment Variables
@@ -170,6 +170,47 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   } > /usr/bin/unity-editor.d/android-2019+.sh \
   # Update '~/.bashrc' to enable using variables when logging in
   && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
+  
+#=======================================================================================
+# [2022.x-android] Support usage of installed Android SDKs outside of editor
+#=======================================================================================
+RUN echo "$version-$module" | grep -q -vP '^(2022.[2-9]|202[3-9]|20[3-9]).*android' \
+  && exit 0 \
+  || : \
+  && apt-get update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades file\
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  # Environment Variables
+  && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id == "android-sdk-platform-tools-32.0.0")).destination' $UNITY_PATH/modules.json) \
+  # We need to replace some characters common to paths that will break the sed expression when expanded
+  && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
+  && export ANDROID_SDK_ROOT=$(echo $RAW_ANDROID_SDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  && export ANDROID_HOME=${ANDROID_SDK_ROOT} \
+  && export RAW_ANDROID_NDK_ROOT=$(jq -cr '(.[] | select(.id == "android-ndk-r23b")).destination' $UNITY_PATH/modules.json) \
+  && export ANDROID_NDK_HOME=$(echo $RAW_ANDROID_NDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  && export RAW_JAVA_HOME=$(jq -cr '(.[] | select(.id == "android-open-jdk-11.0.14.1+1")).destination' $UNITY_PATH/modules.json) \
+  && export ESCAPED_JAVA_HOME=$(echo $RAW_JAVA_HOME | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  # Unity 2019.x doesn't have the jdk in the modules, so put in a fallback. sdkmanager will fail if invaild
+  && export JAVA_HOME=${ESCAPED_JAVA_HOME:-$UNITY_PATH/Editor/Data/PlaybackEngines/AndroidPlayer/Tools/OpenJDK/Linux} \
+  && export ANDROID_LLVM_ROOT="${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin" \
+  && export PATH=$JAVA_HOME/bin:${ANDROID_SDK_ROOT}/cmdline-tools/6.0:${ANDROID_SDK_ROOT}/cmdline-tools/6.0/bin:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${ANDROID_LLVM_ROOT}:${PATH} \
+  \
+  # Accept licenses
+  && yes | "${ANDROID_HOME}/cmdline-tools/6.0/bin/sdkmanager" --licenses \
+  \
+  # Update alias 'unity-editor'
+  && { \
+    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
+    echo "export JAVA_HOME=${JAVA_HOME}"; \
+    echo "export PATH=${PATH}"; \
+  } > /usr/bin/unity-editor.d/android-2019+.sh \
+  # Update '~/.bashrc' to enable using variables when logging in
+  && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc \
+  && cd $ANDROID_LLVM_ROOT \
+  && for f in $(find . -type f -size -64c); do target=$(cat $f) && echo "Making symlink $f -> $target" && rm $f && ln -s $target $f ; done
 
 #=======================================================================================
 # [webgl] Support audio using ffmpeg (~99MB)
