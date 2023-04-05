@@ -44,6 +44,8 @@ RUN apt-get -q update \
  jq \
  openssh-client \
  wget \
+ zip \
+ unzip \
  && git lfs install --system --skip-repo \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
