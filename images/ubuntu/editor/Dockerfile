@@ -174,7 +174,7 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
 RUN echo "$version-$module" | grep -q -vP '^(20(19|20)).*android' \
   && exit 0 \
   || : \
-  && source ~/.bashrc \
+  && . ~/.bashrc \
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses
 
 #=======================================================================================
@@ -183,7 +183,7 @@ RUN echo "$version-$module" | grep -q -vP '^(20(19|20)).*android' \
 RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|20[3-9]).*android' \
   && exit 0 \
   || : \
-  && source ~/.bashrc \
+  && . ~/.bashrc \
   && export RAW_CMDLINE_TOOLS_PATH=$(jq -cr '(.[] | select(.id | contains("android-sdk-command-line-tools"))).renameTo' $UNITY_PATH/modules.json) \
   && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
   && export CMDLINE_TOOLS_PATH=$(echo $RAW_CMDLINE_TOOLS_PATH | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
