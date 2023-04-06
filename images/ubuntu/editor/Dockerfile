@@ -195,7 +195,7 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|20[3-9]).*android' \
 RUN echo "$version-$module" | grep -q -vP '^(2022.[2-9]|202[3-9]|20[3-9]).*android' \
   && exit 0 \
   || : \
-  && source ~/.bashrc \
+  && . ~/.bashrc \
   && cd "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin" \
   # Symlink any file less than 64 bytes to the file name within the file. We assume there are no real files that small
   && for f in $(find . -type f -size -64c); do target=$(cat $f) && echo "Making symlink $f -> $target" && rm $f && ln -s $target $f ; done
