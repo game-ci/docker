@@ -169,6 +169,27 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
 
 #=======================================================================================
+# [2021.x/2022.x-android] Set CMDLINE Tools Path
+#=======================================================================================
+RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|20[3-9]).*android' \
+  && exit 0 \
+  || : \
+  && . ~/.bashrc \
+  && export RAW_CMDLINE_TOOLS_PATH=$(jq -cr '(.[] | select(.id | contains("android-sdk-command-line-tools"))).renameTo' $UNITY_PATH/modules.json) \
+  && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
+  && export ANDROID_CMDLINE_TOOLS_PATH=$(echo $RAW_CMDLINE_TOOLS_PATH | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  # Prefer cmdline tools over legacy tools
+  && export PATH=${ANDROID_CMDLINE_TOOLS_PATH}/bin:${PATH} \
+  && { \
+    echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
+    echo "export ANDROID_HOME=${ANDROID_HOME}"; \
+    echo "export ANDROID_NDK_HOME=${ANDROID_NDK_HOME}"; \
+    echo "export JAVA_HOME=${JAVA_HOME}"; \
+    echo "export ANDROID_CMDLINE_TOOLS_PATH=${ANDROID_CMDLINE_TOOLS_PATH}"; \
+    echo "export PATH=${PATH}"; \
+  } > /usr/bin/unity-editor.d/android-2019+.sh
+
+#=======================================================================================
 # [2019.x/2020.x-android] Accept Android SDK licenses via old sdkmanager
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -vP '^(20(19|20)).*android' \
@@ -184,10 +205,7 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|20[3-9]).*android' \
   && exit 0 \
   || : \
   && . ~/.bashrc \
-  && export RAW_CMDLINE_TOOLS_PATH=$(jq -cr '(.[] | select(.id | contains("android-sdk-command-line-tools"))).renameTo' $UNITY_PATH/modules.json) \
-  && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
-  && export CMDLINE_TOOLS_PATH=$(echo $RAW_CMDLINE_TOOLS_PATH | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
-  && yes | "${CMDLINE_TOOLS_PATH}/bin/sdkmanager" --licenses
+  && yes | "${ANDROID_CMDLINE_TOOLS_PATH}/bin/sdkmanager" --licenses
 
 #=======================================================================================
 # [2022.x-android] Fix for symlink issue on Android 2022.2+
