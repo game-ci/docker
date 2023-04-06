@@ -265,6 +265,7 @@ jobs:
       #   Test   #
       ############
       - name: Test project
+        timeout-minutes: 10
         uses: game-ci/unity-test-runner@main
         with:
           unityVersion: ${{ matrix.version }}
