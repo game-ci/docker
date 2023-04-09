@@ -1,6 +1,6 @@
 ARG baseImage="unityci/base"
 FROM $baseImage
-ARG hubVersion="3.0.0"
+ARG hubVersion="3.4.2-beta.1"
 
 # Hub dependencies
 RUN apt-get -q update \
@@ -10,6 +10,7 @@ RUN apt-get -q update \
 # Install Unity Hub
 # https://docs.unity3d.com/hub/manual/InstallHub.html#install-hub-linux
 RUN sh -c 'echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc/apt/sources.list.d/unityhub.list' \
+ && sh -c 'echo "deb https://hub.unity3d.com/linux/repos/deb unstable main" > /etc/apt/sources.list.d/unityhub-beta.list' \
  && wget -qO - https://hub.unity3d.com/linux/keys/public | apt-key add - \
  && apt-get -q update \
  && apt-get -q install -y "unityhub=$hubVersion" \
