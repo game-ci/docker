@@ -108,18 +108,18 @@ jobs:
           echo "Versions: $VERSIONS"
           echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
 
-          # Exclude linux-il2cpp for Unity 2019.2 or earlier
-          EXCLUDES="$EXCLUDES $(echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: "linux-il2cpp" }, { version: ., module: "windows-il2cpp" } ]')"
+          # Exclude linux-il2cpp and windows-il2cpp for Unity 2019.2 or earlier
+          EXCLUDES="$EXCLUDES $(echo '$VERSIONS' | jq -c '[ .[] | select(test("2018|2019.1|2019.2")) | { version: ., module: '\''linux-il2cpp'\'' }, { version: ., module: '\''windows-il2cpp'\'' } ]')"
 
           EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
           echo "Excludes: $EXCLUDES"
           echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
   
-  ##########################
-  #   Build base and hub   #
-  ##########################
+  #################################
+  #   Build Ubuntu base and hub   #
+  #################################
   ubuntu-base-and-hub:
-    name: Base and hub
+    name: Ubuntu Base and Hub
     runs-on: ubuntu-latest
     steps:
       #############
@@ -158,11 +158,11 @@ jobs:
           path: ubuntu-base-and-hub.tar
           retention-days: 1
 
-  ##########################
-  #   Build base and hub   #
-  ##########################
+  ##################################
+  #   Build Windows base and hub   #
+  ##################################
   windows-base-and-hub:
-    name: Base and hub
+    name: Windows Base and Hub
     runs-on: windows-2019
     steps:
       #############
