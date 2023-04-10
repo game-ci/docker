@@ -21,7 +21,7 @@ jobs:
   #      Test Backend      #
   ##########################
   reportingTest:
-    # Only run if not a PR
+    # Only run if not a PR as we need access to secrets
     if: github.base_ref == ''
     name: "🧪 Test reporting system (${{ matrix.imageType }})"
     runs-on: ubuntu-latest
@@ -169,11 +169,39 @@ jobs:
       #############
       #   Setup   #
       #############
+      - name: Setup Build Path
+        id: buildPath
+        run: |
+          RAW_TARGET_WINDOWS_WORKSPACE_PATH="C:\build_workspace"
+          RAW_ORIGINAL_WORKSPACE_PATH="${{ github.workspace }}"
+          TARGET_WORKSPACE_PATH=${RAW_TARGET_WINDOWS_WORKSPACE_PATH//\\//}
+          echo "RAW_TARGET_WINDOWS_WORKSPACE_PATH=$RAW_TARGET_WINDOWS_WORKSPACE_PATH" >> $GITHUB_OUTPUT
+          echo "TARGET_WORKSPACE_PATH=$TARGET_WORKSPACE_PATH" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # There isn't enough space on the D-drive so we are making a workspace
+      # on the c-drive and linking it to the original location with a junction
+      - name: Create workspace on C
+        run: mkdir -p ${{ steps.buildPath.outputs.TARGET_WORKSPACE_PATH }}
+        shell: bash
+      
+      - name: Link C and D drive workspaces
+        run: |
+          cd ..
+          move ${{ github.workspace }} ${{ github.workspace }}_temp
+          mklink /J ${{ github.workspace }} ${{ steps.buildPath.outputs.RAW_TARGET_WINDOWS_WORKSPACE_PATH }}
+          robocopy ${{ github.workspace }}_temp ${{ github.workspace }} /COPYALL /E /NFL /NDL /NJH /NJS /nc /ns /np
+          rd ${{ github.workspace }}_temp /s /q
+          set/A errlev="%ERRORLEVEL% & 24"
+          exit/B %errlev%
+          
+        shell: cmd
+
       - uses: actions/checkout@v3
 
-      #################################
-      #   Build Ubuntu base and hub   #
-      #################################
+      ##################################
+      #   Build Windows base and hub   #
+      ##################################
       - name: Build base
         run: |
           docker build -t base:windows-dev -f ./images/windows/base/Dockerfile .
@@ -427,6 +455,34 @@ jobs:
       #############
       #   Setup   #
       #############
+      - name: Setup Build Path
+        id: buildPath
+        run: |
+          RAW_TARGET_WINDOWS_WORKSPACE_PATH="C:\build_workspace"
+          RAW_ORIGINAL_WORKSPACE_PATH="${{ github.workspace }}"
+          TARGET_WORKSPACE_PATH=${RAW_TARGET_WINDOWS_WORKSPACE_PATH//\\//}
+          echo "RAW_TARGET_WINDOWS_WORKSPACE_PATH=$RAW_TARGET_WINDOWS_WORKSPACE_PATH" >> $GITHUB_OUTPUT
+          echo "TARGET_WORKSPACE_PATH=$TARGET_WORKSPACE_PATH" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # There isn't enough space on the D-drive so we are making a workspace
+      # on the c-drive and linking it to the original location with a junction
+      - name: Create workspace on C
+        run: mkdir -p ${{ steps.buildPath.outputs.TARGET_WORKSPACE_PATH }}
+        shell: bash
+      
+      - name: Link C and D drive workspaces
+        run: |
+          cd ..
+          move ${{ github.workspace }} ${{ github.workspace }}_temp
+          mklink /J ${{ github.workspace }} ${{ steps.buildPath.outputs.RAW_TARGET_WINDOWS_WORKSPACE_PATH }}
+          robocopy ${{ github.workspace }}_temp ${{ github.workspace }} /COPYALL /E /NFL /NDL /NJH /NJS /nc /ns /np
+          rd ${{ github.workspace }}_temp /s /q
+          set/A errlev="%ERRORLEVEL% & 24"
+          exit/B %errlev%
+          
+        shell: cmd
+      
       - uses: actions/checkout@v3
 
       ############################
@@ -460,16 +516,16 @@ jobs:
       ###########################
       - name: Build
         continue-on-error: true
-        timeout-minutes: 40
+        timeout-minutes: 60
         id: build-1
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
           --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
           --build-arg changeSet=${{ env.CHANGESET }} --build-arg module=${{ env.MODULE }} ./images/windows/editor
 
-      ###################################
-      #   Build Ubuntu editor (retry)   #
-      ###################################
+      ####################################
+      #   Build Windows editor (retry)   #
+      ####################################
       - name: Sleep for retry
         if: steps.build-1.outcome == 'failure'
         run: sleep 120
@@ -477,8 +533,62 @@ jobs:
       - name: Build (Retry)
         if: steps.build-1.outcome == 'failure'
         id: build-2
-        timeout-minutes: 40
+        timeout-minutes: 60
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
           --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
           --build-arg changeSet=${{ env.CHANGESET }} --build-arg module=${{ env.MODULE }} ./images/windows/editor
+
+      #####################
+      #   Setup to test   #
+      #####################
+      - name: Show image size
+        run: docker images
+      - name: Setup to test
+        run: |
+          # For 'windows-il2cpp' module, switch the script backend to 'IL2CPP'
+          if [ "${{ matrix.module }}" = "windows-il2cpp" ] ; then
+            mv -f reference-project-test/ProjectSettings/ProjectSettings_il2cpp.asset reference-project-test/ProjectSettings/ProjectSettings.asset
+          fi
+
+          # For editors prior to 2020, use built-in packages. Otherwise use the packages.json with the necessary packages.
+          if [[ $(echo ${{ matrix.version }} | cut -d '.' -f1) -ge 2020 ]]; then
+              mv -f reference-project-test/Packages_Disabled reference-project-test/Packages
+          fi
+
+      #############
+      #   Build   #
+      #############
+      - name: Build project
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == ''
+        timeout-minutes: 60
+        uses: game-ci/unity-builder@main
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: ${{ matrix.version }}
+          customImage: editor:windows-dev
+          projectPath: reference-project-test
+          targetPlatform: ${{ matrix.platform }}
+          allowDirtyBuild: true
+
+      ############
+      #   Test   #
+      ############
+      - name: Test project
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == ''
+        timeout-minutes: 20
+        uses: game-ci/unity-test-runner@main
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: ${{ matrix.version }}
+          customImage: editor:windows-dev
+          projectPath: reference-project-test
+          customParameters: -nographics -buildTarget ${{ matrix.platform }}
