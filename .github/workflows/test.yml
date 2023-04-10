@@ -374,13 +374,10 @@ jobs:
         # The latest patch versions for each minor version.
         version: ${{ fromJson(needs.build-matrix.outputs.versions) }}
         module:
-          - base
           - windows-il2cpp
           - universal-windows-platform
           - appletv
         include:
-          - module: base
-            platform: StandaloneWindows64
           - module: windows-il2cpp
             platform: StandaloneWindows64
           - module: appletv
@@ -496,6 +493,7 @@ jobs:
           if [[ $(echo ${{ matrix.version }} | cut -d '.' -f1) -ge 2020 ]]; then
               mv -f reference-project-test/Packages_Disabled reference-project-test/Packages
           fi
+        shell: bash
 
       #############
       #   Build   #
