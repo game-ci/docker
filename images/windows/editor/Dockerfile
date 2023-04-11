@@ -12,16 +12,22 @@ FROM $hubImage as Builder
 # the installation. Otherwise docker believes there was an error
 ARG version
 ARG changeSet
-RUN "C:/Program Files/Unity Hub/Unity Hub.exe" --no-sandbox --headless install \
-                                               --version %version% \
-                                               --changeset %changeSet%
+RUN powershell -Command "&'C:/Program Files/Unity Hub/Unity Hub.exe' '--%' '--no-sandbox --headless install \ 
+                         --version %version% --changeset %changeset%' 2>$null | \
+                         Tee-Object -FilePath 'C:\install-editor.log'; \
+                         if ((select-string -Path 'C:\install-editor.log' -Pattern \
+                         'Failed to install|Error while installing an editor|Completed with errors') -ne $null) { exit 1 } \
+                         else { exit 0 }"
 
 ARG module
 RUN IF NOT %module% == "base" ( \
-    "C:/Program Files/Unity Hub/Unity Hub.exe" --no-sandbox --headless install-modules \
-                                               --version %version% \
-                                               --module %module% \
-                                               --childModules
+    powershell -Command \
+    "&'C:/Program Files/Unity Hub/Unity Hub.exe' '--%' '--no-sandbox --headless \ 
+     install-modules --version %version% --module %module% --childModules' 2>$null | \
+     Tee-Object -FilePath 'C:\install-module-%module%.log'; \
+     if ((select-string -Path 'C:\install-module-%module%.log' -Pattern \
+     'Failed to install|Error while installing an editor|Completed with errors|Missing module|No modules found') -ne $null) \
+     { exit 1 } else { exit 0 }" \
     )
 
 ############
