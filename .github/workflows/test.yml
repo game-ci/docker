@@ -209,6 +209,7 @@ jobs:
       - name: Save images
         run: |
           docker images
+          dir
           cd artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           dir
