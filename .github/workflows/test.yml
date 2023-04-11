@@ -279,12 +279,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ubuntu-base-and-hub
-          path: ./ubuntu-base-and-hub.tar
 
       - name: Restore base and hub
         run: |
-          docker load -i ubuntu-base-and-hub.tar
-          rm ubuntu-base-and-hub.tar
+          docker load -i ubuntu-base-and-hub/ubuntu-base-and-hub.tar
+          rm -rf ubuntu-base-and-hub
 
       ######################
       #   Setup to build   #
@@ -467,11 +466,10 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: windows-base-and-hub
-          path: ./windows-base-and-hub.tar
       - name: Restore base and hub
         run: |
-          docker load -i windows-base-and-hub.tar
-          rm windows-base-and-hub.tar
+          docker load -i windows-base-and-hub/windows-base-and-hub.tar
+          rm -rf windows-base-and-hub
         shell: bash
 
       ######################
