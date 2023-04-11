@@ -162,6 +162,40 @@ jobs:
           path: ubuntu-base-and-hub.tar
           retention-days: 1
 
+  ##################################
+  #   Build Windows base and hub   #
+  ##################################
+  windows-base-and-hub:
+    name: Windows Base and Hub
+    runs-on: windows-2019
+    steps:
+      #############
+      #   Setup   #
+      #############
+      - uses: actions/checkout@v3
+
+      ##################################
+      #   Build Windows base and hub   #
+      ##################################
+      - name: Build base
+        run: |
+          docker build -t base:windows-dev -f ./images/windows/base/Dockerfile .
+      - name: Build hub
+        run: |
+          docker build -t hub:windows-dev -f ./images/windows/hub/Dockerfile --build-arg baseImage=base:windows-dev .
+      
+      ###################################################
+      #   Save images for later steps in the workflow   #
+      ###################################################
+      - name: Save images
+        run: |
+          docker images
+          docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
+      - uses: actions/upload-artifact@v3
+        with:
+          path: windows-base-and-hub.tar
+          retention-days: 1
+
   #############################
   #   Build editor and test   #
   #############################
@@ -368,7 +402,7 @@ jobs:
   #   Build editor and test   #
   #############################
   windows-editor:
-    needs: [build-matrix]
+    needs: [windows-base-and-hub, build-matrix]
     name: Windows (${{ matrix.version }}, ${{ matrix.module }})
     runs-on: windows-2019
     strategy:
@@ -393,48 +427,17 @@ jobs:
       #############
       #   Setup   #
       #############
-      - name: Setup Build Path
-        id: buildPath
-        run: |
-          RAW_TARGET_WINDOWS_WORKSPACE_PATH="C:\build_workspace"
-          RAW_ORIGINAL_WORKSPACE_PATH="${{ github.workspace }}"
-          TARGET_WORKSPACE_PATH=${RAW_TARGET_WINDOWS_WORKSPACE_PATH//\\//}
-          echo "RAW_TARGET_WINDOWS_WORKSPACE_PATH=$RAW_TARGET_WINDOWS_WORKSPACE_PATH" >> $GITHUB_OUTPUT
-          echo "TARGET_WORKSPACE_PATH=$TARGET_WORKSPACE_PATH" >> $GITHUB_OUTPUT
-        shell: bash
-
-      # There isn't enough space on the D-drive so we are making a workspace
-      # on the c-drive and linking it to the original location with a junction
-      - name: Create workspace on C
-        run: mkdir -p ${{ steps.buildPath.outputs.TARGET_WORKSPACE_PATH }}
-        shell: bash
-      
-      - name: Link C and D drive workspaces
-        run: |
-          cd ..
-          move ${{ github.workspace }} ${{ github.workspace }}_temp
-          mklink /J ${{ github.workspace }} ${{ steps.buildPath.outputs.RAW_TARGET_WINDOWS_WORKSPACE_PATH }}
-          robocopy ${{ github.workspace }}_temp ${{ github.workspace }} /COPYALL /E /NFL /NDL /NJH /NJS /nc /ns /np
-          rd ${{ github.workspace }}_temp /s /q
-          set/A errlev="%ERRORLEVEL% & 24"
-          exit/B %errlev%
-          
-        shell: cmd
-      
       - uses: actions/checkout@v3
 
-      ##################################
-      #   Build Windows base and hub   #
-      ##################################
-
-      # We build the image for each instance because docker save takes an extreme amount of 
-      # time on Windows compared to just building the image
-      - name: Build base
+      ############################
+      #   Restore base and hub   #
+      ############################
+      - uses: actions/download-artifact@v3
+      - name: Restore base and hub
         run: |
-          docker build -t base:windows-dev -f ./images/windows/base/Dockerfile .
-      - name: Build hub
-        run: |
-          docker build -t hub:windows-dev -f ./images/windows/hub/Dockerfile --build-arg baseImage=base:windows-dev .
+          docker load -i artifact/windows-base-and-hub.tar
+          rm -rf artifact
+        shell: bash
 
       ######################
       #   Setup to build   #
