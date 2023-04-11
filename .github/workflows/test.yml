@@ -214,7 +214,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: windows-base-and-hub
-          path: C:/artifact/windows-base-and-hub.tar.zstd
+          path: C:/artifact/windows-base-and-hub.tar.zst
           retention-days: 1
 
       - name: Show disk space
@@ -465,8 +465,13 @@ jobs:
           name: windows-base-and-hub
       - name: Restore base and hub
         run: |
+          mkdir c:/artifact
+          mv windows-base-and-hub.tar.zst c:/artifact
+          cd c:/artifact
+          unzstd windows-base-and-hub.tar.zst
           docker load -i windows-base-and-hub.tar
-          rm windows-base-and-hub.tar
+          cd {{ github.workspace }}
+          rm -rf c:/artifact
         shell: bash
 
       ######################
