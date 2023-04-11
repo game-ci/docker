@@ -206,6 +206,7 @@ jobs:
           mkdir c:\artifact
           cd c:\artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
+          zstd -z --format=zstd windows-base-and-hub.tar
           dir
       
       # move windows-base-and-hub.tar ..
@@ -213,7 +214,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: windows-base-and-hub
-          path: C:/artifact/windows-base-and-hub.tar
+          path: C:/artifact/windows-base-and-hub.tar.zstd
           retention-days: 1
 
       - name: Show disk space
