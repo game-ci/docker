@@ -206,7 +206,8 @@ jobs:
           mkdir c:\artifact
           cd c:\artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
-          zstd -z --format=zstd windows-base-and-hub.tar
+          echo Compressing images
+          zstd -z -16 --format=zstd windows-base-and-hub.tar
           dir
       
       # move windows-base-and-hub.tar ..
@@ -466,11 +467,15 @@ jobs:
       - name: Restore base and hub
         run: |
           mkdir c:/artifact
+          echo moving
           mv windows-base-and-hub.tar.zst c:/artifact
           cd c:/artifact
+          echo decompressing
           zstd -d windows-base-and-hub.tar.zst
+          echo loading
           docker load -i windows-base-and-hub.tar
-          cd {{ github.workspace }}
+          echo cleanup
+          cd ${{ github.workspace }}
           rm -rf c:/artifact
         shell: bash
 
