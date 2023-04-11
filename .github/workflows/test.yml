@@ -468,7 +468,7 @@ jobs:
           mkdir c:/artifact
           mv windows-base-and-hub.tar.zst c:/artifact
           cd c:/artifact
-          unzstd windows-base-and-hub.tar.zst
+          zstd -d windows-base-and-hub.tar.zst
           docker load -i windows-base-and-hub.tar
           cd {{ github.workspace }}
           rm -rf c:/artifact
