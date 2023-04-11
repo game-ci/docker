@@ -282,6 +282,7 @@ jobs:
 
       - name: Restore base and hub
         run: |
+          ls -lashi
           docker load -i ubuntu-base-and-hub/ubuntu-base-and-hub.tar
           rm -rf ubuntu-base-and-hub
 
