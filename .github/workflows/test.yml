@@ -159,6 +159,7 @@ jobs:
           docker save -o ubuntu-base-and-hub.tar base:ubuntu-dev hub:ubuntu-dev
       - uses: actions/upload-artifact@v3
         with:
+          name: ubuntu-base-and-hub
           path: ubuntu-base-and-hub.tar
           retention-days: 1
 
@@ -172,6 +173,23 @@ jobs:
       #############
       #   Setup   #
       #############
+      - name: Setup Artifact Path
+        run: |
+          # There isn't enough space on the D-drive so we are making a workspace
+          # on the c-drive and linking it to the original location with a junction
+          mkdir -p ${RAW_BACKING_ARTIFACT_PATH//\\//}
+        shell: bash
+      
+      - name: Link C and D drive
+        run: |
+          mklink /J ${{ github.workspace }}\artifact C:\artifact
+          dir
+        shell: cmd
+
+      - name: Show disk space
+        if: always()
+        run: get-PSDrive
+
       - uses: actions/checkout@v3
 
       ##################################
@@ -190,11 +208,20 @@ jobs:
       - name: Save images
         run: |
           docker images
+          cd artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
+          dir
+          move windows-base-and-hub.tar ..
+      
       - uses: actions/upload-artifact@v3
         with:
+          name: windows-base-and-hub
           path: windows-base-and-hub.tar
           retention-days: 1
+
+      - name: Show disk space
+        if: always()
+        run: get-PSDrive
 
   #############################
   #   Build editor and test   #
@@ -249,10 +276,14 @@ jobs:
       #   Restore base and hub   #
       ############################
       - uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-base-and-hub
+          path: ./ubuntu-base-and-hub.tar
+
       - name: Restore base and hub
         run: |
-          docker load -i artifact/ubuntu-base-and-hub.tar
-          rm -rf artifact
+          docker load -i ubuntu-base-and-hub.tar
+          rm ubuntu-base-and-hub.tar
 
       ######################
       #   Setup to build   #
@@ -433,10 +464,13 @@ jobs:
       #   Restore base and hub   #
       ############################
       - uses: actions/download-artifact@v3
+        with:
+          name: windows-base-and-hub
+          path: ./windows-base-and-hub.tar
       - name: Restore base and hub
         run: |
-          docker load -i artifact/windows-base-and-hub.tar
-          rm -rf artifact
+          docker load -i windows-base-and-hub.tar
+          rm windows-base-and-hub.tar
         shell: bash
 
       ######################
