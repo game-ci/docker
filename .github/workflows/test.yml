@@ -203,6 +203,7 @@ jobs:
         run: |
           docker images
           dir
+          mkdir c:\artifact
           cd c:\artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           dir
