@@ -112,6 +112,9 @@ jobs:
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
 
+          # Universal Windows Platform is added in 2019
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
+
           EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
           echo "Excludes: $EXCLUDES"
           echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
