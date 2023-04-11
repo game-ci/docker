@@ -282,9 +282,8 @@ jobs:
 
       - name: Restore base and hub
         run: |
-          ls -lashi
-          docker load -i ubuntu-base-and-hub/ubuntu-base-and-hub.tar
-          rm -rf ubuntu-base-and-hub
+          docker load -i ubuntu-base-and-hub.tar
+          rm ubuntu-base-and-hub.tar
 
       ######################
       #   Setup to build   #
@@ -469,8 +468,8 @@ jobs:
           name: windows-base-and-hub
       - name: Restore base and hub
         run: |
-          docker load -i windows-base-and-hub/windows-base-and-hub.tar
-          rm -rf windows-base-and-hub
+          docker load -i windows-base-and-hub.tar
+          rm windows-base-and-hub.tar
         shell: bash
 
       ######################
