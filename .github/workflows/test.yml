@@ -207,7 +207,7 @@ jobs:
           cd c:\artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           echo Compressing images
-          zstd -z -16 --format=zstd windows-base-and-hub.tar
+          zstd -z -12 --format=zstd windows-base-and-hub.tar
           dir
       
       # move windows-base-and-hub.tar ..
@@ -475,7 +475,9 @@ jobs:
           echo loading
           docker load -i windows-base-and-hub.tar
           echo cleanup
-          cd ${{ github.workspace }}
+          RAW_WORKSPACE_PATH="${{ github.workspace }}"
+          WORKSPACE_PATH=${RAW_WORKSPACE_PATH//\\//}
+          cd $WORKSPACE_PATH
           rm -rf c:/artifact
         shell: bash
 
