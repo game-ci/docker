@@ -177,7 +177,8 @@ jobs:
         run: |
           # There isn't enough space on the D-drive so we are making a workspace
           # on the c-drive and linking it to the original location with a junction
-          mkdir -p ${RAW_BACKING_ARTIFACT_PATH//\\//}
+          RAW_ARTIFACT_BACKING_PATH=C:\artifact
+          mkdir -p ${RAW_ARTIFACT_BACKING_PATH//\\//}
         shell: bash
       
       - name: Link C and D drive
