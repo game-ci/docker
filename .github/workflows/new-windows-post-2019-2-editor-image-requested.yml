@@ -60,21 +60,21 @@ jobs:
           if ("${{ github.event.inputs.jobId }}")
           {
             # Workflow Dispatch
-            echo "jobId=${{ github.event.inputs.jobId }}" >> $GITHUB_ENV
-            echo "editorVersion=${{ github.event.inputs.editorVersion }}" >> $GITHUB_ENV
-            echo "changeSet=${{ github.event.inputs.changeSet }}" >> $GITHUB_ENV
-            echo "repoVersionFull=${{ github.event.inputs.repoVersionFull }}" >> $GITHUB_ENV
-            echo "repoVersionMinor=${{ github.event.inputs.repoVersionMinor }}" >> $GITHUB_ENV
-            echo "repoVersionMajor=${{ github.event.inputs.repoVersionMajor }}" >> $GITHUB_ENV
+            echo "jobId=${{ github.event.inputs.jobId }}" >> $GITHUB_OUTPUT
+            echo "editorVersion=${{ github.event.inputs.editorVersion }}" >> $GITHUB_OUTPUT
+            echo "changeSet=${{ github.event.inputs.changeSet }}" >> $GITHUB_OUTPUT
+            echo "repoVersionFull=${{ github.event.inputs.repoVersionFull }}" >> $GITHUB_OUTPUT
+            echo "repoVersionMinor=${{ github.event.inputs.repoVersionMinor }}" >> $GITHUB_OUTPUT
+            echo "repoVersionMajor=${{ github.event.inputs.repoVersionMajor }}" >> $GITHUB_OUTPUT
           } else
           {
             # Repo Dispatch
-            echo "jobId=${{ github.event.client_payload.jobId }}" >> $GITHUB_ENV
-            echo "editorVersion=${{ github.event.client_payload.editorVersion }}" >> $GITHUB_ENV
-            echo "changeSet=${{ github.event.client_payload.changeSet }}" >> $GITHUB_ENV
-            echo "repoVersionFull=${{ github.event.client_payload.repoVersionFull }}" >> $GITHUB_ENV
-            echo "repoVersionMinor=${{ github.event.client_payload.repoVersionMinor }}" >> $GITHUB_ENV
-            echo "repoVersionMajor=${{ github.event.client_payload.repoVersionMajor }}" >> $GITHUB_ENV
+            echo "jobId=${{ github.event.client_payload.jobId }}" >> $GITHUB_OUTPUT
+            echo "editorVersion=${{ github.event.client_payload.editorVersion }}" >> $GITHUB_OUTPUT
+            echo "changeSet=${{ github.event.client_payload.changeSet }}" >> $GITHUB_OUTPUT
+            echo "repoVersionFull=${{ github.event.client_payload.repoVersionFull }}" >> $GITHUB_OUTPUT
+            echo "repoVersionMinor=${{ github.event.client_payload.repoVersionMinor }}" >> $GITHUB_OUTPUT
+            echo "repoVersionMajor=${{ github.event.client_payload.repoVersionMajor }}" >> $GITHUB_OUTPUT
           }
 
       - name: Show hook input
