@@ -191,12 +191,6 @@ jobs:
       ###################################################
       #   Save images for later steps in the workflow   #
       ###################################################
-      # - name: Setup Artifact Path
-      #   run: |
-      #     mkdir C:\artifact
-      #     mklink /J artifact C:\artifact
-      #     dir
-      #   shell: cmd
 
       - name: Show disk space
         if: always()
@@ -205,15 +199,10 @@ jobs:
       - name: Save images
         run: |
           docker images
-          dir
           mkdir c:\artifact
           cd c:\artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
-          echo Compressing images
           zstd -z -12 --format=zstd windows-base-and-hub.tar
-          dir
-      
-      # move windows-base-and-hub.tar ..
       
       - uses: actions/upload-artifact@v3
         with:
@@ -473,14 +462,10 @@ jobs:
       - name: Restore base and hub
         run: |
           mkdir c:/artifact
-          echo moving
           mv windows-base-and-hub.tar.zst c:/artifact
           cd c:/artifact
-          echo decompressing
           zstd -d windows-base-and-hub.tar.zst
-          echo loading
           docker load -i windows-base-and-hub.tar
-          echo cleanup
           RAW_WORKSPACE_PATH="${{ github.workspace }}"
           WORKSPACE_PATH=${RAW_WORKSPACE_PATH//\\//}
           cd $WORKSPACE_PATH
