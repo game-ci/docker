@@ -18,14 +18,118 @@ env:
 
 jobs:
   ##########################
-  #   Build base and hub   #
+  #      Test Backend      #
   ##########################
-  ubuntu-base-and-hub:
-    name: Base and hub
+  reportingTest:
+    # Only run if not a PR as we need access to secrets
+    if: github.base_ref == ''
+    name: "🧪 Test reporting system (${{ matrix.imageType }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        jobId:
+          - dryRun # specifically use `dryRun` for testing.
+        imageType:
+          - base
+          - hub
+          - editor
+        baseOs:
+          - ubuntu
+        repoVersion:
+          - 0.1
+        include:
+          - imageType: editor
+            editorVersion: 2020.1.4f1
+            targetPlatform: android
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Report new build
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ matrix.jobId }}
+          status: started
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+      - name: Report build failure
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ matrix.jobId }}
+          status: failed
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Failed specific
+          reason: 'no real reason'
+      - name: Report publication
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ matrix.jobId }}
+          status: published
+          # Build info
+          imageType: ${{ matrix.imageType }}
+          baseOs: ${{ matrix.baseOs }}
+          repoVersion: ${{ matrix.repoVersion }}
+          editorVersion: ${{ matrix.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Published specific
+          imageRepo: unityci
+          imageName: ${{ matrix.imageType }}
+          friendlyTag: ${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          specificTag: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
+          digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
+  
+  ##########################
+  #   Setup build matrix   #
+  ##########################
+  build-matrix:
+    name: Setup Build Matrix
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.setup.outputs.versions }}
       excludes: ${{ steps.setup.outputs.excludes }}
+    steps:
+      - name: "Setup build matrix"
+        id: setup
+        run: |
+          # Get the Unity versions for test. (The latest patch versions for each minor version.)
+          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2018.3`
+          echo "Versions: $VERSIONS"
+          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+
+          # Exclude linux-il2cpp and windows-il2cpp for Unity 2019.2 or earlier
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
+          
+          # Unity 2021.1 and 2021.2 do not build properly on windows targets
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
+
+          # Universal Windows Platform is added in 2019
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
+
+          # AppleTV isn't stable until 2019.2
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
+
+          EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
+          echo "Excludes: $EXCLUDES"
+          echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
+  
+  #################################
+  #   Build Ubuntu base and hub   #
+  #################################
+  ubuntu-base-and-hub:
+    name: Ubuntu Base and Hub
+    runs-on: ubuntu-latest
     steps:
       #############
       #   Setup   #
@@ -60,39 +164,70 @@ jobs:
           docker save -o ubuntu-base-and-hub.tar base:ubuntu-dev hub:ubuntu-dev
       - uses: actions/upload-artifact@v3
         with:
+          name: ubuntu-base-and-hub
           path: ubuntu-base-and-hub.tar
           retention-days: 1
 
-      ##########################
-      #   Setup build matrix   #
-      ##########################
-      - name: "Setup build matrix"
-        id: setup
+  ##################################
+  #   Build Windows base and hub   #
+  ##################################
+  windows-base-and-hub:
+    name: Windows Base and Hub
+    runs-on: windows-2019
+    steps:
+      #############
+      #   Setup   #
+      #############
+      - uses: actions/checkout@v3
+
+      ##################################
+      #   Build Windows base and hub   #
+      ##################################
+      - name: Build base
         run: |
-          # Get the Unity versions for test. (The latest patch versions for each minor version.)
-          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2018.3`
-          echo "Versions: $VERSIONS"
-          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+          docker build -t base:windows-dev -f ./images/windows/base/Dockerfile .
+      - name: Build hub
+        run: |
+          docker build -t hub:windows-dev -f ./images/windows/hub/Dockerfile --build-arg baseImage=base:windows-dev .
+      
+      ###################################################
+      #   Save images for later steps in the workflow   #
+      ###################################################
 
-          # Exclude linux-il2cpp for Unity 2019.2 or earlier
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
+      - name: Show disk space
+        if: always()
+        run: get-PSDrive
 
-          EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
-          echo "Excludes: $EXCLUDES"
-          echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
+      - name: Save images
+        run: |
+          docker images
+          mkdir c:\artifact
+          cd c:\artifact
+          docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
+          zstd -z -12 --format=zstd windows-base-and-hub.tar
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: windows-base-and-hub
+          path: C:/artifact/windows-base-and-hub.tar.zst
+          retention-days: 1
+
+      - name: Show disk space
+        if: always()
+        run: get-PSDrive
 
   #############################
   #   Build editor and test   #
   #############################
-  editor:
-    needs: ubuntu-base-and-hub
-    name: Editor (${{ matrix.version }}, ${{ matrix.module }})
+  ubuntu-editor:
+    needs: [ubuntu-base-and-hub, build-matrix]
+    name: Ubuntu (${{ matrix.version }}, ${{ matrix.module }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         # The latest patch versions for each minor version.
-        version: ${{ fromJson(needs.ubuntu-base-and-hub.outputs.versions) }}
+        version: ${{ fromJson(needs.build-matrix.outputs.versions) }}
         module:
           - base
           - linux-il2cpp
@@ -107,7 +242,7 @@ jobs:
           - module: linux-il2cpp
             platform: StandaloneLinux64
           - module: windows-mono
-            platform: StandaloneWindows
+            platform: StandaloneWindows64
           - module: mac-mono
             platform: StandaloneOSX
           - module: ios
@@ -116,7 +251,7 @@ jobs:
             platform: Android
           - module: webgl
             platform: WebGL
-        exclude: ${{ fromJson(needs.ubuntu-base-and-hub.outputs.excludes) }}
+        exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
 
     steps:
       #############
@@ -134,10 +269,13 @@ jobs:
       #   Restore base and hub   #
       ############################
       - uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-base-and-hub
+
       - name: Restore base and hub
         run: |
-          docker load -i artifact/ubuntu-base-and-hub.tar
-          rm -rf artifact
+          docker load -i ubuntu-base-and-hub.tar
+          rm ubuntu-base-and-hub.tar
 
       ######################
       #   Setup to build   #
@@ -218,6 +356,7 @@ jobs:
       #############
       - name: Build project
         uses: game-ci/unity-builder@main
+        timeout-minutes: 15
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -236,6 +375,7 @@ jobs:
       - name: Build project (GZip)
         if: env.MODULE == 'webgl'
         uses: game-ci/unity-builder@main
+        timeout-minutes: 15
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -254,6 +394,7 @@ jobs:
       - name: Build project (Brotli)
         if: env.MODULE == 'webgl'
         uses: game-ci/unity-builder@main
+        timeout-minutes: 15
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -282,3 +423,134 @@ jobs:
         with:
           image: editor:ubuntu-dev
           run: bash -l -c 'java -version && sdkmanager --version && cat $ANDROID_NDK_HOME/source.properties'
+
+  #############################
+  #   Build editor and test   #
+  #############################
+  windows-editor:
+    needs: [windows-base-and-hub, build-matrix]
+    name: Windows (${{ matrix.version }}, ${{ matrix.module }})
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        # The latest patch versions for each minor version.
+        version: ${{ fromJson(needs.build-matrix.outputs.versions) }}
+        module:
+          - windows-il2cpp
+          - universal-windows-platform
+          - appletv
+        include:
+          - module: windows-il2cpp
+            platform: StandaloneWindows64
+          - module: appletv
+            platform: tvOS
+          - module: universal-windows-platform
+            platform: WSAPlayer
+        exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
+
+    steps:
+      #############
+      #   Setup   #
+      #############
+      - uses: actions/checkout@v3
+
+      ############################
+      #   Restore base and hub   #
+      ############################
+      - uses: actions/download-artifact@v3
+        with:
+          name: windows-base-and-hub
+      - name: Restore base and hub
+        run: |
+          mkdir c:/artifact
+          mv windows-base-and-hub.tar.zst c:/artifact
+          cd c:/artifact
+          zstd -d windows-base-and-hub.tar.zst
+          docker load -i windows-base-and-hub.tar
+          RAW_WORKSPACE_PATH="${{ github.workspace }}"
+          WORKSPACE_PATH=${RAW_WORKSPACE_PATH//\\//}
+          cd $WORKSPACE_PATH
+          rm -rf c:/artifact
+        shell: bash
+
+      ######################
+      #   Setup to build   #
+      ######################
+      - name: Setup to build
+        run: |
+          # The changeset for unity version
+          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> $GITHUB_ENV
+
+          # For 2019.3 or later, non-il2cpp would also be possible to build with il2cpp image.
+          if [ `echo "${{ matrix.version }}" | grep -v '\(2018\|2019.1\|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
+            echo "MODULE=windows-il2cpp" >> $GITHUB_ENV
+          else
+            echo "MODULE=${{ matrix.module }}" >> $GITHUB_ENV
+          fi
+        shell: bash
+
+      ###########################
+      #   Build Windows editor  #
+      ###########################
+      - name: Build
+        continue-on-error: true
+        timeout-minutes: 60
+        id: build-1
+        run: |
+          docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
+          --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
+          --build-arg changeSet=${{ env.CHANGESET }} --build-arg module=${{ env.MODULE }} ./images/windows/editor
+
+      ####################################
+      #   Build Windows editor (retry)   #
+      ####################################
+      - name: Sleep for retry
+        if: steps.build-1.outcome == 'failure'
+        run: sleep 120
+
+      - name: Build (Retry)
+        if: steps.build-1.outcome == 'failure'
+        id: build-2
+        timeout-minutes: 60
+        run: |
+          docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
+          --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
+          --build-arg changeSet=${{ env.CHANGESET }} --build-arg module=${{ env.MODULE }} ./images/windows/editor
+
+      #####################
+      #   Setup to test   #
+      #####################
+      - name: Show image size
+        run: docker images
+      - name: Setup to test
+        run: |
+          # For 'windows-il2cpp' module, switch the script backend to 'IL2CPP'
+          if [ "${{ matrix.module }}" = "windows-il2cpp" ] ; then
+            mv -f reference-project-test/ProjectSettings/ProjectSettings_il2cpp.asset reference-project-test/ProjectSettings/ProjectSettings.asset
+          fi
+
+          # For editors prior to 2020, use built-in packages. Otherwise use the packages.json with the necessary packages.
+          if [[ $(echo ${{ matrix.version }} | cut -d '.' -f1) -ge 2020 ]]; then
+              mv -f reference-project-test/Packages_Disabled reference-project-test/Packages
+          fi
+        shell: bash
+
+      #############
+      #   Build   #
+      #############
+      - name: Build project
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == ''
+        timeout-minutes: 15
+        uses: game-ci/unity-builder@main
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          unityVersion: ${{ matrix.version }}
+          customImage: editor:windows-dev
+          projectPath: reference-project-test
+          targetPlatform: ${{ matrix.platform }}
+          allowDirtyBuild: true

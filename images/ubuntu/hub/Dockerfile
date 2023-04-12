@@ -16,8 +16,11 @@ RUN sh -c 'echo "deb https://hub.unity3d.com/linux/repos/deb stable main" > /etc
  && apt-get -q install -y "unityhub=$hubVersion" \
  && apt-get clean
 
+# Bug in xvfb-run that causes it to redirect stderr to stdout. We want it separate
+RUN sed -i 's/^\(.*DISPLAY=:.*XAUTHORITY=.*\)\( "\$@" \)2>&1$/\1\2/' /usr/bin/xvfb-run
+
 # Alias to "unity-hub" with default params
-RUN echo '#!/bin/bash\nxvfb-run -ae /dev/stdout /opt/unityhub/unityhub-bin --no-sandbox --headless "$@"' > /usr/bin/unity-hub \
+RUN echo '#!/bin/bash\nxvfb-run -a /opt/unityhub/unityhub-bin --no-sandbox --headless "$@" 2>/dev/null' > /usr/bin/unity-hub \
  && chmod +x /usr/bin/unity-hub
 
 # Configure
