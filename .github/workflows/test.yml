@@ -110,13 +110,15 @@ jobs:
 
           # Exclude linux-il2cpp and windows-il2cpp for Unity 2019.2 or earlier
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
+          
+          # Unity 2021.1 and 2021.2 do not build properly on windows targets
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
 
           # Universal Windows Platform is added in 2019
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
 
           # AppleTV isn't stable until 2019.2
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1\")) | { version: ., module: \"appletv\"} ]'`"
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
 
           EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
           echo "Excludes: $EXCLUDES"
@@ -354,7 +356,7 @@ jobs:
       #############
       - name: Build project
         uses: game-ci/unity-builder@main
-        timeout-minutes: 60
+        timeout-minutes: 15
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -373,7 +375,7 @@ jobs:
       - name: Build project (GZip)
         if: env.MODULE == 'webgl'
         uses: game-ci/unity-builder@main
-        timeout-minutes: 60
+        timeout-minutes: 15
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -392,7 +394,7 @@ jobs:
       - name: Build project (Brotli)
         if: env.MODULE == 'webgl'
         uses: game-ci/unity-builder@main
-        timeout-minutes: 60
+        timeout-minutes: 15
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -540,7 +542,7 @@ jobs:
       - name: Build project
         # Only run if not a PR as we need access to secrets
         if: github.base_ref == ''
-        timeout-minutes: 60
+        timeout-minutes: 15
         uses: game-ci/unity-builder@main
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
