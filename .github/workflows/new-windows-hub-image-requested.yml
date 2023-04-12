@@ -51,17 +51,17 @@ jobs:
           if ("${{ github.event.inputs.jobId }}")
           {
             # Workflow Dispatch
-            echo "jobId={{ github.event.inputs.jobId }}" >> $GITHUB_OUTPUT
-            echo "repoVersionFull={{ github.event.inputs.repoVersionFull }}" >> $GITHUB_OUTPUT
-            echo "repoVersionMinor={{ github.event.inputs.repoVersionMinor }}" >> $GITHUB_OUTPUT
-            echo "repoVersionMajor={{ github.event.inputs.repoVersionMajor }}" >> $GITHUB_OUTPUT
+            echo "jobId={{ github.event.inputs.jobId }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionFull={{ github.event.inputs.repoVersionFull }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMinor={{ github.event.inputs.repoVersionMinor }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMajor={{ github.event.inputs.repoVersionMajor }}" >> $Env:GITHUB_OUTPUT
           } else
           {
             # Repo Dispatch
-            echo "jobId=${{ github.event.client_payload.jobId }}" >> $GITHUB_OUTPUT
-            echo "repoVersionFull=${{ github.event.client_payload.repoVersionFull }}" >> $GITHUB_OUTPUT
-            echo "repoVersionMinor=${{ github.event.client_payload.repoVersionMinor }}" >> $GITHUB_OUTPUT
-            echo "repoVersionMajor=${{ github.event.client_payload.repoVersionMajor }}" >> $GITHUB_OUTPUT
+            echo "jobId=${{ github.event.client_payload.jobId }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionFull=${{ github.event.client_payload.repoVersionFull }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMinor=${{ github.event.client_payload.repoVersionMinor }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMajor=${{ github.event.client_payload.repoVersionMajor }}" >> $Env:GITHUB_OUTPUT
           }
 
       - name: Show hook input
@@ -139,8 +139,8 @@ jobs:
           $MetaData = docker inspect unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
           $ImageDetails = $MetaData | ConvertFrom-Json
           $Digest = $ImageDetails.Config.Image
-          echo "digest=$Digest" >> $GITHUB_OUTPUT
-          echo "metadata=$MetaData" >> $GITHUB_OUTPUT
+          echo "digest=$Digest" >> $Env:GITHUB_OUTPUT
+          echo "metadata=$MetaData" >> $Env:GITHUB_OUTPUT
 
       - name: Inspect
         run: |
