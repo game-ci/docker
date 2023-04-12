@@ -64,7 +64,7 @@ jobs:
       - name: Setup Build Parameters
         id: buildParameters
         run: |
-          if ("${{ github.event.inputs.jobId }}")
+          if ("${{ github.event.inputs.jobId }}" -ne "")
           {
             # Workflow Dispatch
             echo "jobId=${{ github.event.inputs.jobId }}" >> $GITHUB_OUTPUT
