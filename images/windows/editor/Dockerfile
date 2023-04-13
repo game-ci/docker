@@ -20,7 +20,7 @@ RUN powershell -Command "&'C:/Program Files/Unity Hub/Unity Hub.exe' '--%' '--no
                          else { exit 0 }"
 
 ARG module
-RUN IF NOT %module% == "base" ( \
+RUN IF NOT "%module%"=="base" ( \
     powershell -Command \
     "&'C:/Program Files/Unity Hub/Unity Hub.exe' '--%' '--no-sandbox --headless \ 
      install-modules --version %version% --module %module% --childModules' 2>$null | \
