@@ -1,9 +1,6 @@
 name: New Windows Editor Version 🗔
 
 on:
-  repository_dispatch:
-    types:
-      - new_legacy_editor_image_requested
   workflow_dispatch:
     inputs:
       jobId:
@@ -43,8 +40,8 @@ jobs:
         targetPlatform:
           - base
           # - windows-il2cpp
-          - universal-windows-platform
-          - appletv
+          # - universal-windows-platform
+          # - appletv
 
     steps:
       - name: Checkout
