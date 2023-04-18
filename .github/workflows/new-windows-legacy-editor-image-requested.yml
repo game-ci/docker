@@ -1,0 +1,261 @@
+name: New Windows Editor Version 🗔
+
+on:
+  repository_dispatch:
+    types:
+      - new_legacy_editor_image_requested
+  workflow_dispatch:
+    inputs:
+      jobId:
+        description: 'Job ID'
+        required: true
+        default: 'dryRun'
+      editorVersion:
+        description: 'Unity Editor Version'
+        required: true
+        default: '2020.3.24f1'
+      changeSet:
+        description: 'Unity Editor Changeset'
+        required: true
+        default: '79c78de19888'
+      repoVersionFull:
+        description: 'All digits of the latest tag of this repository, e.g. `1.23.45`'
+        required: true
+      repoVersionMinor:
+        description: 'Minor digit of that tag, e.g. `23`'
+        required: true
+      repoVersionMajor:
+        description: 'Major digit of that tag, e.g. `1`'
+        required: true
+
+# Further reading:
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows#repository_dispatch
+# https://docs.github.com/en/free-pro-team@latest/rest/reference/repos#create-a-repository-dispatch-event
+# https://developer.github.com/webhooks/event-payloads/#repository_dispatch
+
+jobs:
+  buildImage:
+    name: "🛠 Build unityci/editor (${{ matrix.targetPlatform }})"
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - base
+          # - windows-il2cpp
+          - universal-windows-platform
+          - appletv
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Checkout latest release tag
+        run: |
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          git checkout $LATEST_TAG
+        shell: bash
+        
+      #################
+      #   Variables   #
+      #################
+      - name: Setup Build Parameters
+        id: buildParameters
+        run: |
+          if ("${{ github.event.inputs.jobId }}")
+          {
+            # Workflow Dispatch
+            echo "jobId=${{ github.event.inputs.jobId }}" >> $Env:GITHUB_OUTPUT
+            echo "editorVersion=${{ github.event.inputs.editorVersion }}" >> $Env:GITHUB_OUTPUT
+            echo "changeSet=${{ github.event.inputs.changeSet }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionFull=${{ github.event.inputs.repoVersionFull }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMinor=${{ github.event.inputs.repoVersionMinor }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMajor=${{ github.event.inputs.repoVersionMajor }}" >> $Env:GITHUB_OUTPUT
+          } else
+          {
+            # Repo Dispatch
+            echo "jobId=${{ github.event.client_payload.jobId }}" >> $Env:GITHUB_OUTPUT
+            echo "editorVersion=${{ github.event.client_payload.editorVersion }}" >> $Env:GITHUB_OUTPUT
+            echo "changeSet=${{ github.event.client_payload.changeSet }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionFull=${{ github.event.client_payload.repoVersionFull }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMinor=${{ github.event.client_payload.repoVersionMinor }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMajor=${{ github.event.client_payload.repoVersionMajor }}" >> $Env:GITHUB_OUTPUT
+          }
+
+      - name: Show hook input
+        run: |
+          echo "Event ${{ github.event.event_type }}"
+          echo "jobId: ${{ steps.buildParameters.outputs.jobId }}"
+          echo "Unity editor version: ${{ steps.buildParameters.outputs.editorVersion }}"
+          echo "Unity changeset: ${{ steps.buildParameters.outputs.changeSet }}"
+          echo "repoVersion (full): ${{ steps.buildParameters.outputs.repoVersionFull }}"
+          echo "repoVersion (only minor and major): ${{ steps.buildParameters.outputs.repoVersionMinor }}"
+          echo "repoVersion (only major): ${{ steps.buildParameters.outputs.repoVersionMajor }}"
+
+      - name: Report new build
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ steps.buildParameters.outputs.jobId }}
+          status: started
+          # Build info
+          imageType: editor
+          baseOs: windows
+          repoVersion: ${{ steps.buildParameters.outputs.repoVersionFull }}
+          editorVersion: ${{ steps.buildParameters.outputs.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+
+      #############
+      #   Setup   #
+      #############
+      - name: Login to DockerHub
+        env:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: docker login --username $Env:username --password $Env:password
+
+      - name: Check if image does not already exist
+        run: |
+          # Source: https://gist.github.com/webbertakken/1789a4683a99e2a62b975ff436a85382
+          function Docker-Tag-Exists {
+            [CmdletBinding()]
+            param([string] $Repository, [string] $Tag)
+
+            Try {
+              Invoke-RestMethod "https://index.docker.io/v1/repositories/$Repository/tags/$Tag"
+            } Catch {} # Assume image does not exist on erroneous response
+
+            return $?
+          }
+
+          if( (Docker-Tag-Exists -Repository unityci/editor -Tag windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}) ) {
+            echo "Image already exists. Exiting."
+            exit 1
+          }
+
+      #######################
+      #   Free disk space   #
+      #######################
+      # TODO: Determine what we can free on windows
+
+      ############################
+      #   Pull previous images   #
+      ############################
+      - name: Pull windows base image (must exist)
+        run: docker pull unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+
+      - name: Pull windows hub image (must exist)
+        run: docker pull unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+
+      ############################
+      #   Windows Editor image   #
+      ############################
+      - name: Build and Publish Windows Editor Image
+        id: build_windows_editor_image
+        continue-on-error: true
+        run: |
+          docker build ./images/windows/editor/ `
+            --build-arg hubImage=unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
+            --build-arg baseImage=unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
+            --build-arg version=${{ steps.buildParameters.outputs.editorVersion }} `
+            --build-arg changeSet=${{ steps.buildParameters.outputs.changeSet }} `
+            --build-arg module=${{ matrix.targetPlatform }} `
+            --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
+            --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
+            --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
+
+          ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
+          ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
+
+          docker push unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }}
+          docker push unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }}
+          docker push unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
+
+      #######################
+      #   Retry the above   #
+      #######################
+      - name: Build and Publish Windows Editor Image (retry)
+        if: steps.build_windows_editor_image.outcome=='failure'
+        id: build_windows_editor_image_retry
+        run: |
+          docker build ./images/windows/editor/ `
+            --build-arg hubImage=unityci/hub:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
+            --build-arg baseImage=unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }} `
+            --build-arg version=${{ steps.buildParameters.outputs.editorVersion }} `
+            --build-arg changeSet=${{ steps.buildParameters.outputs.changeSet }} `
+            --build-arg module=${{ matrix.targetPlatform }} `
+            --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }} `
+            --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }} `
+            --tag unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
+
+          ### Warning: If we once publish latest, we will have to do it forever. Lets not do that unless it's needed ###
+          ### Another warning: order is important: We go from specific to unspecific with the exception of the most specific tag which is used to check if the image is already there ###
+
+          docker push unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMinor }}
+          docker push unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionMajor }}
+          docker push unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
+
+      ###########################
+      #   Inspect publication   #
+      ###########################
+      - name: Inspect
+        run: |
+          docker inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
+
+      - name: Image digest
+        id: image-digest
+        if: ${{ success() }}
+        run: |
+          $MetaData = docker inspect unityci/editor:windows-${{ steps.buildParameters.outputs.editorVersion }}-${{ matrix.targetPlatform }}-${{ steps.buildParameters.outputs.repoVersionFull }}
+          $ImageDetails = $MetaData | ConvertFrom-Json
+          $Digest = $ImageDetails.Config.Image
+          echo "digest=$Digest" >> $Env:GITHUB_OUTPUT
+          echo "metadata=$MetaData" >> $Env:GITHUB_OUTPUT
+
+      #################
+      #   reporting   #
+      #################
+      - name: Report publication
+        if: ${{ success() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ steps.buildParameters.outputs.jobId }}
+          status: published
+          # Build info
+          imageType: editor
+          baseOs: windows
+          repoVersion: ${{ steps.buildParameters.outputs.repoVersionFull }}
+          editorVersion: ${{ steps.buildParameters.outputs.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Publication info
+          imageRepo: unityci
+          imageName: editor
+          friendlyTag: windows-${{ steps.buildParameters.outputs.repoVersionMinor }}
+          specificTag: windows-${{ steps.buildParameters.outputs.repoVersionFull }}
+          digest: ${{ steps.image-digest.outputs.digest }}
+
+      - name: Report failure
+        if: ${{ failure() || cancelled() }}
+        uses: ./.github/workflows/actions/report-to-backend
+        with:
+          token: ${{ secrets.VERSIONING_TOKEN }}
+          jobId: ${{ steps.buildParameters.outputs.jobId }}
+          status: failed
+          # Build info
+          imageType: editor
+          baseOs: windows
+          repoVersion: ${{ steps.buildParameters.outputs.repoVersionFull }}
+          editorVersion: ${{ steps.buildParameters.outputs.editorVersion }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          # Failure info
+          reason: ${{ job.status }} - ${{ steps.image-digest.outputs.metadata }}
+
+      ###############
+      #   Metrics   #
+      ###############
+      - name: Disk space after
+        if: always()
+        run: get-PSDrive
