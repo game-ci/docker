@@ -27,7 +27,7 @@ RUN apt-get -q update \
  libxss1 \
  cpio \
  lsb-release \
- python3 \
+ python-is-python3 \
  python3-pip \
  xvfb \
  xz-utils \
