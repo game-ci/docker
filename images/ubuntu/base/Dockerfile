@@ -32,7 +32,9 @@ RUN apt-get -q update \
  xvfb \
  xz-utils \
  && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /usr/share/icons/* \
+ && rm -rf /usr/lib/python3.10/__pycache__/*
 
 # Toolbox
 RUN apt-get -q update \
