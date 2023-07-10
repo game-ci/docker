@@ -55,7 +55,6 @@ RUN apt-get -q update \
 # libstdc++6 upgrade
 RUN apt-get -q update \
  && apt-get install -y \
- build-essential \
  libstdc++6 \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
