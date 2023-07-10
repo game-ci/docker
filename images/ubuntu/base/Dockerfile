@@ -59,6 +59,12 @@ RUN apt-get -q update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
+# Fix "No useable version of libssl" for Ubuntu 22.04
+# https://forum.unity.com/threads/workaround-for-libssl-issue-on-ubuntu-22-04.1271405/
+RUN wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+ dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
+ rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
 # Disable default sound card, which removes ALSA warnings
 RUN /bin/echo -e 'pcm.!default {\n\
     type plug\n\
