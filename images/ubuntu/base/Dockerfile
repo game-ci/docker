@@ -61,9 +61,12 @@ RUN apt-get -q update \
 
 # Fix "No useable version of libssl" for Ubuntu 22.04
 # https://forum.unity.com/threads/workaround-for-libssl-issue-on-ubuntu-22-04.1271405/
-RUN wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
- dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb && \
- rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+RUN echo "deb http://security.ubuntu.com/ubuntu focal-security main" | tee /etc/apt/sources.list.d/focal-security.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends --allow-downgrades libssl1.1 \
+ && rm /etc/apt/sources.list.d/focal-security.list \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
 # Disable default sound card, which removes ALSA warnings
 RUN /bin/echo -e 'pcm.!default {\n\

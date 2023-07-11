@@ -249,11 +249,13 @@ RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
 RUN echo "$version" | grep -q -v '^2019.' \
   && exit 0 \
   || : \
+  && echo "deb http://security.ubuntu.com/ubuntu bionic-security main" | tee /etc/apt/sources.list.d/bionic-security.list \
   && apt-get -q update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     libnotify4 \
     libunwind-dev \
-    libssl1.0  \
+    libssl1.0.0  \
+  && rm /etc/apt/sources.list.d/bionic-security.list \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
