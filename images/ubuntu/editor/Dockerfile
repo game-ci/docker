@@ -272,7 +272,7 @@ RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020\|2021.1\).*webgl' 
   || : \
   && apt-get -q update \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
-    python2 \
+    python-setuptools \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
   && ln -s /usr/bin/python2 /usr/bin/python
