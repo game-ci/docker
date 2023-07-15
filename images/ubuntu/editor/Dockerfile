@@ -244,7 +244,7 @@ RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
   && rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
-# [2019.x] libnotify4 libunwind-dev libssl1.0
+# [2019.x] libnotify4 libunwind-dev libssl1.0.0
 #=======================================================================================
 RUN echo "$version" | grep -q -v '^2019.' \
   && exit 0 \
@@ -254,9 +254,9 @@ RUN echo "$version" | grep -q -v '^2019.' \
     libnotify4 \
     libunwind-dev \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
-
-RUN wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb \
+  && rm -rf /var/lib/apt/lists/* \
+  # Install libssl1.0.0
+  && wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb \
   && dpkg -i libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb \
   && rm libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb
 
@@ -266,6 +266,11 @@ RUN wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2
 RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020.1\).*webgl' \
   && exit 0 \
   || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    python-setuptools \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
   && cp \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-linux-x86_64.egg \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-macosx-10.10-x86_64.egg
