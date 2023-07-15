@@ -356,7 +356,7 @@ jobs:
       #############
       - name: Build project
         uses: game-ci/unity-builder@main
-        timeout-minutes: 25
+        timeout-minutes: 35
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
