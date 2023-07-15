@@ -271,6 +271,7 @@ RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020.1\).*webgl' \
     python-setuptools \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/* \
+  && ln -s /usr/bin/python2 /usr/bin/python \
   && cp \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-linux-x86_64.egg \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-macosx-10.10-x86_64.egg
