@@ -253,7 +253,6 @@ RUN echo "$version" | grep -q -v '^2019.' \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     libnotify4 \
     libunwind-dev \
-    libssl1.0.0  \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
