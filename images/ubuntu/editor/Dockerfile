@@ -231,7 +231,7 @@ RUN echo "$module" | grep -q -v 'webgl' \
   && rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
-# [webgl, il2cpp] python python-setuptools build-essential clang
+# [webgl, il2cpp] build-essential clang
 #=======================================================================================
 RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
   && exit 0 \
@@ -261,17 +261,25 @@ RUN echo "$version" | grep -q -v '^2019.' \
   && rm libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb
 
 #=======================================================================================
+# [2018.x/2019.x/2020.x/2021.1.x-webgl] python2
+#=======================================================================================
+
+RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020\|2021.1\).*webgl' \
+  && exit 0 \
+  || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    python2 \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  && ln -s /usr/bin/python2 /usr/bin/python
+
+#=======================================================================================
 # [2018.x/2019.x/2020.1.x-webgl] support brotli compression for linux
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020.1\).*webgl' \
   && exit 0 \
   || : \
-  && apt-get -q update \
-  && apt-get -q install -y --no-install-recommends --allow-downgrades \
-    python-setuptools \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
-  && ln -s /usr/bin/python2 /usr/bin/python \
   && cp \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-linux-x86_64.egg \
     $UNITY_PATH/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Brotli/dist/Brotli-0.4.0-py2.7-macosx-10.10-x86_64.egg
