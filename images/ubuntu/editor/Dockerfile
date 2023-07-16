@@ -85,10 +85,11 @@ RUN echo "$version-$module" | grep -q -v '^\(2019.3.[6-9]f\|2019.3.1[0-9]f\|2019
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -v '^\(2020.1\|2020.2.0f\|2020.2.1f\).*-webgl' \
   && exit 0 \
+  || : \
   && wget https://old-releases.ubuntu.com/ubuntu/pool/main/g/gzip/gzip_1.6-5ubuntu2_amd64.deb \
   && dpkg -i gzip_1.6-5ubuntu2_amd64.deb \
   && rm gzip_1.6-5ubuntu2_amd64.deb \
-  || echo 'export GZIP=-f' >> /usr/bin/unity-editor.d/webgl-2020.1-2.sh
+  && echo 'export GZIP=-f' >> /usr/bin/unity-editor.d/webgl-2020.1-2.sh
 
 
 ###########################
