@@ -85,7 +85,11 @@ RUN echo "$version-$module" | grep -q -v '^\(2019.3.[6-9]f\|2019.3.1[0-9]f\|2019
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -v '^\(2020.1\|2020.2.0f\|2020.2.1f\).*-webgl' \
   && exit 0 \
-  || echo 'export GZIP=-f' >> /usr/bin/unity-editor.d/webgl-2020.1-2.sh
+  || : \
+  && wget https://old-releases.ubuntu.com/ubuntu/pool/main/g/gzip/gzip_1.6-5ubuntu2_amd64.deb \
+  && dpkg -i gzip_1.6-5ubuntu2_amd64.deb \
+  && rm gzip_1.6-5ubuntu2_amd64.deb \
+  && echo 'export GZIP=-f' >> /usr/bin/unity-editor.d/webgl-2020.1-2.sh
 
 
 ###########################
@@ -231,7 +235,7 @@ RUN echo "$module" | grep -q -v 'webgl' \
   && rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
-# [webgl, il2cpp] python python-setuptools build-essential clang
+# [webgl, il2cpp] build-essential clang
 #=======================================================================================
 RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
   && exit 0 \
@@ -244,7 +248,7 @@ RUN echo "$module" | grep -q -v '\(webgl\|linux-il2cpp\)' \
   && rm -rf /var/lib/apt/lists/*
 
 #=======================================================================================
-# [2019.x] libnotify4 libunwind-dev libssl1.0
+# [2019.x] libnotify4 libunwind-dev libssl1.0.0
 #=======================================================================================
 RUN echo "$version" | grep -q -v '^2019.' \
   && exit 0 \
@@ -253,9 +257,26 @@ RUN echo "$version" | grep -q -v '^2019.' \
   && apt-get -q install -y --no-install-recommends --allow-downgrades \
     libnotify4 \
     libunwind-dev \
-    libssl1.0  \
   && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  # Install libssl1.0.0
+  && wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb \
+  && dpkg -i libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb \
+  && rm libssl1.0.0_1.0.2g-1ubuntu4.20_amd64.deb
+
+#=======================================================================================
+# [2018.x/2019.x/2020.x/2021.1.x-webgl] python2
+#=======================================================================================
+
+RUN echo "$version-$module" | grep -q -v '^\(2018\|2019\|2020\|2021.1\).*webgl' \
+  && exit 0 \
+  || : \
+  && apt-get -q update \
+  && apt-get -q install -y --no-install-recommends --allow-downgrades \
+    python-setuptools \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* \
+  && ln -s /usr/bin/python2 /usr/bin/python
 
 #=======================================================================================
 # [2018.x/2019.x/2020.1.x-webgl] support brotli compression for linux
