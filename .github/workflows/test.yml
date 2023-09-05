@@ -44,7 +44,7 @@ jobs:
             targetPlatform: android
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
@@ -134,7 +134,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v2
       - uses: docker/setup-buildx-action@v2
         with:
@@ -178,7 +178,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       ##################################
       #   Build Windows base and hub   #
@@ -257,7 +257,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v2
       - uses: docker/setup-buildx-action@v2
         with:
@@ -456,7 +456,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       ############################
       #   Restore base and hub   #
