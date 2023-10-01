@@ -7,28 +7,36 @@ ARG hubImage="unityci/hub:windows-latest"
 
 FROM $hubImage as Builder
 
+# Packages/manifest.json could have git dependencies
+RUN choco install git --no-progress -y
+
+SHELL ["cmd", "/S", "/C"]
+
+RUN setx path "C:\\Program Files\\Git\\bin;%path%"
+
+SHELL ["bash.exe", "-c"]
+
 # Install Editor
 # The portion after the & is to change the exit code to 0 if we exited 1 from
 # the installation. Otherwise docker believes there was an error
 ARG version
 ARG changeSet
-RUN powershell -Command "&'C:/Program Files/Unity Hub/Unity Hub.exe' '--%' '--no-sandbox --headless install \ 
-                         --version %version% --changeset %changeset%' 2>$null | \
-                         Tee-Object -FilePath 'C:\install-editor.log'; \
-                         if ((select-string -Path 'C:\install-editor.log' -Pattern \
-                         'Failed to install|Error while installing an editor|Completed with errors') -ne $null) { exit 1 } \
-                         else { exit 0 }"
+RUN "mkdir -p /var/log"
+RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install \
+                                                    --version $version \
+                                                    --changeset $changeSet \
+                                                    | tee /var/log/install-editor.log \
+                                                    && grep 'Error' /var/log/install-editor.log \
+                                                    | exit $(wc -l)"
 
-ARG module
-RUN IF NOT "%module%"=="base" ( \
-    powershell -Command \
-    "&'C:/Program Files/Unity Hub/Unity Hub.exe' '--%' '--no-sandbox --headless \ 
-     install-modules --version %version% --module %module% --childModules' 2>$null | \
-     Tee-Object -FilePath 'C:\install-module-%module%.log'; \
-     if ((select-string -Path 'C:\install-module-%module%.log' -Pattern \
-     'Failed to install|Error while installing an editor|Completed with errors|Missing module|No modules found') -ne $null) \
-     { exit 1 } else { exit 0 }" \
-    )
+# ARG module
+RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install-modules \
+                                                    --version $version \
+                                                    --module $module \
+                                                    --childModules \
+                                                    | tee /var/log/install-module-${module}.log \
+                                                    && grep 'Missing module' /var/log/install-module-${module}.log \
+                                                    | exit $(wc -l);
 
 ############
 #  Editor  #
@@ -50,6 +58,10 @@ COPY --from=Builder C:/windows/system32/MSVCP100.dll \
 ARG version
 RUN echo %version% > "C:/Program Files/Unity/Hub/Editor/%version%/version"
 
+SHELL ["powershell.exe", "-Command"]
+
+RUN setx -M UNITY_PATH "C:/Program` Files/Unity/Hub/Editor/$Env:version"
+
 # Need to enable these services to make Unity happy
 # When these were in base, things blew up, not sure why they have to be specifically here
 RUN powershell -Command foreach ($service in 'nlasvc', 'netprofm') {"Set-Service $service -StartupType Automatic"}
@@ -57,5 +69,12 @@ RUN powershell -Command foreach ($service in 'nlasvc', 'netprofm') {"Set-Service
 # Not needed with the dotnet base image
 # RUN powershell -Command Set-Service 'wmiApSrv' -StartupType Automatic
 
-# Packages/manifest.json could have git dependencies
-RUN choco install git --no-progress -y
+ADD SetupSDKManager.ps1 SetupAndroidPaths.ps1 ./
+
+RUN powershell -Command .\SetupAndroidPaths.ps1
+
+COPY ["licenses/", "C:/licenses/"]
+
+RUN powershell -Command .\SetupSDKManager.ps1
+
+RUN rm *.ps1
