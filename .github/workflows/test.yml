@@ -70,7 +70,7 @@ jobs:
           editorVersion: ${{ matrix.editorVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
           # Failed specific
-          reason: 'no real reason'
+          reason: "no real reason"
       - name: Report publication
         uses: ./.github/workflows/actions/report-to-backend
         with:
@@ -89,7 +89,7 @@ jobs:
           friendlyTag: ${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           specificTag: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
-  
+
   ##########################
   #   Setup build matrix   #
   ##########################
@@ -110,7 +110,7 @@ jobs:
 
           # Exclude linux-il2cpp and windows-il2cpp for Unity 2019.2 or earlier
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
-          
+
           # Unity 2021.1 and 2021.2 do not build properly on windows targets
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
 
@@ -123,7 +123,7 @@ jobs:
           EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
           echo "Excludes: $EXCLUDES"
           echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
-  
+
   #################################
   #   Build Ubuntu base and hub   #
   #################################
@@ -173,7 +173,7 @@ jobs:
   ##################################
   windows-base-and-hub:
     name: Windows Base and Hub
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       #############
       #   Setup   #
@@ -189,7 +189,7 @@ jobs:
       - name: Build hub
         run: |
           docker build -t hub:windows-dev -f ./images/windows/hub/Dockerfile --build-arg baseImage=base:windows-dev .
-      
+
       ###################################################
       #   Save images for later steps in the workflow   #
       ###################################################
@@ -205,7 +205,7 @@ jobs:
           cd c:\artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           zstd -z -12 --format=zstd windows-base-and-hub.tar
-      
+
       - uses: actions/upload-artifact@v3
         with:
           name: windows-base-and-hub
@@ -430,7 +430,7 @@ jobs:
   windows-editor:
     needs: [windows-base-and-hub, build-matrix]
     name: Windows (${{ matrix.version }}, ${{ matrix.module }})
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:

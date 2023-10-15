@@ -8,17 +8,17 @@ on:
   workflow_dispatch:
     inputs:
       jobId:
-        description: 'Job ID'
+        description: "Job ID"
         required: true
-        default: 'dryRun'
+        default: "dryRun"
       repoVersionFull:
-        description: 'All digits of the latest tag of this repository, e.g. `1.23.45`'
+        description: "All digits of the latest tag of this repository, e.g. `1.23.45`"
         required: true
       repoVersionMinor:
-        description: 'Minor digit of that tag, e.g. `23`'
+        description: "Minor digit of that tag, e.g. `23`"
         required: true
       repoVersionMajor:
-        description: 'Major digit of that tag, e.g. `1`'
+        description: "Major digit of that tag, e.g. `1`"
         required: true
 
 # Further reading:
@@ -29,7 +29,7 @@ on:
 jobs:
   build:
     name: "🛠 Build unityci/base"
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - name: Checkout
         uses: actions/checkout@v3

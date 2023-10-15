@@ -5,7 +5,7 @@ ARG hubImage="unityci/hub:windows-latest"
 #  Builder  #
 #############
 
-FROM $hubImage as Builder
+FROM $hubImage AS Builder
 
 # Using bash to process unity install
 RUN choco install git --no-progress -y
