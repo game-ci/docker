@@ -7,7 +7,7 @@ ARG hubImage="unityci/hub:windows-latest"
 
 FROM $hubImage as Builder
 
-# Packages/manifest.json could have git dependencies
+# Using bash to process unity install
 RUN choco install git --no-progress -y
 
 SHELL ["cmd", "/S", "/C"]
@@ -29,14 +29,18 @@ RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install \
                                                     && grep 'Error' /var/log/install-editor.log \
                                                     | exit $(wc -l)"
 
-# ARG module
-RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install-modules \
+ARG module
+RUN "if [ $module = 'base' ]; then \
+        echo 'running default modules for this base OS'; \
+     else \
+        C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install-modules \
                                                     --version $version \
                                                     --module $module \
                                                     --childModules \
                                                     | tee /var/log/install-module-${module}.log \
                                                     && grep 'Missing module' /var/log/install-module-${module}.log \
-                                                    | exit $(wc -l);
+                                                    | exit $(wc -l); \
+     fi"
 
 ############
 #  Editor  #
@@ -62,19 +66,16 @@ SHELL ["powershell.exe", "-Command"]
 
 RUN setx -M UNITY_PATH "C:/Program` Files/Unity/Hub/Editor/$Env:version"
 
+# Packages/manifest.json could have git dependencies
+RUN choco install git --no-progress -y
+
+# Unity package manager throws an error about not being in a git directory when
+# importing git packages without this
+RUN git config --global --add safe.directory "*"
+
 # Need to enable these services to make Unity happy
 # When these were in base, things blew up, not sure why they have to be specifically here
-RUN powershell -Command foreach ($service in 'nlasvc', 'netprofm') {"Set-Service $service -StartupType Automatic"}
+RUN foreach ($service in 'nlasvc', 'netprofm') {"Set-Service $service -StartupType Automatic"}
 
 # Not needed with the dotnet base image
 # RUN powershell -Command Set-Service 'wmiApSrv' -StartupType Automatic
-
-ADD SetupSDKManager.ps1 SetupAndroidPaths.ps1 ./
-
-RUN powershell -Command .\SetupAndroidPaths.ps1
-
-COPY ["licenses/", "C:/licenses/"]
-
-RUN powershell -Command .\SetupSDKManager.ps1
-
-RUN rm *.ps1
