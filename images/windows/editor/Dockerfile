@@ -79,3 +79,14 @@ RUN foreach ($service in 'nlasvc', 'netprofm') {"Set-Service $service -StartupTy
 
 # Not needed with the dotnet base image
 # RUN powershell -Command Set-Service 'wmiApSrv' -StartupType Automatic
+
+ADD SetupAndroid.ps1 AcceptAndroidLicenses.ps1 ./
+
+ARG module
+RUN if ($Env:module -eq 'Android') { .\SetupAndroid.ps1 }
+
+# Accept Android Licenses. Needs to be separate from the above script to
+# ensure the environment variables are set.
+RUN if ($Env:module -eq 'Android') { .\AcceptAndroidLicenses.ps1 }
+
+RUN rm SetupAndroid.ps1, AcceptAndroidLicenses.ps1
