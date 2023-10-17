@@ -441,6 +441,7 @@ jobs:
           - windows-il2cpp
           - universal-windows-platform
           - appletv
+          - android
         include:
           - module: base
             platform: StandaloneWindows64
@@ -450,6 +451,8 @@ jobs:
             platform: tvOS
           - module: universal-windows-platform
             platform: WSAPlayer
+          - module: android
+            platform: android
         exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
 
     steps:
