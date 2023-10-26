@@ -44,7 +44,7 @@ jobs:
             targetPlatform: android
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
@@ -120,6 +120,9 @@ jobs:
           # AppleTV isn't stable until 2019.2
           EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
 
+          # No Windows Mono Builds
+          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
+
           EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
           echo "Excludes: $EXCLUDES"
           echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
@@ -134,9 +137,9 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
-      - uses: docker/setup-qemu-action@v2
-      - uses: docker/setup-buildx-action@v2
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
         with:
           driver: docker
 
@@ -144,12 +147,12 @@ jobs:
       #   Build Ubuntu base and hub   #
       #################################
       - name: Build base
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: ./images/ubuntu/base/Dockerfile
           tags: base:ubuntu-dev
       - name: Build hub
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: ./images/ubuntu/hub/Dockerfile
           build-args: baseImage=base:ubuntu-dev
@@ -178,7 +181,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       ##################################
       #   Build Windows base and hub   #
@@ -257,9 +260,9 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
-      - uses: docker/setup-qemu-action@v2
-      - uses: docker/setup-buildx-action@v2
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
         with:
           driver: docker
       - name: Free disk space
@@ -297,7 +300,7 @@ jobs:
       ###########################
       - name: Build
         # if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: build-1
         continue-on-error: true
         timeout-minutes: 40
@@ -320,7 +323,7 @@ jobs:
 
       - name: Build (Retry)
         if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: build-2
         # continue-on-error: true
         timeout-minutes: 40
@@ -452,14 +455,14 @@ jobs:
           - module: universal-windows-platform
             platform: WSAPlayer
           - module: android
-            platform: android
+            platform: Android
         exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
 
     steps:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       ############################
       #   Restore base and hub   #
