@@ -549,7 +549,7 @@ jobs:
         # Only run if not a PR as we need access to secrets
         if: github.base_ref == ''
         timeout-minutes: 15
-        uses: game-ci/unity-builder@main
+        uses: game-ci/unity-builder@feature/windows-upgrades
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
