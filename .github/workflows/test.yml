@@ -121,8 +121,8 @@ jobs:
           # AppleTV isn't stable until 2019.2. Issues with 2021.1 and 2021.2 so they are skipped too
           WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
 
-          # No Windows 2018 Android Builds
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018\")) | { version: ., module: \"android\"} ]'`"
+          # No Windows 2018 Android Builds. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2021.1|2021.2\")) | { version: ., module: \"android\"} ]'`"
 
           LINUX_EXCLUDES=`echo "$LINUX_EXCLUDES" | jq -s -c 'flatten'`
           WINDOWS_EXCLUDES=`echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten'`
