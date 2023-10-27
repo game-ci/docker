@@ -98,7 +98,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.setup.outputs.versions }}
-      excludes: ${{ steps.setup.outputs.excludes }}
+      linuxExcludes: ${{ steps.setup.outputs.linuxExcludes }}
+      windowsExcludes: ${{ steps.setup.outputs.windowsExcludes }}
     steps:
       - name: "Setup build matrix"
         id: setup
@@ -108,24 +109,29 @@ jobs:
           echo "Versions: $VERSIONS"
           echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
 
-          # Exclude linux-il2cpp and windows-il2cpp for Unity 2019.2 or earlier
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
+          # Exclude il2cpp for Unity 2019.2 or earlier
+          LINUX_EXCLUDES="$LINUX_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
 
-          # Unity 2021.1 and 2021.2 do not build properly on windows targets
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
+          # Exclude il2cpp for Unity 2019.2 or earlier. Unity 2021.1 and 2021.2 also do not build properly and will be skipped
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
 
-          # Universal Windows Platform is added in 2019
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
+          # Universal Windows Platform is added in 2019. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
 
-          # AppleTV isn't stable until 2019.2
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
+          # AppleTV isn't stable until 2019.2. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
 
-          # No Windows Mono Builds
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"base\"} ]'`"
+          # No Windows 2018 Android Builds
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018\")) | { version: ., module: \"android\"} ]'`"
 
-          EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
-          echo "Excludes: $EXCLUDES"
-          echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
+          LINUX_EXCLUDES=`echo "$LINUX_EXCLUDES" | jq -s -c 'flatten'`
+          WINDOWS_EXCLUDES=`echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten'`
+
+          echo "Linux Excludes: $LINUX_EXCLUDES"
+          echo "Windows Excludes: $WINDOWS_EXCLUDES"
+
+          echo "linuxExcludes=$LINUX_EXCLUDES" >> $GITHUB_OUTPUT
+          echo "windowsExcludes=$WINDOWS_EXCLUDES" >> $GITHUB_OUTPUT
 
   #################################
   #   Build Ubuntu base and hub   #
@@ -254,7 +260,7 @@ jobs:
             platform: Android
           - module: webgl
             platform: WebGL
-        exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
+        exclude: ${{ fromJson(needs.build-matrix.outputs.linuxExcludes) }}
 
     steps:
       #############
@@ -456,7 +462,7 @@ jobs:
             platform: WSAPlayer
           - module: android
             platform: Android
-        exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
+        exclude: ${{ fromJson(needs.build-matrix.outputs.windowsExcludes) }}
 
     steps:
       #############
