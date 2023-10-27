@@ -124,6 +124,9 @@ jobs:
           # No Windows 2018 Android Builds. Issues with 2021.1 and 2021.2 so they are skipped too
           WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2021.1|2021.2\")) | { version: ., module: \"android\"} ]'`"
 
+          # No Windows mono Builds for Unity 2019.2 or earlier. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"base\"} ]'`"
+
           LINUX_EXCLUDES=`echo "$LINUX_EXCLUDES" | jq -s -c 'flatten'`
           WINDOWS_EXCLUDES=`echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten'`
 
