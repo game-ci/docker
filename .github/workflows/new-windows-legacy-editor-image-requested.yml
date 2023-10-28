@@ -39,10 +39,6 @@ jobs:
       matrix:
         targetPlatform:
           - base
-          - android
-          # - windows-il2cpp
-          # - universal-windows-platform
-          # - appletv
 
     steps:
       - name: Checkout
