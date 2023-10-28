@@ -45,6 +45,7 @@ jobs:
           - windows-il2cpp
           - universal-windows-platform
           - appletv
+          - android
           # - lumin # TODO: Determine if we can build for lumin. Requires 3rd party SDK with several versions
 
     steps:
