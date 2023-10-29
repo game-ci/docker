@@ -513,7 +513,7 @@ jobs:
       ###########################
       - name: Build
         continue-on-error: true
-        timeout-minutes: 60
+        timeout-minutes: 90
         id: build-1
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
@@ -530,7 +530,7 @@ jobs:
       - name: Build (Retry)
         if: steps.build-1.outcome == 'failure'
         id: build-2
-        timeout-minutes: 60
+        timeout-minutes: 90
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
           --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
@@ -561,7 +561,7 @@ jobs:
         # Only run if not a PR as we need access to secrets
         if: github.base_ref == ''
         timeout-minutes: 15
-        uses: game-ci/unity-builder@main
+        uses: game-ci/unity-builder@windows-image-updates
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}

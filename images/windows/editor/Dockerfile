@@ -21,7 +21,11 @@ SHELL ["bash.exe", "-c"]
 # the installation. Otherwise docker believes there was an error
 ARG version
 ARG changeSet
-RUN "mkdir -p /var/log"
+
+RUN "mkdir -p /var/log && mkdir -p C:/UnityEditor"
+
+RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install-path --set C:/UnityEditor"
+
 RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install \
                                                     --version $version \
                                                     --changeset $changeSet \
@@ -48,8 +52,10 @@ RUN "if [ $module = 'base' ]; then \
 
 FROM $baseImage
 
+SHELL ["powershell.exe", "-Command"]
+
 # Copy the editor from the builder to the final editor image
-COPY --from=Builder ["C:/Program Files/Unity/Hub/Editor/", "C:/Program Files/Unity/Hub/Editor/"]
+COPY --from=Builder ["C:/UnityEditor/", "C:/UnityEditor/"]
 
 # Need to grab these dependencies that the editor needs to run
 COPY --from=Builder C:/windows/system32/MSVCP100.dll \
@@ -60,11 +66,9 @@ COPY --from=Builder C:/windows/system32/MSVCP100.dll \
 
 # Add version to file at editor path
 ARG version
-RUN echo %version% > "C:/Program Files/Unity/Hub/Editor/%version%/version"
+RUN echo "$Env:version" > "C:/UnityEditor/$Env:version/version"
 
-SHELL ["powershell.exe", "-Command"]
-
-RUN setx -M UNITY_PATH "C:/Program` Files/Unity/Hub/Editor/$Env:version"
+RUN setx -M UNITY_PATH "C:/UnityEditor/$Env:version"
 
 # Packages/manifest.json could have git dependencies
 RUN choco install git --no-progress -y
@@ -80,13 +84,13 @@ RUN foreach ("$service" in 'nlasvc', 'netprofm') {"Set-Service $service -Startup
 # Not needed with the dotnet base image
 # RUN powershell -Command Set-Service 'wmiApSrv' -StartupType Automatic
 
-ADD SetupAndroid.ps1 AcceptAndroidLicenses.ps1 ./
+ADD scripts ./scripts
 
 ARG module
-RUN if ("$Env:module" -eq 'Android') { .\SetupAndroid.ps1 }
+RUN if ("$Env:module" -eq 'Android') { .\scripts\SetupAndroid.ps1 }
 
 # Accept Android Licenses. Needs to be separate from the above script to
 # ensure the environment variables are set.
-RUN if ("$Env:module" -eq 'Android') { .\AcceptAndroidLicenses.ps1 }
+RUN if ("$Env:module" -eq 'Android') { .\scripts\AcceptAndroidLicenses.ps1 }
 
-RUN rm SetupAndroid.ps1, AcceptAndroidLicenses.ps1
+RUN Remove-Item .\scripts -Recurse -Force
