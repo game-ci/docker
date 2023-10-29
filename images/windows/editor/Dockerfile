@@ -75,7 +75,7 @@ RUN git config --global --add safe.directory "*"
 
 # Need to enable these services to make Unity happy
 # When these were in base, things blew up, not sure why they have to be specifically here
-RUN foreach ($service in 'nlasvc', 'netprofm') {"Set-Service $service -StartupType Automatic"}
+RUN foreach ("$service" in 'nlasvc', 'netprofm') {"Set-Service $service -StartupType Automatic"}
 
 # Not needed with the dotnet base image
 # RUN powershell -Command Set-Service 'wmiApSrv' -StartupType Automatic
@@ -83,10 +83,10 @@ RUN foreach ($service in 'nlasvc', 'netprofm') {"Set-Service $service -StartupTy
 ADD SetupAndroid.ps1 AcceptAndroidLicenses.ps1 ./
 
 ARG module
-RUN if ($Env:module -eq 'Android') { .\SetupAndroid.ps1 }
+RUN if ("$Env:module" -eq 'Android') { .\SetupAndroid.ps1 }
 
 # Accept Android Licenses. Needs to be separate from the above script to
 # ensure the environment variables are set.
-RUN if ($Env:module -eq 'Android') { .\AcceptAndroidLicenses.ps1 }
+RUN if ("$Env:module" -eq 'Android') { .\AcceptAndroidLicenses.ps1 }
 
 RUN rm SetupAndroid.ps1, AcceptAndroidLicenses.ps1

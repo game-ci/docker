@@ -1,4 +1,6 @@
-function Get-Module-Destination-Path {
+$ErrorActionPreference = "Stop"
+
+function Get-ModuleDestinationPath {
 
     param (
         $ModuleList,
@@ -9,7 +11,7 @@ function Get-Module-Destination-Path {
     return $rawPath.Replace('{UNITY_PATH}', $Env:UNITY_PATH)
 }
 
-function Get-Module-Renamed-Path {
+function Get-ModuleRenamedPath {
 
   param (
       $ModuleList,
@@ -20,7 +22,7 @@ function Get-Module-Renamed-Path {
   return $rawPath.Replace('{UNITY_PATH}', $Env:UNITY_PATH)
 }
 
-function Module-Exists {
+function Find-Module {
 
     param (
         $ModuleList,
@@ -37,13 +39,13 @@ $UNITY_MODULES_JSON = (New-Object -TypeName System.Web.Script.Serialization.Java
 $UNITY_MODULES_LIST = [Collections.Generic.List[Object]]($UNITY_MODULES_JSON)
 
 # Find our environment variables
-$ANDROID_SDK_ROOT = Get-Module-Destination-Path $UNITY_MODULES_LIST 'android-sdk-platform-tools'
-$ANDROID_NDK_HOME = Get-Module-Destination-Path $UNITY_MODULES_LIST 'android-ndk'
-$JAVA_HOME = Get-Module-Destination-Path $UNITY_MODULES_LIST 'android-open-jdk'
+$ANDROID_SDK_ROOT = Get-ModuleDestinationPath $UNITY_MODULES_LIST 'android-sdk-platform-tools'
+$ANDROID_NDK_HOME = Get-ModuleDestinationPath $UNITY_MODULES_LIST 'android-ndk'
+$JAVA_HOME = Get-ModuleDestinationPath $UNITY_MODULES_LIST 'android-open-jdk'
 
-if (Module-Exists $UNITY_MODULES_LIST 'android-sdk-command-line-tools')
+if (Find-Module $UNITY_MODULES_LIST 'android-sdk-command-line-tools')
 {
-  $TOOLS_PATH = Get-Module-Renamed-Path $UNITY_MODULES_LIST 'android-sdk-command-line-tools'
+  $TOOLS_PATH = Get-ModuleRenamedPath $UNITY_MODULES_LIST 'android-sdk-command-line-tools'
 }
 else
 {
@@ -58,3 +60,6 @@ $oldPath = [Environment]::GetEnvironmentVariable('PATH', 'Machine');
 [Environment]::SetEnvironmentVariable('ANDROID_NDK_HOME', $ANDROID_NDK_HOME,'Machine');
 [Environment]::SetEnvironmentVariable('JAVA_HOME', $JAVA_HOME,'Machine');
 [Environment]::SetEnvironmentVariable('ANDROID_CMDLINE_TOOLS', $TOOLS_PATH,'Machine');
+
+# Unity seems to always look for this file and can't find it so we manually create an empty one
+New-Item -ItemType file -Path "$Env:USERPROFILE/.android/repositories.cfg" -Force
