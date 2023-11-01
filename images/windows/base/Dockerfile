@@ -1,8 +1,8 @@
-ARG windowsDllSourceImage="mcr.microsoft.com/windows:1809"
-ARG windowsImage="mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019"
+ARG windowsDllSourceImage="mcr.microsoft.com/windows/server:ltsc2022"
+ARG windowsImage="mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2022"
 
 # Need this image to grab missing dlls for the server core version
-FROM $windowsDllSourceImage as dll-source
+FROM $windowsDllSourceImage AS dll-source
 
 # We use the .net framework servercore image because we will need the .net support
 # anyway and there is no real benefit to try and make this smaller by

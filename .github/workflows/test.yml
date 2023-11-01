@@ -44,7 +44,7 @@ jobs:
             targetPlatform: android
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
@@ -70,7 +70,7 @@ jobs:
           editorVersion: ${{ matrix.editorVersion }}
           targetPlatform: ${{ matrix.targetPlatform }}
           # Failed specific
-          reason: 'no real reason'
+          reason: "no real reason"
       - name: Report publication
         uses: ./.github/workflows/actions/report-to-backend
         with:
@@ -89,7 +89,7 @@ jobs:
           friendlyTag: ${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           specificTag: ${{ matrix.baseOs }}-${{ matrix.editorVersion }}-${{ matrix.targetPlatform }}-${{ matrix.repoVersion }}
           digest: sha256:ef872b67450a680fbeebe1b037190b8f8fbfb04088531f422873915520e26e0f;
-  
+
   ##########################
   #   Setup build matrix   #
   ##########################
@@ -98,7 +98,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.setup.outputs.versions }}
-      excludes: ${{ steps.setup.outputs.excludes }}
+      linuxExcludes: ${{ steps.setup.outputs.linuxExcludes }}
+      windowsExcludes: ${{ steps.setup.outputs.windowsExcludes }}
     steps:
       - name: "Setup build matrix"
         id: setup
@@ -108,22 +109,33 @@ jobs:
           echo "Versions: $VERSIONS"
           echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
 
-          # Exclude linux-il2cpp and windows-il2cpp for Unity 2019.2 or earlier
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
-          
-          # Unity 2021.1 and 2021.2 do not build properly on windows targets
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
+          # Exclude il2cpp for Unity 2019.2 or earlier
+          LINUX_EXCLUDES="$LINUX_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
 
-          # Universal Windows Platform is added in 2019
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
+          # Exclude il2cpp for Unity 2019.2 or earlier. Unity 2021.1 and 2021.2 also do not build properly and will be skipped
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
 
-          # AppleTV isn't stable until 2019.2
-          EXCLUDES="$EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
+          # Universal Windows Platform is added in 2019. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
 
-          EXCLUDES=`echo "$EXCLUDES" | jq -s -c 'flatten'`
-          echo "Excludes: $EXCLUDES"
-          echo "excludes=$EXCLUDES" >> $GITHUB_OUTPUT
-  
+          # AppleTV isn't stable until 2019.2. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
+
+          # No Windows 2018 Android Builds. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2021.1|2021.2\")) | { version: ., module: \"android\"} ]'`"
+
+          # No Windows mono Builds for Unity 2019.2 or earlier. Issues with 2021.1 and 2021.2 so they are skipped too
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"base\"} ]'`"
+
+          LINUX_EXCLUDES=`echo "$LINUX_EXCLUDES" | jq -s -c 'flatten'`
+          WINDOWS_EXCLUDES=`echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten'`
+
+          echo "Linux Excludes: $LINUX_EXCLUDES"
+          echo "Windows Excludes: $WINDOWS_EXCLUDES"
+
+          echo "linuxExcludes=$LINUX_EXCLUDES" >> $GITHUB_OUTPUT
+          echo "windowsExcludes=$WINDOWS_EXCLUDES" >> $GITHUB_OUTPUT
+
   #################################
   #   Build Ubuntu base and hub   #
   #################################
@@ -134,9 +146,9 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
-      - uses: docker/setup-qemu-action@v2
-      - uses: docker/setup-buildx-action@v2
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
         with:
           driver: docker
 
@@ -144,12 +156,12 @@ jobs:
       #   Build Ubuntu base and hub   #
       #################################
       - name: Build base
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: ./images/ubuntu/base/Dockerfile
           tags: base:ubuntu-dev
       - name: Build hub
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           file: ./images/ubuntu/hub/Dockerfile
           build-args: baseImage=base:ubuntu-dev
@@ -173,12 +185,12 @@ jobs:
   ##################################
   windows-base-and-hub:
     name: Windows Base and Hub
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       ##################################
       #   Build Windows base and hub   #
@@ -189,7 +201,7 @@ jobs:
       - name: Build hub
         run: |
           docker build -t hub:windows-dev -f ./images/windows/hub/Dockerfile --build-arg baseImage=base:windows-dev .
-      
+
       ###################################################
       #   Save images for later steps in the workflow   #
       ###################################################
@@ -205,7 +217,7 @@ jobs:
           cd c:\artifact
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           zstd -z -12 --format=zstd windows-base-and-hub.tar
-      
+
       - uses: actions/upload-artifact@v3
         with:
           name: windows-base-and-hub
@@ -251,15 +263,15 @@ jobs:
             platform: Android
           - module: webgl
             platform: WebGL
-        exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
+        exclude: ${{ fromJson(needs.build-matrix.outputs.linuxExcludes) }}
 
     steps:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
-      - uses: docker/setup-qemu-action@v2
-      - uses: docker/setup-buildx-action@v2
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
         with:
           driver: docker
       - name: Free disk space
@@ -297,7 +309,7 @@ jobs:
       ###########################
       - name: Build
         # if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: build-1
         continue-on-error: true
         timeout-minutes: 40
@@ -320,7 +332,7 @@ jobs:
 
       - name: Build (Retry)
         if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: build-2
         # continue-on-error: true
         timeout-minutes: 40
@@ -430,7 +442,7 @@ jobs:
   windows-editor:
     needs: [windows-base-and-hub, build-matrix]
     name: Windows (${{ matrix.version }}, ${{ matrix.module }})
-    runs-on: windows-2019
+    runs-on: windows-2022
     strategy:
       fail-fast: false
       matrix:
@@ -441,6 +453,7 @@ jobs:
           - windows-il2cpp
           - universal-windows-platform
           - appletv
+          - android
         include:
           - module: base
             platform: StandaloneWindows64
@@ -450,13 +463,15 @@ jobs:
             platform: tvOS
           - module: universal-windows-platform
             platform: WSAPlayer
-        exclude: ${{ fromJson(needs.build-matrix.outputs.excludes) }}
+          - module: android
+            platform: Android
+        exclude: ${{ fromJson(needs.build-matrix.outputs.windowsExcludes) }}
 
     steps:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       ############################
       #   Restore base and hub   #
@@ -498,7 +513,7 @@ jobs:
       ###########################
       - name: Build
         continue-on-error: true
-        timeout-minutes: 60
+        timeout-minutes: 90
         id: build-1
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
@@ -515,7 +530,7 @@ jobs:
       - name: Build (Retry)
         if: steps.build-1.outcome == 'failure'
         id: build-2
-        timeout-minutes: 60
+        timeout-minutes: 90
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
           --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
