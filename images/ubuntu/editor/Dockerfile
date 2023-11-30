@@ -312,3 +312,6 @@ RUN echo "$version-$module" | grep -q -v '^2021.*linux-il2cpp' \
     lld \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+USER gameci
+WORKDIR /home/gameci/

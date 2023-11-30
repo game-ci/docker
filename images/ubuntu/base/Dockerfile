@@ -76,7 +76,7 @@ RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && mkdir -p /var/l
 ENV UNITY_PATH="/opt/unity"
 
 # create a user for non-root operation
-ARG USER="player1"
+ARG USER="gameci"
 RUN useradd -ms /bin/bash $USER && \
         usermod -aG sudo $USER && \
         echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
@@ -84,5 +84,3 @@ RUN useradd -ms /bin/bash $USER && \
         mkdir -p /home/$USER/.local/lib && \
         chown -R $USER:$USER /home/$USER/
 
-USER $USER
-WORKDIR /home/$USER/
