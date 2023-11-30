@@ -83,3 +83,6 @@ RUN useradd -ms /bin/bash $USER && \
         mkdir -p /home/$USER/.local/bin && \
         mkdir -p /home/$USER/.local/lib && \
         chown -R $USER:$USER /home/$USER/
+
+USER $USER
+WORKDIR /home/$USER/
