@@ -74,3 +74,12 @@ RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && mkdir -p /var/l
 
 # Used by Unity editor in "modules.json" and must not end with a slash.
 ENV UNITY_PATH="/opt/unity"
+
+# create a user for non-root operation
+ARG USER="player1"
+RUN useradd -ms /bin/bash $USER && \
+        usermod -aG sudo $USER && \
+        echo "$USER ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
+        mkdir -p /home/$USER/.local/bin && \
+        mkdir -p /home/$USER/.local/lib && \
+        chown -R $USER:$USER /home/$USER/
