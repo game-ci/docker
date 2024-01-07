@@ -365,6 +365,8 @@ jobs:
       - name: Build project
         uses: game-ci/unity-builder@main
         timeout-minutes: 35
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == ''
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
@@ -385,7 +387,7 @@ jobs:
           # Set WebGL compression format to gzip
           sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 1/' reference-project-test/ProjectSettings/ProjectSettings.asset
       - name: Build project (GZip)
-        if: env.MODULE == 'webgl'
+        if: env.MODULE == 'webgl' && github.base_ref == ''
         uses: game-ci/unity-builder@main
         timeout-minutes: 15
         env:
@@ -408,7 +410,7 @@ jobs:
           # Set WebGL compression format to brotli
           sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 0/' reference-project-test/ProjectSettings/ProjectSettings.asset
       - name: Build project (Brotli)
-        if: env.MODULE == 'webgl'
+        if: env.MODULE == 'webgl' && github.base_ref == ''
         uses: game-ci/unity-builder@main
         timeout-minutes: 15
         env:
@@ -428,6 +430,8 @@ jobs:
       - name: Test project
         timeout-minutes: 10
         uses: game-ci/unity-test-runner@main
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == ''
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
