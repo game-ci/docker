@@ -173,7 +173,7 @@ jobs:
         run: |
           docker images
           docker save -o ubuntu-base-and-hub.tar base:ubuntu-dev hub:ubuntu-dev
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           name: ubuntu-base-and-hub
           path: ubuntu-base-and-hub.tar
@@ -217,7 +217,7 @@ jobs:
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           zstd -z -12 --format=zstd windows-base-and-hub.tar
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           name: windows-base-and-hub
           path: C:/artifact/windows-base-and-hub.tar.zst
@@ -279,7 +279,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: ubuntu-base-and-hub
 
@@ -491,7 +491,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: windows-base-and-hub
       - name: Restore base and hub
