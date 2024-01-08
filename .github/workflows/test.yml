@@ -5,16 +5,19 @@ on:
   push:
     paths:
       - "**/Dockerfile"
+      - "**/scripts/**"
       - ".github/workflows/test.yml"
       - "reference-project-test/**"
   pull_request:
     paths:
       - "**/Dockerfile"
+      - "**/scripts/**"
       - ".github/workflows/test.yml"
       - "reference-project-test/**"
 
-env:
-  UNITY_LICENSE: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><root>\n    <License id=\"Terms\">\n        <MachineBindings>\n            <Binding Key=\"1\" Value=\"576562626572264761624c65526f7578\"/>\n            <Binding Key=\"2\" Value=\"576562626572264761624c65526f7578\"/>\n        </MachineBindings>\n        <MachineID Value=\"D7nTUnjNAmtsUMcnoyrqkgIbYdM=\"/>\n        <SerialHash Value=\"2033b8ac3e6faa3742ca9f0bfae44d18f2a96b80\"/>\n        <Features>\n            <Feature Value=\"33\"/>\n            <Feature Value=\"1\"/>\n            <Feature Value=\"12\"/>\n            <Feature Value=\"2\"/>\n            <Feature Value=\"24\"/>\n            <Feature Value=\"3\"/>\n            <Feature Value=\"36\"/>\n            <Feature Value=\"17\"/>\n            <Feature Value=\"19\"/>\n            <Feature Value=\"62\"/>\n        </Features>\n        <DeveloperData Value=\"AQAAAEY0LUJHUlgtWEQ0RS1aQ1dWLUM1SlctR0RIQg==\"/>\n        <SerialMasked Value=\"F4-BGRX-XD4E-ZCWV-C5JW-XXXX\"/>\n        <StartDate Value=\"2021-02-08T00:00:00\"/>\n        <UpdateDate Value=\"2021-02-09T00:34:57\"/>\n        <InitialActivationDate Value=\"2021-02-08T00:34:56\"/>\n        <LicenseVersion Value=\"6.x\"/>\n        <ClientProvidedVersion Value=\"2018.4.30f1\"/>\n        <AlwaysOnline Value=\"false\"/>\n        <Entitlements>\n            <Entitlement Ns=\"unity_editor\" Tag=\"UnityPersonal\" Type=\"EDITOR\" ValidTo=\"9999-12-31T00:00:00\"/>\n            <Entitlement Ns=\"unity_editor\" Tag=\"DarkSkin\" Type=\"EDITOR_FEATURE\" ValidTo=\"9999-12-31T00:00:00\"/>\n        </Entitlements>\n    </License>\n<Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/><SignatureMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#rsa-sha1\"/><Reference URI=\"#Terms\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2000/09/xmldsig#sha1\"/><DigestValue>m0Db8UK+ktnOLJBtHybkfetpcKo=</DigestValue></Reference></SignedInfo><SignatureValue>o/pUbSQAukz7+ZYAWhnA0AJbIlyyCPL7bKVEM2lVqbrXt7cyey+umkCXamuOgsWPVUKBMkXtMH8L\n5etLmD0getWIhTGhzOnDCk+gtIPfL4jMo9tkEuOCROQAXCci23VFscKcrkB+3X6h4wEOtA2APhOY\nB+wvC794o8/82ffjP79aVAi57rp3Wmzx+9pe9yMwoJuljAy2sc2tIMgdQGWVmOGBpQm3JqsidyzI\nJWG2kjnc7pDXK9pwYzXoKiqUqqrut90d+kQqRyv7MSZXR50HFqD/LI69h68b7P8Bjo3bPXOhNXGR\n9YCoemH6EkfCJxp2gIjzjWW+l2Hj2EsFQi8YXw==</SignatureValue></Signature></root>"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   ##########################
@@ -105,27 +108,24 @@ jobs:
         id: setup
         run: |
           # Get the Unity versions for test. (The latest patch versions for each minor version.)
-          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2018.3`
+          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2019.3`
           echo "Versions: $VERSIONS"
           echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
 
-          # Exclude il2cpp for Unity 2019.2 or earlier
-          LINUX_EXCLUDES="$LINUX_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2\")) | { version: ., module: \"linux-il2cpp\"} ]'`"
+          # Unity 2021.1 and 2021.2 do not build il2cpp properly and will be skipped
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
 
-          # Exclude il2cpp for Unity 2019.2 or earlier. Unity 2021.1 and 2021.2 also do not build properly and will be skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
+          # Issues with 2021.1 and 2021.2 on Universal Windows Platform so they are skipped
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
 
-          # Universal Windows Platform is added in 2019. Issues with 2021.1 and 2021.2 so they are skipped too
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
+          # Issues with 2021.1 and 2021.2 on AppleTV so they are skipped
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
 
-          # AppleTV isn't stable until 2019.2. Issues with 2021.1 and 2021.2 so they are skipped too
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
+          # Issues with 2021.1 and 2021.2 on Android so they are skipped
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"android\"} ]'`"
 
-          # No Windows 2018 Android Builds. Issues with 2021.1 and 2021.2 so they are skipped too
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2021.1|2021.2\")) | { version: ., module: \"android\"} ]'`"
-
-          # No Windows mono Builds for Unity 2019.2 or earlier. Issues with 2021.1 and 2021.2 so they are skipped too
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2018|2019.1|2019.2|2021.1|2021.2\")) | { version: ., module: \"base\"} ]'`"
+          # Issues with 2021.1 and 2021.2 on Mono so they are skipped
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"base\"} ]'`"
 
           LINUX_EXCLUDES=`echo "$LINUX_EXCLUDES" | jq -s -c 'flatten'`
           WINDOWS_EXCLUDES=`echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten'`
@@ -369,6 +369,12 @@ jobs:
       - name: Build project
         uses: game-ci/unity-builder@main
         timeout-minutes: 35
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == ''
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -385,9 +391,13 @@ jobs:
           # Set WebGL compression format to gzip
           sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 1/' reference-project-test/ProjectSettings/ProjectSettings.asset
       - name: Build project (GZip)
-        if: env.MODULE == 'webgl'
+        if: env.MODULE == 'webgl' && github.base_ref == ''
         uses: game-ci/unity-builder@main
         timeout-minutes: 15
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -404,9 +414,13 @@ jobs:
           # Set WebGL compression format to brotli
           sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 0/' reference-project-test/ProjectSettings/ProjectSettings.asset
       - name: Build project (Brotli)
-        if: env.MODULE == 'webgl'
+        if: env.MODULE == 'webgl' && github.base_ref == ''
         uses: game-ci/unity-builder@main
         timeout-minutes: 15
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
@@ -420,6 +434,12 @@ jobs:
       - name: Test project
         timeout-minutes: 10
         uses: game-ci/unity-test-runner@main
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == ''
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           unityVersion: ${{ matrix.version }}
           customImage: editor:ubuntu-dev
