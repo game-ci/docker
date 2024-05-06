@@ -18,21 +18,20 @@ dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
 echo ""
 
 # Remove packages
-echo ""
-echo "Removing large packages"
-sudo apt-get remove -y '^ghc-8.*'
-sudo apt-get remove -y '^dotnet-.*'
-sudo apt-get remove -y '^llvm-.*'
-sudo apt-get remove -y 'php.*'
-sudo apt-get remove -y '^mongodb-.*'
-sudo apt-get remove -y '^mysql-.*'
-sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
-sudo apt-get autoremove -y
-sudo apt-get clean
-echo ""
-echo "Disk space after apt-get:"
-df -h
-echo ""
+# echo ""
+# echo "Removing large packages"
+# sudo apt-get remove -y '^dotnet-.*'
+# sudo apt-get remove -y '^llvm-.*'
+# sudo apt-get remove -y 'php.*'
+# sudo apt-get remove -y '^mongodb-.*'
+# sudo apt-get remove -y '^mysql-.*'
+# sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
+# sudo apt-get autoremove -y
+# sudo apt-get clean
+# echo ""
+# echo "Disk space after apt-get:"
+# df -h
+# echo ""
 
 # Large dirs
 echo "Removing large directories"
