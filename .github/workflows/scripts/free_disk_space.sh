@@ -43,7 +43,6 @@ sudo rm -rf /usr/local/share/powershell
 sudo rm -rf /usr/local/share/chromium
 sudo rm -rf /usr/local/lib/android
 sudo rm -rf /opt/ghc
-sudo rm -rf /usr/local/lib/node_modules
 echo ""
 echo "Disk space after removing large directories:"
 df -h
