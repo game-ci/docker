@@ -13,31 +13,38 @@ df -h
 echo ""
 
 # List packages
-#echo "Listing 25 largest packages"
-#dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 25
-#echo ""
+echo "Listing 100 largest packages"
+dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
+echo ""
 
 # Remove packages
-#echo ""
-#echo "Removing large packages"
-#sudo apt-get remove -y '^ghc-8.*'
-#sudo apt-get remove -y '^dotnet-.*'
-#sudo apt-get remove -y '^llvm-.*'
-#sudo apt-get remove -y 'php.*'
-#sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
-#sudo apt-get autoremove -y
-#sudo apt-get clean
-#echo ""
-#echo "Disk space after apt-get:"
-#df -h
-#echo ""
+echo ""
+echo "Removing large packages"
+sudo apt-get remove -y '^ghc-8.*'
+sudo apt-get remove -y '^dotnet-.*'
+sudo apt-get remove -y '^llvm-.*'
+sudo apt-get remove -y 'php.*'
+sudo apt-get remove -y '^mongodb-.*'
+sudo apt-get remove -y '^mysql-.*'
+sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
+sudo apt-get autoremove -y
+sudo apt-get clean
+echo ""
+echo "Disk space after apt-get:"
+df -h
+echo ""
 
 # Large dirs
 echo "Removing large directories"
 # https://github.com/apache/flink/blob/master/tools/azure-pipelines/free_disk_space.sh
-sudo rm -rf /usr/share/dotnet
+sudo rm -rf /usr/share/dotnet/
+sudo rm -rf /usr/local/graalvm/
+sudo rm -rf /usr/local/.ghcup/
+sudo rm -rf /usr/local/share/powershell
+sudo rm -rf /usr/local/share/chromium
 sudo rm -rf /usr/local/lib/android
 sudo rm -rf /opt/ghc
+sudo rm -rf /usr/local/lib/node_modules
 echo ""
 echo "Disk space after removing large directories:"
 df -h

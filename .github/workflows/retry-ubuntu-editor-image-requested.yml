@@ -22,7 +22,7 @@ jobs:
       #################
       - name: Show hook input
         run: |
-          echo "Event ${{ github.event.event_type }}"
+          echo "Event ${{ github.event.action }}"
           echo "jobId: ${{ github.event.client_payload.jobId }}"
           echo "Target platform to retry: ${{ github.event.client_payload.targetPlatform }}"
           echo "Unity editor version: ${{ github.event.client_payload.editorVersion }}"
