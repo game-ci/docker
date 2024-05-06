@@ -24,11 +24,11 @@ RUN for mod in $module; do \
 	# Set execute permissions for modules
 	&& chmod -R 755 /opt/unity/editors/$version/Editor/Data/PlaybackEngines
 
-RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9][0-9][0-9]).*linux' \
+RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*linux' \
   && exit 0 \
   || unity-hub install-modules --version "$version" --module "linux-server" --childModules | tee /var/log/install-module-linux-server.log && grep 'Missing module' /var/log/install-module-linux-server.log | exit $(wc -l);
 
-RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9][0-9][0-9]).*windows' \
+RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*windows' \
   && exit 0 \
   || unity-hub install-modules --version "$version" --module "windows-server" --childModules | tee /var/log/install-module-windows-server.log && grep 'Missing module' /var/log/install-module-windows-server.log | exit $(wc -l);
 
@@ -175,7 +175,7 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
 #=======================================================================================
 # [2021.x/2022.x/6000+-android] Set CMDLINE Tools Path
 #=======================================================================================
-RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9][0-9][0-9]).*android' \
+RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*android' \
   && exit 0 \
   || : \
   && . ~/.bashrc \
@@ -214,7 +214,7 @@ RUN echo "$version-$module" | grep -q -vP '^(20(19|20)).*android' \
 #=======================================================================================
 # [2021.x/2022.x/6000+-android] Accept Android SDK licenses via new cmdline-tools sdkmanager
 #=======================================================================================
-RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9][0-9][0-9]).*android' \
+RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*android' \
   && exit 0 \
   || : \
   && . ~/.bashrc \
