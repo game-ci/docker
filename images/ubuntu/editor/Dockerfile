@@ -24,11 +24,11 @@ RUN for mod in $module; do \
 	# Set execute permissions for modules
 	&& chmod -R 755 /opt/unity/editors/$version/Editor/Data/PlaybackEngines
 
-RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|20[3-9]).*linux' \
+RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9][0-9][0-9]).*linux' \
   && exit 0 \
   || unity-hub install-modules --version "$version" --module "linux-server" --childModules | tee /var/log/install-module-linux-server.log && grep 'Missing module' /var/log/install-module-linux-server.log | exit $(wc -l);
 
-RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|20[3-9]).*windows' \
+RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9][0-9][0-9]).*windows' \
   && exit 0 \
   || unity-hub install-modules --version "$version" --module "windows-server" --childModules | tee /var/log/install-module-windows-server.log && grep 'Missing module' /var/log/install-module-windows-server.log | exit $(wc -l);
 
@@ -173,17 +173,24 @@ RUN echo "$version-$module" | grep -q -vP '^20(?!18).*android' \
   && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
 
 #=======================================================================================
-# [2021.x/2022.x-android] Set CMDLINE Tools Path
+# [2021.x/2022.x/6000+-android] Set CMDLINE Tools Path
 #=======================================================================================
-RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|20[3-9]).*android' \
+RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9][0-9][0-9]).*android' \
   && exit 0 \
   || : \
   && . ~/.bashrc \
-  && export RAW_CMDLINE_TOOLS_PATH=$(jq -cr '(.[] | select(.id | contains("android-sdk-command-line-tools"))).renameTo' $UNITY_PATH/modules.json) \
   && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
+  && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id | contains("android-sdk-platform-tools"))).destination' $UNITY_PATH/modules.json) \
+  && export ANDROID_SDK_ROOT=$(echo $RAW_ANDROID_SDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  && export ANDROID_HOME=${ANDROID_SDK_ROOT} \
+  && export RAW_ANDROID_NDK_ROOT=$(jq -cr '(.[] | select(.id | contains("android-ndk"))).destination' $UNITY_PATH/modules.json) \
+  && export ANDROID_NDK_HOME=$(echo $RAW_ANDROID_NDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  && export RAW_CMDLINE_TOOLS_PATH=$(jq -cr '(.[] | select(.id | contains("android-sdk-command-line-tools"))).renameTo' $UNITY_PATH/modules.json) \
   && export ANDROID_CMDLINE_TOOLS_PATH=$(echo $RAW_CMDLINE_TOOLS_PATH | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  && export RAW_JAVA_HOME=$(jq -cr '(.[] | select(.id | contains("android-open-jdk"))).destination' $UNITY_PATH/modules.json) \
+  && export JAVA_HOME=$(echo $RAW_JAVA_HOME | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
   # Prefer cmdline tools over legacy tools
-  && export PATH=${ANDROID_CMDLINE_TOOLS_PATH}/bin:${PATH} \
+  && export PATH=${JAVA_HOME}/bin:${ANDROID_CMDLINE_TOOLS_PATH}/bin:${PATH} \
   && { \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
     echo "export ANDROID_HOME=${ANDROID_HOME}"; \
@@ -191,7 +198,9 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|20[3-9]).*android' \
     echo "export JAVA_HOME=${JAVA_HOME}"; \
     echo "export ANDROID_CMDLINE_TOOLS_PATH=${ANDROID_CMDLINE_TOOLS_PATH}"; \
     echo "export PATH=${PATH}"; \
-  } > /usr/bin/unity-editor.d/android-2019+.sh
+  } > /usr/bin/unity-editor.d/android-2019+.sh \
+  # Update '~/.bashrc' to enable using variables when logging in
+  && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
 
 #=======================================================================================
 # [2019.x/2020.x-android] Accept Android SDK licenses via old sdkmanager
@@ -203,9 +212,9 @@ RUN echo "$version-$module" | grep -q -vP '^(20(19|20)).*android' \
   && yes | "${ANDROID_HOME}/tools/bin/sdkmanager" --licenses
 
 #=======================================================================================
-# [2021.x/2022.x-android] Accept Android SDK licenses via new cmdline-tools sdkmanager
+# [2021.x/2022.x/6000+-android] Accept Android SDK licenses via new cmdline-tools sdkmanager
 #=======================================================================================
-RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|20[3-9]).*android' \
+RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9][0-9][0-9]).*android' \
   && exit 0 \
   || : \
   && . ~/.bashrc \

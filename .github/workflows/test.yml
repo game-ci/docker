@@ -296,9 +296,7 @@ jobs:
         id: setup
         run: |
           # The changeset for unity version
-          CHANGESET=`npx unity-changeset ${{ matrix.version }}`
-          echo Changeset is $CHANGESET
-          echo "CHANGESET=$CHANGESET" >> "$GITHUB_OUTPUT"
+          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> "$GITHUB_OUTPUT"
 
           # For 2019.3 or later, non-il2cpp would also be possible to build with il2cpp image.
           if [ `echo "${{ matrix.version }}" | grep -v '\(2018\|2019.1\|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
