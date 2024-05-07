@@ -110,7 +110,7 @@ jobs:
           # Get the Unity versions for test. (The latest patch versions for each minor version.)
           VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2019.3`
           echo "Versions: $VERSIONS"
-          echo "versions=$VERSIONS" >> $GITHUB_OUTPUT
+          echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
 
           # Unity 2021.1 and 2021.2 do not build il2cpp properly and will be skipped
           WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
@@ -133,8 +133,8 @@ jobs:
           echo "Linux Excludes: $LINUX_EXCLUDES"
           echo "Windows Excludes: $WINDOWS_EXCLUDES"
 
-          echo "linuxExcludes=$LINUX_EXCLUDES" >> $GITHUB_OUTPUT
-          echo "windowsExcludes=$WINDOWS_EXCLUDES" >> $GITHUB_OUTPUT
+          echo "linuxExcludes=$LINUX_EXCLUDES" >> "$GITHUB_OUTPUT"
+          echo "windowsExcludes=$WINDOWS_EXCLUDES" >> "$GITHUB_OUTPUT"
 
   #################################
   #   Build Ubuntu base and hub   #
@@ -174,7 +174,7 @@ jobs:
         run: |
           docker images
           docker save -o ubuntu-base-and-hub.tar base:ubuntu-dev hub:ubuntu-dev
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ubuntu-base-and-hub
           path: ubuntu-base-and-hub.tar
@@ -218,7 +218,7 @@ jobs:
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           zstd -z -12 --format=zstd windows-base-and-hub.tar
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: windows-base-and-hub
           path: C:/artifact/windows-base-and-hub.tar.zst
@@ -280,7 +280,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: ubuntu-base-and-hub
 
@@ -293,15 +293,16 @@ jobs:
       #   Setup to build   #
       ######################
       - name: Setup to build
+        id: setup
         run: |
           # The changeset for unity version
-          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> $GITHUB_ENV
+          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> "$GITHUB_OUTPUT"
 
           # For 2019.3 or later, non-il2cpp would also be possible to build with il2cpp image.
           if [ `echo "${{ matrix.version }}" | grep -v '\(2018\|2019.1\|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
-            echo "MODULE=linux-il2cpp" >> $GITHUB_ENV
+            echo "MODULE=linux-il2cpp" >> "$GITHUB_OUTPUT"
           else
-            echo "MODULE=${{ matrix.module }}" >> $GITHUB_ENV
+            echo "MODULE=${{ matrix.module }}" >> "$GITHUB_OUTPUT"
           fi
 
       ###########################
@@ -319,8 +320,8 @@ jobs:
             baseImage=base:ubuntu-dev
             hubImage=hub:ubuntu-dev
             version=${{ matrix.version }}
-            changeSet=${{ env.CHANGESET }}
-            module=${{ env.MODULE }}
+            changeSet=${{ steps.setup.outputs.CHANGESET }}
+            module=${{ steps.setup.outputs.MODULE }}
           tags: editor:ubuntu-dev
 
       ###################################
@@ -342,8 +343,8 @@ jobs:
             baseImage=base:ubuntu-dev
             hubImage=hub:ubuntu-dev
             version=${{ matrix.version }}
-            changeSet=${{ env.CHANGESET }}
-            module=${{ env.MODULE }}
+            changeSet=${{ steps.setup.outputs.CHANGESET }}
+            module=${{ steps.setup.outputs.MODULE }}
           tags: editor:ubuntu-dev
 
       #####################
@@ -386,12 +387,12 @@ jobs:
       #   Build (Ubuntu GZip)   #
       ###########################
       - name: "⚙️ Setup (Ubuntu GZip)"
-        if: env.MODULE == 'webgl'
+        if: steps.setup.outputs.MODULE == 'webgl'
         run: |
           # Set WebGL compression format to gzip
           sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 1/' reference-project-test/ProjectSettings/ProjectSettings.asset
       - name: Build project (GZip)
-        if: env.MODULE == 'webgl' && github.base_ref == ''
+        if: steps.setup.outputs.MODULE == 'webgl' && github.base_ref == ''
         uses: game-ci/unity-builder@main
         timeout-minutes: 15
         env:
@@ -409,12 +410,12 @@ jobs:
       #   Build (Ubuntu Brotli)   #
       #############################
       - name: "⚙️ Setup (Ubuntu Brotli)"
-        if: env.MODULE == 'webgl'
+        if: steps.setup.outputs.MODULE == 'webgl'
         run: |
           # Set WebGL compression format to brotli
           sed -i -e 's/webGLCompressionFormat: .*$/webGLCompressionFormat: 0/' reference-project-test/ProjectSettings/ProjectSettings.asset
       - name: Build project (Brotli)
-        if: env.MODULE == 'webgl' && github.base_ref == ''
+        if: steps.setup.outputs.MODULE == 'webgl' && github.base_ref == ''
         uses: game-ci/unity-builder@main
         timeout-minutes: 15
         env:
@@ -450,7 +451,7 @@ jobs:
       #   Validate Android Utils   #
       ##############################
       - name: Validate Android Utils
-        if: env.MODULE == 'android'
+        if: steps.setup.outputs.MODULE == 'android'
         uses: addnab/docker-run-action@v3
         with:
           image: editor:ubuntu-dev
@@ -496,7 +497,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: windows-base-and-hub
       - name: Restore base and hub
@@ -516,15 +517,16 @@ jobs:
       #   Setup to build   #
       ######################
       - name: Setup to build
+        id: setup
         run: |
           # The changeset for unity version
-          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> $GITHUB_ENV
+          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> "$GITHUB_OUTPUT"
 
           # For 2019.3 or later, non-il2cpp would also be possible to build with il2cpp image.
           if [ `echo "${{ matrix.version }}" | grep -v '\(2018\|2019.1\|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
-            echo "MODULE=windows-il2cpp" >> $GITHUB_ENV
+            echo "MODULE=windows-il2cpp" >> "$GITHUB_OUTPUT"
           else
-            echo "MODULE=${{ matrix.module }}" >> $GITHUB_ENV
+            echo "MODULE=${{ matrix.module }}" >> "$GITHUB_OUTPUT"
           fi
         shell: bash
 
@@ -538,7 +540,7 @@ jobs:
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
           --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
-          --build-arg changeSet=${{ env.CHANGESET }} --build-arg module=${{ env.MODULE }} ./images/windows/editor
+          --build-arg changeSet=${{ steps.setup.outputs.CHANGESET }} --build-arg module=${{ steps.setup.outputs.MODULE }} ./images/windows/editor
 
       ####################################
       #   Build Windows editor (retry)   #
@@ -554,7 +556,7 @@ jobs:
         run: |
           docker build -t editor:windows-dev --build-arg baseImage=base:windows-dev `
           --build-arg hubImage=hub:windows-dev --build-arg version=${{ matrix.version }} `
-          --build-arg changeSet=${{ env.CHANGESET }} --build-arg module=${{ env.MODULE }} ./images/windows/editor
+          --build-arg changeSet=${{ steps.setup.outputs.CHANGESET }} --build-arg module=${{ steps.setup.outputs.MODULE }} ./images/windows/editor
 
       #####################
       #   Setup to test   #

@@ -31,7 +31,7 @@ jobs:
       #################
       - name: Show hook input
         run: |
-          echo "Event ${{ github.event.event_type }}"
+          echo "Event ${{ github.event.action }}"
           echo "jobId: ${{ github.event.client_payload.jobId }}"
           echo "repoVersion (full): ${{ github.event.client_payload.repoVersionFull }}"
           echo "repoVersion (only minor and major): ${{ github.event.client_payload.repoVersionMinor }}"
@@ -70,7 +70,7 @@ jobs:
             exit 1
           fi
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ github.event.client_payload.repoVersionFull }}-${{ runner.os }}-buildx-hub-${{ github.sha }}

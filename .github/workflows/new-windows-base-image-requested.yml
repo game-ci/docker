@@ -66,7 +66,7 @@ jobs:
 
       - name: Show hook input
         run: |
-          echo "Event ${{ github.event.event_type }}"
+          echo "Event ${{ github.event.action }}"
           echo "jobId: ${{ steps.buildParameters.outputs.jobId }}"
           echo "repoVersion (full): ${{ steps.buildParameters.outputs.repoVersionFull }}"
           echo "repoVersion (only minor and major): ${{ steps.buildParameters.outputs.repoVersionMinor }}"

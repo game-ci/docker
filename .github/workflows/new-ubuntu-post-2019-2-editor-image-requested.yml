@@ -41,7 +41,7 @@ jobs:
       #################
       - name: Show hook input
         run: |
-          echo "Event ${{ github.event.event_type }}"
+          echo "Event ${{ github.event.action }}"
           echo "jobId: ${{ github.event.client_payload.jobId }}"
           echo "Unity editor version: ${{ github.event.client_payload.editorVersion }}"
           echo "Unity changeset: ${{ github.event.client_payload.changeSet }}"
