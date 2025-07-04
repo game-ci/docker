@@ -59,9 +59,7 @@ COPY --from=Builder ["C:/UnityEditor/", "C:/UnityEditor/"]
 
 # Need to grab these dependencies that the editor needs to run
 COPY --from=Builder C:/windows/system32/MSVCP100.dll \
-                    C:/windows/system32/MSVCP120.dll \
                     C:/windows/system32/MSVCR100.dll \
-                    C:/windows/system32/MSVCR120.dll \
                     C:/windows/system32/
 
 # Add version to file at editor path
