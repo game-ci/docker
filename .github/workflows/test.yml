@@ -156,12 +156,12 @@ jobs:
       #   Build Ubuntu base and hub   #
       #################################
       - name: Build base
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: ./images/ubuntu/base/Dockerfile
           tags: base:ubuntu-dev
       - name: Build hub
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           file: ./images/ubuntu/hub/Dockerfile
           build-args: baseImage=base:ubuntu-dev
@@ -310,7 +310,7 @@ jobs:
       ###########################
       - name: Build
         # if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         id: build-1
         continue-on-error: true
         timeout-minutes: 40
@@ -333,7 +333,7 @@ jobs:
 
       - name: Build (Retry)
         if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         id: build-2
         # continue-on-error: true
         timeout-minutes: 40
