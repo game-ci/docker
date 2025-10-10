@@ -222,6 +222,20 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4
   && yes | "${ANDROID_CMDLINE_TOOLS_PATH}/bin/sdkmanager" --licenses
 
 #=======================================================================================
+# [6000+-android] Install platform-tools if missing
+#=======================================================================================
+RUN echo "$version-$module" | grep -q -vP '^([6-9][0-9]{3}|[1-9][0-9]{4,}).*android' \
+  && exit 0 \
+  || : \
+  && . ~/.bashrc \
+  && if [ ! -d "${ANDROID_HOME}/platform-tools" ]; then \
+    echo "Installing platform-tools..."; \
+    "${ANDROID_CMDLINE_TOOLS_PATH}/bin/sdkmanager" "platform-tools"; \
+  else \
+    echo "platform-tools already exists at ${ANDROID_HOME}/platform-tools"; \
+  fi
+
+#=======================================================================================
 # [2022.x-android] Fix for symlink issue on Android 2022.2+
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -vP '^(2022.[2-9]|202[3-9]|20[3-9]).*android' \
