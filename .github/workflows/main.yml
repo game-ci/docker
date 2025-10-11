@@ -21,7 +21,7 @@ jobs:
       - run: |
           echo "SHORT_DESCRIPTION=$(cat ./images/ubuntu/${{ matrix.imageType }}/100-characters-dockerhub-description.txt)" >> $GITHUB_ENV
       - name: Update DockerHub description
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_LEGACY_PASSWORD }}
