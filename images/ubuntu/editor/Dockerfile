@@ -180,7 +180,7 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4
   || : \
   && . ~/.bashrc \
   && export ESCAPED_UNITY_PATH=$(printf '%s' "$UNITY_PATH" | sed 's/[#\/]/\\\0/g') \
-  && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id | contains("android-sdk-platform-tools"))).destination' $UNITY_PATH/modules.json) \
+  && export RAW_ANDROID_SDK_ROOT=$(jq -cr '(.[] | select(.id | contains("android-sdk-platform-tools")) | .destination) // (.[] | select(.id | contains("android-sdk-ndk-tools")) | .destination)' $UNITY_PATH/modules.json) \
   && export ANDROID_SDK_ROOT=$(echo $RAW_ANDROID_SDK_ROOT | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
   && export ANDROID_HOME=${ANDROID_SDK_ROOT} \
   && export RAW_ANDROID_NDK_ROOT=$(jq -cr '(.[] | select(.id | contains("android-ndk"))).destination' $UNITY_PATH/modules.json) \
@@ -219,6 +219,20 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4
   || : \
   && . ~/.bashrc \
   && yes | "${ANDROID_CMDLINE_TOOLS_PATH}/bin/sdkmanager" --licenses
+
+#=======================================================================================
+# [6000+-android] Install platform-tools if missing
+#=======================================================================================
+RUN echo "$version-$module" | grep -q -vP '^([6-9][0-9]{3}|[1-9][0-9]{4,}).*android' \
+  && exit 0 \
+  || : \
+  && . ~/.bashrc \
+  && if [ ! -d "${ANDROID_HOME}/platform-tools" ]; then \
+    echo "Installing platform-tools..."; \
+    "${ANDROID_CMDLINE_TOOLS_PATH}/bin/sdkmanager" "platform-tools"; \
+  else \
+    echo "platform-tools already exists at ${ANDROID_HOME}/platform-tools"; \
+  fi
 
 #=======================================================================================
 # [2022.x-android] Fix for symlink issue on Android 2022.2+
