@@ -188,6 +188,7 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4
   && export ANDROID_CMDLINE_TOOLS_PATH=$(echo $RAW_CMDLINE_TOOLS_PATH | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
   && export RAW_JAVA_HOME=$(jq -cr '(.[] | select(.id | contains("android-open-jdk"))).destination' $UNITY_PATH/modules.json) \
   && export JAVA_HOME=$(echo $RAW_JAVA_HOME | sed -e "s/{UNITY_PATH}/$ESCAPED_UNITY_PATH/g") \
+  # Prefer cmdline tools over legacy tools
   && export PATH=${JAVA_HOME}/bin:${ANDROID_CMDLINE_TOOLS_PATH}/bin:${PATH} \
   && { \
     echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}"; \
@@ -197,6 +198,7 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4
     echo "export ANDROID_CMDLINE_TOOLS_PATH=${ANDROID_CMDLINE_TOOLS_PATH}"; \
     echo "export PATH=${PATH}"; \
   } > /usr/bin/unity-editor.d/android-2019+.sh \
+  # Update '~/.bashrc' to enable using variables when logging in
   && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
 
 #=======================================================================================
