@@ -263,7 +263,7 @@ jobs:
           digest: ${{ steps.image-digest.outputs.digest }}
 
       - name: Report failure
-        if: ${{ steps.build_windows_editor_image.outcome == 'failure' && steps.build_windows_editor_image_retry.outcome == 'failure' }}
+        if: ${{ failure() || cancelled() }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}

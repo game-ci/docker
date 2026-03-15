@@ -51,10 +51,10 @@ jobs:
           if ("${{ github.event.inputs.jobId }}")
           {
             # Workflow Dispatch
-            echo "jobId=${{ github.event.inputs.jobId }}" >> $Env:GITHUB_OUTPUT
-            echo "repoVersionFull=${{ github.event.inputs.repoVersionFull }}" >> $Env:GITHUB_OUTPUT
-            echo "repoVersionMinor=${{ github.event.inputs.repoVersionMinor }}" >> $Env:GITHUB_OUTPUT
-            echo "repoVersionMajor=${{ github.event.inputs.repoVersionMajor }}" >> $Env:GITHUB_OUTPUT
+            echo "jobId={{ github.event.inputs.jobId }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionFull={{ github.event.inputs.repoVersionFull }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMinor={{ github.event.inputs.repoVersionMinor }}" >> $Env:GITHUB_OUTPUT
+            echo "repoVersionMajor={{ github.event.inputs.repoVersionMajor }}" >> $Env:GITHUB_OUTPUT
           } else
           {
             # Repo Dispatch
@@ -194,7 +194,7 @@ jobs:
           digest: ${{ steps.build_windows_hub_image.outputs.digest }}
 
       - name: Report failure
-        if: ${{ steps.build_windows_hub_image.outcome == 'failure' }}
+        if: ${{ failure() || cancelled() }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}

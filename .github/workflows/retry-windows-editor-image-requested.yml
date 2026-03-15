@@ -73,8 +73,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         run: docker login --username $Env:username --password $Env:password
-      - name: Check if image already exists
-        id: check_image
+      - name: Check if image does not already exist
         run: |
           # Source: https://gist.github.com/webbertakken/1789a4683a99e2a62b975ff436a85382
           function Docker-Tag-Exists {
@@ -88,20 +87,9 @@ jobs:
             return $?
           }
 
-          $tag = "windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}"
-          if( (Docker-Tag-Exists -Repository unityci/editor -Tag $tag) ) {
-            echo "Image already exists. Skipping build and reporting as published."
-            echo "already_exists=true" >> $Env:GITHUB_OUTPUT
-
-            # Pull the existing image to extract its digest
-            docker pull "unityci/editor:$tag"
-            $MetaData = docker inspect "unityci/editor:$tag"
-            $ImageDetails = $MetaData | ConvertFrom-Json
-            $RepoDigest = $ImageDetails[0].RepoDigests[0]
-            $Digest = ($RepoDigest -split '@')[1]
-            echo "digest=$Digest" >> $Env:GITHUB_OUTPUT
-          } else {
-            echo "already_exists=false" >> $Env:GITHUB_OUTPUT
+          if( (Docker-Tag-Exists -Repository unityci/editor -Tag windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}) ) {
+            echo "Image already exists. Exiting."
+            exit 1
           }
 
       #######################
@@ -113,11 +101,9 @@ jobs:
       #   Pull previous images   #
       ############################
       - name: Pull windows base image (must exist)
-        if: steps.check_image.outputs.already_exists != 'true'
         run: docker pull unityci/base:windows-${{ github.event.client_payload.repoVersionFull }}
 
       - name: Pull windows hub image (must exist)
-        if: steps.check_image.outputs.already_exists != 'true'
         run: docker pull unityci/hub:windows-${{ github.event.client_payload.repoVersionFull }}
 
       ############################
@@ -125,7 +111,6 @@ jobs:
       ############################
       - name: Build and Publish Windows Editor Image
         id: build_windows_editor_image
-        if: steps.check_image.outputs.already_exists != 'true'
         continue-on-error: true
         run: |
           docker build ./images/windows/editor/ `
@@ -149,7 +134,7 @@ jobs:
       #   Retry the above   #
       #######################
       - name: Build and Publish Windows Editor Image (retry)
-        if: steps.check_image.outputs.already_exists != 'true' && steps.build_windows_editor_image.outcome=='failure'
+        if: steps.build_windows_editor_image.outcome=='failure'
         id: build_windows_editor_image_retry
         run: |
           docker build ./images/windows/editor/ `
@@ -173,12 +158,11 @@ jobs:
       #   Inspect publication   #
       ###########################
       - name: Inspect
-        if: steps.check_image.outputs.already_exists != 'true'
         run: |
           docker inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
       - name: Image digest
         id: image-digest
-        if: steps.check_image.outputs.already_exists != 'true'
+        if: ${{ success() }}
         run: |
           $MetaData = docker inspect unityci/editor:windows-${{ github.event.client_payload.editorVersion }}-${{ github.event.client_payload.targetPlatform }}-${{ github.event.client_payload.repoVersionFull }}
           $ImageDetails = $MetaData | ConvertFrom-Json
@@ -191,7 +175,7 @@ jobs:
       #   reporting   #
       #################
       - name: Report publication
-        if: ${{ success() || steps.check_image.outputs.already_exists == 'true' }}
+        if: ${{ success() }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
@@ -208,10 +192,10 @@ jobs:
           imageName: editor
           friendlyTag: windows-${{ github.event.client_payload.repoVersionMinor }}
           specificTag: windows-${{ github.event.client_payload.repoVersionFull }}
-          digest: ${{ steps.check_image.outputs.already_exists == 'true' && steps.check_image.outputs.digest || steps.image-digest.outputs.digest }}
+          digest: ${{ steps.image-digest.outputs.digest }}
 
       - name: Report failure
-        if: ${{ (steps.build_windows_editor_image.outcome == 'failure' && steps.build_windows_editor_image_retry.outcome == 'failure') || (failure() && steps.check_image.outputs.already_exists != 'true') }}
+        if: ${{ failure() || cancelled() }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
