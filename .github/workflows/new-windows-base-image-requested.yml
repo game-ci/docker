@@ -86,6 +86,29 @@ jobs:
       #############
       #   Setup   #
       #############
+      - name: Wait for Docker daemon
+        shell: powershell
+        run: |
+          $maxRetries = 10
+          $retryDelay = 6
+          for ($i = 0; $i -lt $maxRetries; $i++) {
+            $svc = Get-Service docker -ErrorAction SilentlyContinue
+            if ($svc -and $svc.Status -eq 'Running') {
+              docker version 2>$null
+              if ($LASTEXITCODE -eq 0) {
+                Write-Host "Docker is ready."
+                exit 0
+              }
+            }
+            if ($svc -and $svc.Status -eq 'Stopped') {
+              Write-Host "Docker service stopped, attempting to start..."
+              Start-Service docker -ErrorAction SilentlyContinue
+            }
+            Write-Host "Waiting for Docker daemon (attempt $($i+1)/$maxRetries)..."
+            Start-Sleep -Seconds $retryDelay
+          }
+          Write-Error "Docker daemon did not start within $($maxRetries * $retryDelay) seconds"
+          exit 1
       - name: Login to DockerHub
         env:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -131,7 +154,8 @@ jobs:
 
           $MetaData = docker inspect unityci/base:windows-${{ steps.buildParameters.outputs.repoVersionFull }}
           $ImageDetails = $MetaData | ConvertFrom-Json
-          $Digest = $ImageDetails.Config.Image
+          $RepoDigest = $ImageDetails[0].RepoDigests[0]
+          $Digest = ($RepoDigest -split '@')[1]
           echo "digest=$Digest" >> $Env:GITHUB_OUTPUT
           echo "metadata=$MetaData" >> $Env:GITHUB_OUTPUT
 
