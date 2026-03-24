@@ -54,6 +54,12 @@ const action = async () => {
       const { statusCode, data } = await post(startedEndpoint, { headers, body });
       console.log('Reported that this build has started.', statusCode, data);
     } catch (err) {
+      // 409 means the build is already in progress or published (duplicate dispatch).
+      // Exit gracefully so the workflow does not trigger the "Report failure" step.
+      if (err.statusCode === 409) {
+        core.warning(`Duplicate dispatch: ${err.data || 'build already exists'}. Exiting gracefully.`);
+        process.exit(0);
+      }
       console.error('An error occurred while reporting the start of this build.', err.statusCode, err.message);
       console.error('~> data:', err.data);
       core.setFailed(err)
