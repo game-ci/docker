@@ -1,0 +1,36 @@
+name: Clean Up Stuck Builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "yes" to confirm cleanup of all stuck builds'
+        required: true
+        default: ''
+
+jobs:
+  cleanup:
+    name: Clean up stuck builds
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'yes' }}
+    steps:
+      - name: Trigger manual cleanup
+        run: |
+          echo "Triggering manual cleanup of stuck builds..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.VERSIONING_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "https://europe-west3-unity-ci-versions.cloudfunctions.net/cleanUpStuckBuilds")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Cleanup request failed with status $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "::notice::Cleanup completed successfully"
