@@ -1,0 +1,50 @@
+name: Reset Failed Builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildId:
+        description: 'Optional: specific build ID to reset (leave empty to reset ALL maxed-out builds)'
+        required: false
+        default: ''
+      confirm:
+        description: 'Type "yes" to confirm reset of failure counts'
+        required: true
+        default: ''
+
+jobs:
+  reset:
+    name: Reset failed build counts
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'yes' }}
+    steps:
+      - name: Reset failure counts
+        run: |
+          BUILD_ID="${{ github.event.inputs.buildId }}"
+
+          if [ -n "$BUILD_ID" ]; then
+            echo "Resetting failure count for build: $BUILD_ID"
+            PAYLOAD="{\"buildId\": \"$BUILD_ID\"}"
+          else
+            echo "Resetting ALL failed builds at max retries..."
+            PAYLOAD="{}"
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.VERSIONING_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "https://europe-west3-unity-ci-versions.cloudfunctions.net/resetFailedBuilds")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP Status: $HTTP_CODE"
+          echo "$BODY" | jq . 2>/dev/null || echo "$BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::error::Reset request failed with status $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "::notice::Reset completed successfully"
