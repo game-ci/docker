@@ -59,6 +59,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Check if image does not already exist
+        id: check-image
         run: |
           # DockerHub V2 API (V1 was decommissioned, returns 410 Gone)
           function docker_tag_exists() {
@@ -67,6 +68,7 @@ jobs:
 
           if docker_tag_exists unityci/base ubuntu-${{ github.event.client_payload.repoVersionFull }} ; then
             echo "Image already exists. Exiting."
+            echo "image_exists=true" >> $GITHUB_OUTPUT
             exit 1
           fi
       - name: Cache Docker layers
@@ -123,7 +125,7 @@ jobs:
           specificTag: ubuntu-${{ github.event.client_payload.repoVersionFull }}
           digest: ${{ steps.build_ubuntu_base_image.outputs.digest }}
       - name: Report failure
-        if: ${{ failure() || cancelled() }}
+        if: ${{ (failure() || cancelled()) && steps.check-image.outputs.image_exists != 'true' }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}

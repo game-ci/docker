@@ -115,6 +115,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
         run: docker login --username $Env:username --password $Env:password
       - name: Check if image does not already exist
+        id: check-image
         run: |
           # Source: https://gist.github.com/webbertakken/1789a4683a99e2a62b975ff436a85382
           function Docker-Tag-Exists {
@@ -130,6 +131,7 @@ jobs:
 
           if (Docker-Tag-Exists -Repository "unityci/hub" -Tag "windows-${{ steps.buildParameters.outputs.repoVersionFull }}") {
             echo "Image already exists. Exiting."
+            echo "image_exists=true" >> $Env:GITHUB_OUTPUT
             exit 1
           }
 
@@ -194,7 +196,7 @@ jobs:
           digest: ${{ steps.build_windows_hub_image.outputs.digest }}
 
       - name: Report failure
-        if: ${{ failure() || cancelled() }}
+        if: ${{ (failure() || cancelled()) && steps.check-image.outputs.image_exists != 'true' }}
         uses: ./.github/workflows/actions/report-to-backend
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
