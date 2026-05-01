@@ -47,7 +47,7 @@ jobs:
             targetPlatform: android
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Report new build
         uses: ./.github/workflows/actions/report-to-backend
         with:
@@ -146,9 +146,9 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v5
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v6
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
         with:
           driver: docker
 
@@ -156,12 +156,12 @@ jobs:
       #   Build Ubuntu base and hub   #
       #################################
       - name: Build base
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           file: ./images/ubuntu/base/Dockerfile
           tags: base:ubuntu-dev
       - name: Build hub
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           file: ./images/ubuntu/hub/Dockerfile
           build-args: baseImage=base:ubuntu-dev
@@ -174,7 +174,7 @@ jobs:
         run: |
           docker images
           docker save -o ubuntu-base-and-hub.tar base:ubuntu-dev hub:ubuntu-dev
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ubuntu-base-and-hub
           path: ubuntu-base-and-hub.tar
@@ -190,7 +190,7 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       ##################################
       #   Build Windows base and hub   #
@@ -218,7 +218,7 @@ jobs:
           docker save -o windows-base-and-hub.tar base:windows-dev hub:windows-dev
           zstd -z -12 --format=zstd windows-base-and-hub.tar
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: windows-base-and-hub
           path: C:/artifact/windows-base-and-hub.tar.zst
@@ -269,9 +269,9 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v5
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@v6
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
         with:
           driver: docker
       - name: Free disk space
@@ -280,7 +280,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: ubuntu-base-and-hub
 
@@ -310,7 +310,7 @@ jobs:
       ###########################
       - name: Build
         # if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         id: build-1
         continue-on-error: true
         timeout-minutes: 40
@@ -333,7 +333,7 @@ jobs:
 
       - name: Build (Retry)
         if: steps.build-1.outcome == 'failure'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         id: build-2
         # continue-on-error: true
         timeout-minutes: 40
@@ -492,12 +492,12 @@ jobs:
       #############
       #   Setup   #
       #############
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: windows-base-and-hub
       - name: Restore base and hub
