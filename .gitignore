@@ -1,2 +1,5 @@
 # IDE settings
 .idea/
+
+# Action dependencies (bundled via ncc)
+.github/workflows/actions/report-to-backend/node_modules/
