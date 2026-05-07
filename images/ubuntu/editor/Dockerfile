@@ -24,13 +24,23 @@ RUN for mod in $module; do \
 	# Set execute permissions for modules
 	&& chmod -R 755 /opt/unity/editors/$version/Editor/Data/PlaybackEngines
 
-RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*linux' \
-  && exit 0 \
-  || unity-hub install-modules --version "$version" --module "linux-server" --childModules | tee /var/log/install-module-linux-server.log && grep 'Missing module' /var/log/install-module-linux-server.log | exit $(wc -l);
+RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*linux'; then \
+      exit 0; \
+    fi; \
+    if grep -q '"id"[[:space:]]*:[[:space:]]*"linux-server"' "/opt/unity/editors/$version/modules.json"; then \
+      echo "linux-server already selected; skipping auto-install"; \
+      exit 0; \
+    fi; \
+    unity-hub install-modules --version "$version" --module "linux-server" --childModules | tee /var/log/install-module-linux-server.log && grep 'Missing module' /var/log/install-module-linux-server.log | exit $(wc -l);
 
-RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*windows' \
-  && exit 0 \
-  || unity-hub install-modules --version "$version" --module "windows-server" --childModules | tee /var/log/install-module-windows-server.log && grep 'Missing module' /var/log/install-module-windows-server.log | exit $(wc -l);
+RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*windows'; then \
+      exit 0; \
+    fi; \
+    if grep -q '"id"[[:space:]]*:[[:space:]]*"windows-server"' "/opt/unity/editors/$version/modules.json"; then \
+      echo "windows-server already selected; skipping auto-install"; \
+      exit 0; \
+    fi; \
+    unity-hub install-modules --version "$version" --module "windows-server" --childModules | tee /var/log/install-module-windows-server.log && grep 'Missing module' /var/log/install-module-windows-server.log | exit $(wc -l);
 
 ###########################
 #          Editor         #
