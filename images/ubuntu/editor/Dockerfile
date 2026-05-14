@@ -10,7 +10,11 @@ FROM $hubImage AS builder
 # Install editor
 ARG version
 ARG changeSet
-RUN unity-hub install --version "$version" --changeset "$changeSet" | tee /var/log/install-editor.log && grep 'Failed to install\|Error while installing an editor\|Completed with errors' /var/log/install-editor.log | exit $(wc -l)
+RUN unity-hub install --version "$version" --changeset "$changeSet" > /var/log/install-editor.log 2>&1 \
+  && cat /var/log/install-editor.log \
+  && ! grep -Eq 'Failed to install|Error while installing an editor|Completed with errors' /var/log/install-editor.log \
+  && test -d "/opt/unity/editors/$version/Editor" \
+  && test -f "/opt/unity/editors/$version/modules.json"
 
 # Install modules for that editor
 ARG module="non-existent-module"
@@ -18,7 +22,9 @@ RUN for mod in $module; do \
       if [ "$mod" = "base" ] ; then \
         echo "running default modules for this baseOs"; \
       else \
-        unity-hub install-modules --version "$version" --module "$mod" --childModules | tee /var/log/install-module-${mod}.log && grep 'Missing module\|Completed with errors' /var/log/install-module-${mod}.log | exit $(wc -l); \
+        unity-hub install-modules --version "$version" --module "$mod" --childModules > /var/log/install-module-${mod}.log 2>&1; \
+        cat /var/log/install-module-${mod}.log; \
+        ! grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-${mod}.log; \
       fi \
     done \
 	# Set execute permissions for modules
@@ -31,7 +37,9 @@ RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3
       echo "linux-server already selected; skipping auto-install"; \
       exit 0; \
     fi; \
-    unity-hub install-modules --version "$version" --module "linux-server" --childModules | tee /var/log/install-module-linux-server.log && grep 'Missing module' /var/log/install-module-linux-server.log | exit $(wc -l);
+    unity-hub install-modules --version "$version" --module "linux-server" --childModules > /var/log/install-module-linux-server.log 2>&1; \
+    cat /var/log/install-module-linux-server.log; \
+    ! grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-linux-server.log;
 
 RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*windows'; then \
       exit 0; \
@@ -40,7 +48,9 @@ RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3
       echo "windows-server already selected; skipping auto-install"; \
       exit 0; \
     fi; \
-    unity-hub install-modules --version "$version" --module "windows-server" --childModules | tee /var/log/install-module-windows-server.log && grep 'Missing module' /var/log/install-module-windows-server.log | exit $(wc -l);
+    unity-hub install-modules --version "$version" --module "windows-server" --childModules > /var/log/install-module-windows-server.log 2>&1; \
+    cat /var/log/install-module-windows-server.log; \
+    ! grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-windows-server.log;
 
 ###########################
 #          Editor         #
