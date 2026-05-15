@@ -1,3 +1,4 @@
+# escape=`
 ARG baseImage="unityci/base:windows-latest"
 
 FROM $baseImage
