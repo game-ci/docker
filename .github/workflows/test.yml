@@ -191,6 +191,25 @@ jobs:
       #   Setup   #
       #############
       - uses: actions/checkout@v6
+      - name: Start Docker
+        shell: pwsh
+        run: |
+          $service = Get-Service -Name docker -ErrorAction Stop
+          if ($service.Status -ne 'Running') {
+            Start-Service -Name docker
+          }
+
+          $deadline = (Get-Date).AddMinutes(2)
+          while ((Get-Date) -lt $deadline) {
+            try {
+              docker version
+              exit 0
+            } catch {
+              Start-Sleep -Seconds 5
+            }
+          }
+
+          throw 'Docker daemon did not become ready in time.'
 
       ##################################
       #   Build Windows base and hub   #
