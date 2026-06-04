@@ -1,0 +1,59 @@
+name: Self Heal Editor Images
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Only print missing image dispatches'
+        required: true
+        default: 'false'
+      repoVersionFull:
+        description: 'Repo version to heal. Defaults to latest git tag.'
+        required: false
+        default: ''
+      versionsToCheck:
+        description: 'Newest Unity patch versions to verify'
+        required: true
+        default: '1'
+
+concurrency:
+  group: self-heal-editor-images
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    name: Reconcile newest editor images
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve supported Unity versions
+        id: unity-versions
+        run: |
+          VERSIONS="$(npx --yes unity-changeset list --supported --latest-patch --json --min 2019.3)"
+          echo "$VERSIONS" | jq .
+          {
+            echo 'versions<<EOF'
+            echo "$VERSIONS"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Reconcile DockerHub and dispatch missing builds
+        env:
+          DRY_RUN: ${{ github.event.inputs.dryRun || 'false' }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+          JOB_PREFIX: self-heal-${{ github.run_id }}
+          REPO_VERSION_FULL: ${{ github.event.inputs.repoVersionFull }}
+          UNITY_VERSIONS_JSON: ${{ steps.unity-versions.outputs.versions }}
+          VERSIONS_TO_CHECK: ${{ github.event.inputs.versionsToCheck || '1' }}
+        run: node .github/workflows/scripts/self-heal-editor-images.js
