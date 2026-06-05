@@ -56,4 +56,4 @@ jobs:
           REPO_VERSION_FULL: ${{ github.event.inputs.repoVersionFull }}
           UNITY_VERSIONS_JSON: ${{ steps.unity-versions.outputs.versions }}
           VERSIONS_TO_CHECK: ${{ github.event.inputs.versionsToCheck || '1' }}
-        run: node .github/workflows/scripts/self-heal-editor-images.js
+        run: node .github/workflows/self-heal-editor-images.js
