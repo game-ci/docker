@@ -24,9 +24,9 @@ ARG changeSet
 
 RUN "mkdir -p /var/log && mkdir -p C:/UnityEditor"
 
-RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install-path --set C:/UnityEditor"
+RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe --no-sandbox -- --headless install-path --set C:/UnityEditor"
 
-RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install \
+RUN "C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe --no-sandbox -- --headless install \
                                                     --version $version \
                                                     --changeset $changeSet \
                                                     | tee /var/log/install-editor.log \
@@ -37,7 +37,7 @@ ARG module
 RUN "if [ $module = 'base' ]; then \
         echo 'running default modules for this base OS'; \
      else \
-        C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe -- --headless install-modules \
+        C:/Program\ Files/Unity\ Hub/Unity\ Hub.exe --no-sandbox -- --headless install-modules \
                                                     --version $version \
                                                     --module $module \
                                                     --childModules \
