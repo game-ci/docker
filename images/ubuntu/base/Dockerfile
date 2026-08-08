@@ -1,4 +1,4 @@
-ARG ubuntuImage="ubuntu:22.04"
+ARG ubuntuImage="ubuntu:24.04"
 FROM $ubuntuImage
 
 # Fixes a Gradle crash while building for Android on Unity 2019 when there are accented characters in environment variables
@@ -14,15 +14,16 @@ RUN apt-get -q update \
  && apt-get -q install -y --no-install-recommends apt-utils \
  && apt-get -q install -y --no-install-recommends --allow-downgrades \
  ca-certificates \
- libasound2 \
+ libasound2t64 \
  libc6-dev \
  libcap2 \
- libgconf-2-4 \
  libglu1 \
- libgtk-3-0 \
- libncurses5 \
+ libgtk-3-0t64 \
+ libncurses6 \
  libnotify4 \
  libnss3 \
+ libvulkan1 \
+ mesa-vulkan-drivers \
  libxtst6 \
  libxss1 \
  cpio \
@@ -32,7 +33,7 @@ RUN apt-get -q update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/* \
  && rm -rf /usr/share/icons/* \
- && rm -rf /usr/lib/python3.10/__pycache__/*
+ && rm -rf /usr/lib/python3.12/__pycache__/*
 
 # Toolbox
 RUN apt-get -q update \
@@ -57,7 +58,7 @@ RUN apt-get -q update \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-# Fix "No useable version of libssl" for Ubuntu 22.04
+# Install OpenSSL 1.1 for older Unity Editors that do not support OpenSSL 3.
 # https://forum.unity.com/threads/workaround-for-libssl-issue-on-ubuntu-22-04.1271405/
 RUN wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
  && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
