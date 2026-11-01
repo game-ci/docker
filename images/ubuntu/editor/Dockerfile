@@ -105,14 +105,41 @@ static int record_main_executable_range(struct dl_phdr_info *info, size_t size, 
   return 1;
 }
 
-__attribute__((constructor)) static void initialise(void) {
-  real_sem_wait = (sem_wait_fn)dlsym(RTLD_NEXT, "sem_wait");
-  real_sem_timedwait = (sem_timedwait_fn)dlsym(RTLD_NEXT, "sem_timedwait");
-  log_retries = getenv("SEM_EINTR_RETRY_LOG") != 0;
-  if (!real_sem_wait || !real_sem_timedwait) {
-    fprintf(stderr, "[sem_eintr_retry] could not resolve sem_wait/sem_timedwait: %s\n", dlerror());
+static void *resolve_next(const char *name) {
+  void *symbol = dlsym(RTLD_NEXT, name);
+  if (!symbol) {
+    const char *reason = dlerror();
+    fprintf(stderr, "[sem_eintr_retry] could not resolve %s: %s\n", name, reason ? reason : "not found");
     abort();
   }
+  return symbol;
+}
+
+// Resolved on first use too: another library's constructor may wait on a semaphore
+// before this library's constructor has run.
+static sem_wait_fn next_sem_wait(void) {
+  sem_wait_fn next = __atomic_load_n(&real_sem_wait, __ATOMIC_ACQUIRE);
+  if (!next) {
+    next = (sem_wait_fn)resolve_next("sem_wait");
+    __atomic_store_n(&real_sem_wait, next, __ATOMIC_RELEASE);
+  }
+  return next;
+}
+
+static sem_timedwait_fn next_sem_timedwait(void) {
+  sem_timedwait_fn next = __atomic_load_n(&real_sem_timedwait, __ATOMIC_ACQUIRE);
+  if (!next) {
+    next = (sem_timedwait_fn)resolve_next("sem_timedwait");
+    __atomic_store_n(&real_sem_timedwait, next, __ATOMIC_RELEASE);
+  }
+  return next;
+}
+
+__attribute__((constructor)) static void initialise(void) {
+  next_sem_wait();
+  next_sem_timedwait();
+  const char *log_setting = getenv("SEM_EINTR_RETRY_LOG");
+  log_retries = log_setting && strcmp(log_setting, "1") == 0;
   if (is_target_executable()) {
     dl_iterate_phdr(record_main_executable_range, 0);
     if (log_retries) fprintf(stderr, "[sem_eintr_retry] active for pid %d\n", (int)getpid());
@@ -131,7 +158,7 @@ static void note_retry(const char *function_name) {
 int sem_wait(sem_t *semaphore) {
   const int retry = should_retry(__builtin_return_address(0));
   for (;;) {
-    int status = real_sem_wait(semaphore);
+    int status = next_sem_wait()(semaphore);
     if (status == 0 || errno != EINTR || !retry) return status;
     note_retry("sem_wait");
   }
@@ -140,7 +167,7 @@ int sem_wait(sem_t *semaphore) {
 int sem_timedwait(sem_t *semaphore, const struct timespec *absolute_deadline) {
   const int retry = should_retry(__builtin_return_address(0));
   for (;;) {
-    int status = real_sem_timedwait(semaphore, absolute_deadline);
+    int status = next_sem_timedwait()(semaphore, absolute_deadline);
     if (status == 0 || errno != EINTR || !retry) return status;
     note_retry("sem_timedwait");
   }
