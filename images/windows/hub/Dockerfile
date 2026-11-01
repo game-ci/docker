@@ -18,10 +18,13 @@ RUN $installer = 'C:\UnityHubSetup.exe'; \
     Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $installer; \
     $actualSha256 = (Get-FileHash $installer -Algorithm SHA256).Hash; \
     if ($actualSha256 -ne $env:hubSha256) { throw \"Unity Hub installer checksum mismatch: expected $env:hubSha256, got $actualSha256\" }; \
-    Start-Process $installer -ArgumentList '/S' -Wait; \
+    $installation = Start-Process $installer -ArgumentList '/S' -Wait -PassThru; \
+    if ($installation.ExitCode -ne 0) { throw \"Unity Hub installer exited with code $($installation.ExitCode)\" }; \
     Remove-Item $installer; \
     $hub = 'C:\Program Files\Unity Hub\Unity Hub.exe'; \
     if (-not (Test-Path $hub)) { throw 'Unity Hub was not installed' }; \
-    Write-Host \"Installed Unity Hub $((Get-Item $hub).VersionInfo.ProductVersion)\"
+    $installedVersion = (Get-Item $hub).VersionInfo.ProductVersion; \
+    if (-not $installedVersion.StartsWith($env:hubVersion)) { throw \"Installed Unity Hub $installedVersion, expected $env:hubVersion\" }; \
+    Write-Host \"Installed Unity Hub $installedVersion\"
 
 SHELL ["cmd", "/S", "/C"]
