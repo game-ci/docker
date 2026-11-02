@@ -1,6 +1,12 @@
 ARG baseImage="unityci/base:windows-latest"
 ARG hubImage="unityci/hub:windows-latest"
 
+# Git for Windows, pinned and verified: Chocolatey exits 0 when its feed is unreachable,
+# which cached layers without Git. https://github.com/git-for-windows/git/releases
+ARG gitReleaseTag="v2.56.0.windows.4"
+ARG gitInstaller="Git-2.56.0.4-64-bit.exe"
+ARG gitSha256="4961a4a8cc778d8b6e00a5819e5fe4d078b754555aff7aedc2d77a5d74c2de80"
+
 #############
 #  Builder  #
 #############
@@ -8,7 +14,24 @@ ARG hubImage="unityci/hub:windows-latest"
 FROM $hubImage AS Builder
 
 # Using bash to process unity install
-RUN choco install git --no-progress -y
+ARG gitReleaseTag
+ARG gitInstaller
+ARG gitSha256
+
+SHELL ["powershell", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+RUN $installer = 'C:\GitSetup.exe'; \
+    $url = \"https://github.com/git-for-windows/git/releases/download/$env:gitReleaseTag/$env:gitInstaller\"; \
+    Write-Host \"Downloading Git for Windows from $url\"; \
+    Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $installer; \
+    $actualSha256 = (Get-FileHash $installer -Algorithm SHA256).Hash; \
+    if ($actualSha256 -ne $env:gitSha256) { throw \"Git installer checksum mismatch: expected $env:gitSha256, got $actualSha256\" }; \
+    $installation = Start-Process $installer -ArgumentList '/VERYSILENT', '/NORESTART', '/NOCANCEL', '/SP-', '/SUPPRESSMSGBOXES' -Wait -PassThru; \
+    if ($installation.ExitCode -ne 0) { throw \"Git installer exited with code $($installation.ExitCode)\" }; \
+    Remove-Item $installer; \
+    foreach ($tool in 'C:\Program Files\Git\cmd\git.exe', 'C:\Program Files\Git\bin\bash.exe') { if (-not (Test-Path $tool)) { throw \"$tool is missing after installing Git\" } }; \
+    & 'C:\Program Files\Git\cmd\git.exe' --version; \
+    if ($LASTEXITCODE -ne 0) { throw 'git --version failed' }
 
 SHELL ["cmd", "/S", "/C"]
 
@@ -69,7 +92,26 @@ RUN echo "$Env:version" > "C:/UnityEditor/$Env:version/version"
 RUN setx -M UNITY_PATH "C:/UnityEditor/$Env:version"
 
 # Packages/manifest.json could have git dependencies
-RUN choco install git --no-progress -y
+ARG gitReleaseTag
+ARG gitInstaller
+ARG gitSha256
+
+SHELL ["powershell", "-NoProfile", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+
+RUN $installer = 'C:\GitSetup.exe'; \
+    $url = \"https://github.com/git-for-windows/git/releases/download/$env:gitReleaseTag/$env:gitInstaller\"; \
+    Write-Host \"Downloading Git for Windows from $url\"; \
+    Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $installer; \
+    $actualSha256 = (Get-FileHash $installer -Algorithm SHA256).Hash; \
+    if ($actualSha256 -ne $env:gitSha256) { throw \"Git installer checksum mismatch: expected $env:gitSha256, got $actualSha256\" }; \
+    $installation = Start-Process $installer -ArgumentList '/VERYSILENT', '/NORESTART', '/NOCANCEL', '/SP-', '/SUPPRESSMSGBOXES' -Wait -PassThru; \
+    if ($installation.ExitCode -ne 0) { throw \"Git installer exited with code $($installation.ExitCode)\" }; \
+    Remove-Item $installer; \
+    foreach ($tool in 'C:\Program Files\Git\cmd\git.exe', 'C:\Program Files\Git\bin\bash.exe') { if (-not (Test-Path $tool)) { throw \"$tool is missing after installing Git\" } }; \
+    & 'C:\Program Files\Git\cmd\git.exe' --version; \
+    if ($LASTEXITCODE -ne 0) { throw 'git --version failed' }
+
+SHELL ["powershell.exe", "-Command"]
 
 # Unity package manager throws an error about not being in a git directory when
 # importing git packages without this
