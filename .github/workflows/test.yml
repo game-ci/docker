@@ -352,6 +352,11 @@ jobs:
       #####################
       - name: Show image size
         run: docker images
+      - name: Validate semaphore EINTR shim
+        timeout-minutes: 5
+        run: |
+          docker run --rm --env SEM_EINTR_RETRY_LOG=1 editor:ubuntu-dev \
+            bash -c 'unity-editor -version 2>&1 | tee /dev/stderr | grep -q "\[sem_eintr_retry\] active"'
       - name: Setup to test
         run: |
           # For 'linux-il2cpp' module, switch the script backend to 'IL2CPP'

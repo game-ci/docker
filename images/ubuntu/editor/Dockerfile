@@ -33,6 +33,152 @@ RUN echo "$version-$module" | grep -q -vP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9
   || unity-hub install-modules --version "$version" --module "windows-server" --childModules | tee /var/log/install-module-windows-server.log && grep 'Missing module' /var/log/install-module-windows-server.log | exit $(wc -l);
 
 ###########################
+#  Semaphore EINTR shim   #
+###########################
+
+# crnlib (Crunch texture compression, inside the editor) aborts with
+# "semaphore: sem_wait() or sem_timedwait() failed" when a signal interrupts a semaphore wait.
+# This preloaded shim retries those waits for the editor's own code.
+# https://github.com/game-ci/docker/issues/243
+FROM $baseImage AS sem-eintr-retry
+
+COPY <<'EOF' /src/sem_eintr_retry.c
+// LD_PRELOAD shim: retries sem_wait and sem_timedwait when a signal handler interrupts
+// them (EINTR), for calls made from the Unity editor executable itself.
+//
+// crnlib (Crunch texture compression, linked into the Unity editor) treats EINTR from
+// these calls as fatal, so any signal delivered to a waiting thread aborts the import with
+// "semaphore: sem_wait() or sem_timedwait() failed".
+//
+// Scope, so that nothing else changes behaviour:
+// - Only processes whose executable is named SEM_EINTR_RETRY_EXECUTABLE (default "Unity").
+// - Only calls from that executable's own code; shared libraries such as the Mono runtime
+//   may rely on EINTR to interrupt a wait on purpose.
+//
+// SEM_EINTR_RETRY_LOG=1 logs each retry to stderr.
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#include <errno.h>
+#include <link.h>
+#include <semaphore.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+typedef int (*sem_wait_fn)(sem_t *);
+typedef int (*sem_timedwait_fn)(sem_t *, const struct timespec *);
+
+static sem_wait_fn real_sem_wait;
+static sem_timedwait_fn real_sem_timedwait;
+static uintptr_t target_code_start;
+static uintptr_t target_code_end;
+static int log_retries;
+
+static int is_target_executable(void) {
+  const char *target_name = getenv("SEM_EINTR_RETRY_EXECUTABLE");
+  if (!target_name || !*target_name) target_name = "Unity";
+
+  char executable_path[4096];
+  ssize_t length = readlink("/proc/self/exe", executable_path, sizeof executable_path - 1);
+  if (length <= 0) return 0;
+  executable_path[length] = '\0';
+
+  const char *executable_name = strrchr(executable_path, '/');
+  executable_name = executable_name ? executable_name + 1 : executable_path;
+  return strcmp(executable_name, target_name) == 0;
+}
+
+static int record_main_executable_range(struct dl_phdr_info *info, size_t size, void *data) {
+  (void)size;
+  (void)data;
+  // The first object reported is the main executable.
+  for (int i = 0; i < info->dlpi_phnum; i++) {
+    const ElfW(Phdr) *segment = &info->dlpi_phdr[i];
+    if (segment->p_type != PT_LOAD) continue;
+    uintptr_t start = info->dlpi_addr + segment->p_vaddr;
+    uintptr_t end = start + segment->p_memsz;
+    if (!target_code_start || start < target_code_start) target_code_start = start;
+    if (end > target_code_end) target_code_end = end;
+  }
+  return 1;
+}
+
+static void *resolve_next(const char *name) {
+  void *symbol = dlsym(RTLD_NEXT, name);
+  if (!symbol) {
+    const char *reason = dlerror();
+    fprintf(stderr, "[sem_eintr_retry] could not resolve %s: %s\n", name, reason ? reason : "not found");
+    abort();
+  }
+  return symbol;
+}
+
+// Resolved on first use too: another library's constructor may wait on a semaphore
+// before this library's constructor has run.
+static sem_wait_fn next_sem_wait(void) {
+  sem_wait_fn next = __atomic_load_n(&real_sem_wait, __ATOMIC_ACQUIRE);
+  if (!next) {
+    next = (sem_wait_fn)resolve_next("sem_wait");
+    __atomic_store_n(&real_sem_wait, next, __ATOMIC_RELEASE);
+  }
+  return next;
+}
+
+static sem_timedwait_fn next_sem_timedwait(void) {
+  sem_timedwait_fn next = __atomic_load_n(&real_sem_timedwait, __ATOMIC_ACQUIRE);
+  if (!next) {
+    next = (sem_timedwait_fn)resolve_next("sem_timedwait");
+    __atomic_store_n(&real_sem_timedwait, next, __ATOMIC_RELEASE);
+  }
+  return next;
+}
+
+__attribute__((constructor)) static void initialise(void) {
+  next_sem_wait();
+  next_sem_timedwait();
+  const char *log_setting = getenv("SEM_EINTR_RETRY_LOG");
+  log_retries = log_setting && strcmp(log_setting, "1") == 0;
+  if (is_target_executable()) {
+    dl_iterate_phdr(record_main_executable_range, 0);
+    if (log_retries) fprintf(stderr, "[sem_eintr_retry] active for pid %d\n", (int)getpid());
+  }
+}
+
+static int should_retry(const void *return_address) {
+  uintptr_t address = (uintptr_t)return_address;
+  return address >= target_code_start && address < target_code_end;
+}
+
+static void note_retry(const char *function_name) {
+  if (log_retries) fprintf(stderr, "[sem_eintr_retry] %s interrupted by a signal; retrying\n", function_name);
+}
+
+int sem_wait(sem_t *semaphore) {
+  const int retry = should_retry(__builtin_return_address(0));
+  for (;;) {
+    int status = next_sem_wait()(semaphore);
+    if (status == 0 || errno != EINTR || !retry) return status;
+    note_retry("sem_wait");
+  }
+}
+
+int sem_timedwait(sem_t *semaphore, const struct timespec *absolute_deadline) {
+  const int retry = should_retry(__builtin_return_address(0));
+  for (;;) {
+    int status = next_sem_timedwait()(semaphore, absolute_deadline);
+    if (status == 0 || errno != EINTR || !retry) return status;
+    note_retry("sem_timedwait");
+  }
+}
+EOF
+
+RUN apt-get -q update \
+  && apt-get -q install -y --no-install-recommends gcc libc6-dev \
+  && gcc -shared -fPIC -O2 -Wall -Wextra -Werror -o /libsem_eintr_retry.so /src/sem_eintr_retry.c -ldl
+
+###########################
 #          Editor         #
 ###########################
 
@@ -45,6 +191,9 @@ COPY --from=builder /opt/unity/editors/$version/ "$UNITY_PATH/"
 
 # Add a file containing the version for this build
 RUN echo $version > "$UNITY_PATH/version"
+
+# Retry semaphore waits interrupted by signals; see the "Semaphore EINTR shim" stage
+COPY --from=sem-eintr-retry /libsem_eintr_retry.so /usr/lib/game-ci/libsem_eintr_retry.so
 
 
 ###########################
@@ -59,6 +208,10 @@ if [ -d /usr/bin/unity-editor.d ] ; then\n\
       . $i\n\
     fi\n\
   done\n\
+fi\n\
+\n\
+if [ "${SEM_EINTR_RETRY:-true}" != false ] ; then\n\
+  export LD_PRELOAD="/usr/lib/game-ci/libsem_eintr_retry.so${LD_PRELOAD:+:$LD_PRELOAD}"\n\
 fi\n\
 \n\
 xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/unity-editor \
