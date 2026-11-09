@@ -127,6 +127,9 @@ RUN foreach ("$service" in 'nlasvc', 'netprofm') {"Set-Service $service -Startup
 ADD scripts ./scripts
 
 ARG module
+# OpenJDK 8 for 2022.1, whose Android module rejects the OpenJDK 11 that Unity's metadata installs
+ARG openJdk8Url="https://download.unity3d.com/download_unity/open-jdk/open-jdk-win-x64/jdk8u172-b11_4be8440cc514099cfe1b50cbc74128f6955cd90fd5afe15ea7be60f832de67b4.zip"
+ARG openJdk8Sha256="43d8964b5d97b95a87b54ed5b08b70dcb0aa4f6521a1dad4caba958e44c205b9"
 RUN if ("$Env:module" -eq 'Android') { .\scripts\SetupAndroid.ps1 }
 
 # Accept Android Licenses. Needs to be separate from the above script to
