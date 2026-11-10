@@ -29,9 +29,10 @@ if ($Env:version -match '^2022\.1\.')
   Expand-Archive -Path $archive -DestinationPath $JAVA_HOME
   Remove-Item $archive
 
-  # Native stderr becomes an error record under 'Stop', so read the version under 'Continue'
+  # java prints its version to stderr, which PowerShell wraps in error records: read it under
+  # 'Continue' and keep only each record's text
   $ErrorActionPreference = 'Continue'
-  $javaVersion = & "$JAVA_HOME/bin/java.exe" -version 2>&1 | Out-String
+  $javaVersion = & "$JAVA_HOME/bin/java.exe" -version 2>&1 | ForEach-Object { "$_" } | Out-String
   $javaExitCode = $LASTEXITCODE
   $ErrorActionPreference = 'Stop'
   Write-Host $javaVersion
