@@ -358,6 +358,25 @@ RUN echo "$version-$module" | grep -q -vP '^(202[1-9]|[6-9][0-9]{3}|[1-9][0-9]{4
   && echo ". /usr/bin/unity-editor.d/android-2019+.sh" >> ~/.bashrc
 
 #=======================================================================================
+# [2022.1.x-android] Replace OpenJDK 11 with the OpenJDK 8 that the 2022.1 Android module requires
+# Unity's release metadata installs OpenJDK 11 for every 2022.1 release, but its Android
+# module only accepts JDK 8, so builds fail with "JDK not found".
+#=======================================================================================
+ARG openJdk8Url="https://download.unity3d.com/download_unity/open-jdk/open-jdk-linux-x64/jdk8u172-b11_4be8440cc514099cfe1b50cbc74128f6955cd90fd5afe15ea7be60f832de67b4.zip"
+ARG openJdk8Sha256="4be8440cc514099cfe1b50cbc74128f6955cd90fd5afe15ea7be60f832de67b4"
+RUN echo "$version-$module" | grep -q -vP '^2022\.1\..*android' \
+  && exit 0 \
+  || : \
+  && . ~/.bashrc \
+  && wget -q "$openJdk8Url" -O /tmp/openjdk8.zip \
+  && echo "$openJdk8Sha256  /tmp/openjdk8.zip" | sha256sum -c - \
+  && rm -rf "${JAVA_HOME:?}" \
+  && unzip -q /tmp/openjdk8.zip -d "${JAVA_HOME}" \
+  && rm /tmp/openjdk8.zip \
+  && "${JAVA_HOME}/bin/java" -version 2>&1 | tee /dev/stderr | grep -q 'version "1\.8\..*' \
+  && "${JAVA_HOME}/bin/javac" -version
+
+#=======================================================================================
 # [2019.x/2020.x-android] Accept Android SDK licenses via old sdkmanager
 #=======================================================================================
 RUN echo "$version-$module" | grep -q -vP '^(20(19|20)).*android' \
