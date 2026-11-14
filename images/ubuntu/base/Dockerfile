@@ -60,9 +60,13 @@ RUN apt-get -q update \
 
 # Install OpenSSL 1.1 for older Unity Editors that do not support OpenSSL 3.
 # https://forum.unity.com/threads/workaround-for-libssl-issue-on-ubuntu-22-04.1271405/
-RUN wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
- && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
- && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+# The checksum is the one published in the focal-security package index.
+ARG libssl11Deb="libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb"
+ARG libssl11Sha256="7cf39d70a639017d1dd7c8d36daa2258063608688e449fddf40ffdd46f992a78"
+RUN wget -q "https://security.ubuntu.com/ubuntu/pool/main/o/openssl/$libssl11Deb" \
+ && echo "$libssl11Sha256  $libssl11Deb" | sha256sum -c - \
+ && dpkg -i "$libssl11Deb" \
+ && rm "$libssl11Deb"
 
 # Disable default sound card, which removes ALSA warnings
 RUN /bin/echo -e 'pcm.!default {\n\
