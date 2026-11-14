@@ -27,8 +27,21 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.event.workflow_run.id }}
           RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          WORKFLOW_ID: ${{ github.event.workflow_run.workflow_id }}
         run: |
           set -euo pipefail
+          # A re-run joins the Test concurrency group again, so re-running a superseded run would
+          # cancel the newer run for the same branch. Leave the newer run to report instead.
+          newer_run=$(gh api -X GET "repos/$REPOSITORY/actions/workflows/$WORKFLOW_ID/runs" \
+            -f branch="$HEAD_BRANCH" -f per_page=30 \
+            --jq "[.workflow_runs[] | select(.id > $RUN_ID and ((.event == \"pull_request\") == (\"$RUN_EVENT\" == \"pull_request\")))]
+              | first | .html_url // empty")
+          if [ -n "$newer_run" ]; then
+            echo "Not re-running [run $RUN_ID]($RUN_URL): it is superseded by $newer_run" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           failed_jobs=$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/1/jobs?per_page=100" --paginate \
             --jq '.jobs[] | select(.conclusion == "failure") | "- \(.name): \([.steps[] | select(.conclusion == "failure") | .name] | join(", "))"')
           {
