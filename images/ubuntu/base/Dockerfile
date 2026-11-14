@@ -68,6 +68,34 @@ RUN wget -q "https://security.ubuntu.com/ubuntu/pool/main/o/openssl/$libssl11Deb
  && dpkg -i "$libssl11Deb" \
  && rm "$libssl11Deb"
 
+# Install the Ubuntu 22.04 libraries that Ubuntu 24.04 no longer ships, which Unity still links against:
+# - libgconf-2.so.4: the Editor itself (Unity, UnityHelper, libcef.so) up to 2019.4
+# - libncurses.so.5, libtinfo.so.5, libpanel.so.5: Android SDK build-tools and NDK (through Unity 6),
+#   and the Emscripten Fastcomp toolchain of WebGL (up to 2020.3)
+# The checksums are the ones published in the jammy-updates and jammy package indexes.
+RUN cd /tmp \
+ && pool="https://archive.ubuntu.com/ubuntu/pool/universe" \
+ && wget -q \
+      "$pool/n/ncurses/libtinfo5_6.3-2ubuntu0.3_amd64.deb" \
+      "$pool/n/ncurses/libncurses5_6.3-2ubuntu0.3_amd64.deb" \
+      "$pool/g/gconf/gconf2-common_3.2.6-7ubuntu2_all.deb" \
+      "$pool/g/gconf/libgconf-2-4_3.2.6-7ubuntu2_amd64.deb" \
+ && printf '%s\n' \
+      '4df4288404108f1a156d014e8764a064e977e34e6d44931ab60451694c03c90d  libtinfo5_6.3-2ubuntu0.3_amd64.deb' \
+      '58da01991712c6856af0658dc5e9cb533c1a6854ab950055ade185e35bc9c276  libncurses5_6.3-2ubuntu0.3_amd64.deb' \
+      '627d708d8f282821f3ec7d9f08060cc5b7cc3a737b1e30e91da710c915a71482  gconf2-common_3.2.6-7ubuntu2_all.deb' \
+      'ad86a4ee82b2631dab97d16736580f03108524a8040a790a6ef8b20cbd358be4  libgconf-2-4_3.2.6-7ubuntu2_amd64.deb' \
+    | sha256sum -c - \
+ && apt-get -q update \
+ && apt-get -q install -y --no-install-recommends \
+      ./libtinfo5_6.3-2ubuntu0.3_amd64.deb \
+      ./libncurses5_6.3-2ubuntu0.3_amd64.deb \
+      ./gconf2-common_3.2.6-7ubuntu2_all.deb \
+      ./libgconf-2-4_3.2.6-7ubuntu2_amd64.deb \
+ && rm ./*.deb \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
 # Disable default sound card, which removes ALSA warnings
 RUN /bin/echo -e 'pcm.!default {\n\
     type plug\n\
