@@ -37,16 +37,33 @@ jobs:
           # A re-run joins the Test concurrency group again, so re-running a superseded run would
           # cancel the newer run in that group. Leave the newer run to report instead. The group is
           # the PR for pull_request runs and the branch otherwise; runs from forks carry no PR
-          # number, so a PR is matched by its head repository and branch.
-          newer_runs=$(gh api -X GET "repos/$REPOSITORY/actions/workflows/$WORKFLOW_ID/runs" --paginate \
-            -f branch="$HEAD_BRANCH" -f created=">=$RUN_CREATED" -f per_page=100 \
+          # number, so a PR is matched by its head repository and branch. When that can't be
+          # decided, skip the re-run: a missed retry is safer than cancelling a newer run.
+          skip() {
+            echo "Not re-running [run $RUN_ID]($RUN_URL): $1" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+          if [ "$RUN_EVENT" = pull_request ]; then
+            head="${HEAD_REPOSITORY%%/*}:$HEAD_BRANCH"
+            open_prs=$(gh api -X GET "repos/$REPOSITORY/pulls" -f head="$head" -f state=open --jq length)
+            if [ "$open_prs" -gt 1 ]; then
+              skip "$open_prs open pull requests share $head, so their runs can't be told apart"
+            fi
+          fi
+          runs_query=(-X GET "repos/$REPOSITORY/actions/workflows/$WORKFLOW_ID/runs"
+            -f branch="$HEAD_BRANCH" -f created=">=$RUN_CREATED")
+          # GitHub returns at most 1,000 results for a filtered search, even when paginating
+          total_runs=$(gh api "${runs_query[@]}" -f per_page=1 --jq .total_count)
+          if [ "$total_runs" -gt 1000 ]; then
+            skip "$total_runs runs on $HEAD_BRANCH since it, more than GitHub can list"
+          fi
+          newer_runs=$(gh api "${runs_query[@]}" -f per_page=100 --paginate \
             --jq ".workflow_runs[] | select(.id > $RUN_ID
               and ((.event == \"pull_request\") == (\"$RUN_EVENT\" == \"pull_request\"))
               and .head_repository.full_name == \"$HEAD_REPOSITORY\") | .html_url")
           newer_run=${newer_runs%%$'\n'*}
           if [ -n "$newer_run" ]; then
-            echo "Not re-running [run $RUN_ID]($RUN_URL): it is superseded by $newer_run" | tee -a "$GITHUB_STEP_SUMMARY"
-            exit 0
+            skip "it is superseded by $newer_run"
           fi
           failed_jobs=$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/1/jobs?per_page=100" --paginate \
             --jq '.jobs[] | select(.conclusion == "failure") | "- \(.name): \([.steps[] | select(.conclusion == "failure") | .name] | join(", "))"')
