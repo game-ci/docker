@@ -120,8 +120,12 @@ jobs:
           for ($i = 0; $i -lt $maxRetries; $i++) {
             $svc = Get-Service docker -ErrorAction SilentlyContinue
             if ($svc -and $svc.Status -eq 'Running') {
+              $previousPreference = $ErrorActionPreference
+              $ErrorActionPreference = 'Continue'
               docker version 2>$null
-              if ($LASTEXITCODE -eq 0) {
+              $probeExitCode = $LASTEXITCODE
+              $ErrorActionPreference = $previousPreference
+              if ($probeExitCode -eq 0) {
                 Write-Host "Docker is ready."
                 exit 0
               }

@@ -1,0 +1,76 @@
+name: Re-run failed tests
+
+# Re-runs the failed jobs of a "Test" run once, on fresh runners.
+# Hosted runners fail intermittently (Docker daemon not ready, full disk, stalled downloads),
+# and a second attempt on another runner usually passes. A job that fails twice stays red.
+# The first attempt's logs remain available on the run.
+
+on:
+  workflow_run:
+    workflows:
+      - Test
+    types:
+      - completed
+
+permissions:
+  actions: write
+
+jobs:
+  rerun:
+    name: Re-run failed jobs once
+    if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt == 1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-run failed jobs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          WORKFLOW_ID: ${{ github.event.workflow_run.workflow_id }}
+          RUN_CREATED: ${{ github.event.workflow_run.created_at }}
+          HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+        run: |
+          set -euo pipefail
+          # A re-run joins the Test concurrency group again, so re-running a superseded run would
+          # cancel the newer run in that group. Leave the newer run to report instead. The group is
+          # the PR for pull_request runs and the branch otherwise; runs from forks carry no PR
+          # number, so a PR is matched by its head repository and branch. When that can't be
+          # decided, skip the re-run: a missed retry is safer than cancelling a newer run.
+          skip() {
+            echo "Not re-running [run $RUN_ID]($RUN_URL): $1" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          }
+          if [ "$RUN_EVENT" = pull_request ]; then
+            head="${HEAD_REPOSITORY%%/*}:$HEAD_BRANCH"
+            open_prs=$(gh api -X GET "repos/$REPOSITORY/pulls" -f head="$head" -f state=open --jq length)
+            if [ "$open_prs" -gt 1 ]; then
+              skip "$open_prs open pull requests share $head, so their runs can't be told apart"
+            fi
+          fi
+          runs_query=(-X GET "repos/$REPOSITORY/actions/workflows/$WORKFLOW_ID/runs"
+            -f branch="$HEAD_BRANCH" -f created=">=$RUN_CREATED")
+          # GitHub returns at most 1,000 results for a filtered search, even when paginating
+          total_runs=$(gh api "${runs_query[@]}" -f per_page=1 --jq .total_count)
+          if [ "$total_runs" -gt 1000 ]; then
+            skip "$total_runs runs on $HEAD_BRANCH since it, more than GitHub can list"
+          fi
+          newer_runs=$(gh api "${runs_query[@]}" -f per_page=100 --paginate \
+            --jq ".workflow_runs[] | select(.id > $RUN_ID
+              and ((.event == \"pull_request\") == (\"$RUN_EVENT\" == \"pull_request\"))
+              and .head_repository.full_name == \"$HEAD_REPOSITORY\") | .html_url")
+          newer_run=${newer_runs%%$'\n'*}
+          if [ -n "$newer_run" ]; then
+            skip "it is superseded by $newer_run"
+          fi
+          failed_jobs=$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/1/jobs?per_page=100" --paginate \
+            --jq '.jobs[] | select(.conclusion == "failure") | "- \(.name): \([.steps[] | select(.conclusion == "failure") | .name] | join(", "))"')
+          {
+            echo "### Re-running failed jobs of [run $RUN_ID]($RUN_URL)"
+            echo
+            echo "${failed_jobs:-No failed jobs listed.}"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          gh run rerun "$RUN_ID" --failed --repo "$REPOSITORY"
+          echo "Requested attempt 2 for run $RUN_ID"
