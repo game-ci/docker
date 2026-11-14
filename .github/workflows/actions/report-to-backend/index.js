@@ -1,9 +1,51 @@
 const core = require('@actions/core');
-const { post } = require('httpie');
 
 const startedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/reportNewBuild';
 const failedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/reportBuildFailure';
 const publishedEndpoint = 'https://europe-west3-unity-ci-versions.cloudfunctions.net/reportPublication';
+
+const MAX_RETRIES = 3;
+const INITIAL_DELAY_MS = 2000;
+
+async function postWithRetry(url, headers, body) {
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.text();
+    let parsed;
+    try { parsed = JSON.parse(data); } catch { parsed = data; }
+
+    if (response.ok) {
+      return { statusCode: response.status, data: parsed };
+    }
+
+    // 409 = duplicate dispatch, not a transient error
+    if (response.status === 409) {
+      const err = new Error(`${response.status} ${response.statusText}`);
+      err.statusCode = response.status;
+      err.data = parsed;
+      throw err;
+    }
+
+    // Retry on 5xx (server) errors
+    if (response.status >= 500 && attempt < MAX_RETRIES) {
+      const delay = INITIAL_DELAY_MS * Math.pow(2, attempt - 1);
+      core.warning(`Backend returned ${response.status}, retrying in ${delay}ms (attempt ${attempt}/${MAX_RETRIES})...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      continue;
+    }
+
+    // Non-retryable error or final attempt
+    const err = new Error(`${response.status} ${response.statusText}`);
+    err.statusCode = response.status;
+    err.data = parsed;
+    throw err;
+  }
+}
 
 const action = async () => {
   // Take input from workflow
@@ -51,7 +93,7 @@ const action = async () => {
         targetPlatform,
       }
 
-      const { statusCode, data } = await post(startedEndpoint, { headers, body });
+      const { statusCode, data } = await postWithRetry(startedEndpoint, headers, body);
       console.log('Reported that this build has started.', statusCode, data);
     } catch (err) {
       // 409 means the build is already in progress or published (duplicate dispatch).
@@ -78,7 +120,7 @@ const action = async () => {
         reason,
       }
 
-      const { statusCode, data } = await post(failedEndpoint, { headers, body });
+      const { statusCode, data } = await postWithRetry(failedEndpoint, headers, body);
       console.log('Successfully reported the build failure.', statusCode, data);
     } catch (err) {
       console.error('An error occurred while reporting the build failure.', err.statusCode, err.message);
@@ -109,7 +151,7 @@ const action = async () => {
         }
       }
 
-      const { statusCode, data } = await post(publishedEndpoint, { headers, body });
+      const { statusCode, data } = await postWithRetry(publishedEndpoint, headers, body);
       console.log('Successfully reported this publication.', statusCode, data);
     } catch (err) {
       console.error('An error occurred while reporting this publication.', err.statusCode, err.message);
