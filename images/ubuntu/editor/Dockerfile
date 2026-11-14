@@ -10,8 +10,10 @@ FROM $hubImage AS builder
 # Install editor
 ARG version
 ARG changeSet
-RUN unity-hub install --version "$version" --changeset "$changeSet" > /var/log/install-editor.log 2>&1 \
-  && cat /var/log/install-editor.log \
+RUN unity-hub install --version "$version" --changeset "$changeSet" > /var/log/install-editor.log 2>&1; \
+    status=$?; \
+    cat /var/log/install-editor.log; \
+    [ "$status" -eq 0 ] \
   && ! grep -Eq 'Failed to install|Error while installing an editor|Completed with errors' /var/log/install-editor.log \
   && test -d "/opt/unity/editors/$version/Editor" \
   && test -f "/opt/unity/editors/$version/modules.json"
@@ -24,7 +26,9 @@ RUN for mod in $module; do \
       else \
         unity-hub install-modules --version "$version" --module "$mod" --childModules > /var/log/install-module-${mod}.log 2>&1; \
         cat /var/log/install-module-${mod}.log; \
-        ! grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-${mod}.log; \
+        if grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-${mod}.log; then \
+          exit 1; \
+        fi; \
       fi \
     done \
 	# Set execute permissions for modules
@@ -33,7 +37,7 @@ RUN for mod in $module; do \
 RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*linux'; then \
       exit 0; \
     fi; \
-    if grep -q '"id"[[:space:]]*:[[:space:]]*"linux-server"' "/opt/unity/editors/$version/modules.json"; then \
+    if jq -e 'any(.[]; .id == "linux-server" and .selected == true)' "/opt/unity/editors/$version/modules.json" > /dev/null; then \
       echo "linux-server already selected; skipping auto-install"; \
       exit 0; \
     fi; \
@@ -44,7 +48,7 @@ RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3
 RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*windows'; then \
       exit 0; \
     fi; \
-    if grep -q '"id"[[:space:]]*:[[:space:]]*"windows-server"' "/opt/unity/editors/$version/modules.json"; then \
+    if jq -e 'any(.[]; .id == "windows-server" and .selected == true)' "/opt/unity/editors/$version/modules.json" > /dev/null; then \
       echo "windows-server already selected; skipping auto-install"; \
       exit 0; \
     fi; \
