@@ -13,6 +13,33 @@ $ANDROID_SDK_ROOT = Get-ModuleDestinationPath $UNITY_MODULES_LIST 'android-sdk-p
 $ANDROID_NDK_HOME = Get-ModuleDestinationPath $UNITY_MODULES_LIST 'android-ndk' $Env:UNITY_PATH
 $JAVA_HOME        = Get-ModuleDestinationPath $UNITY_MODULES_LIST 'android-open-jdk' $Env:UNITY_PATH
 
+# Unity's release metadata installs OpenJDK 11 for every 2022.1 release, but its Android
+# module only accepts JDK 8, so builds fail with "JDK not found".
+if ($Env:version -match '^2022\.1\.')
+{
+  if ((Split-Path $JAVA_HOME -Leaf) -ne 'OpenJDK') { throw "Refusing to replace unexpected JDK path: $JAVA_HOME" }
+
+  $archive = "$Env:TEMP\openjdk8.zip"
+  Write-Host "Replacing OpenJDK at $JAVA_HOME with OpenJDK 8 from $Env:openJdk8Url"
+  Invoke-WebRequest -UseBasicParsing -Uri $Env:openJdk8Url -OutFile $archive
+  $actualSha256 = (Get-FileHash $archive -Algorithm SHA256).Hash
+  if ($actualSha256 -ne $Env:openJdk8Sha256) { throw "OpenJDK 8 checksum mismatch: expected $Env:openJdk8Sha256, got $actualSha256" }
+
+  Remove-Item $JAVA_HOME -Recurse -Force
+  Expand-Archive -Path $archive -DestinationPath $JAVA_HOME
+  Remove-Item $archive
+
+  # java prints its version to stderr, which PowerShell wraps in error records: read it under
+  # 'Continue' and keep only each record's text
+  $ErrorActionPreference = 'Continue'
+  $javaVersion = & "$JAVA_HOME/bin/java.exe" -version 2>&1 | ForEach-Object { "$_" } | Out-String
+  $javaExitCode = $LASTEXITCODE
+  $ErrorActionPreference = 'Stop'
+  Write-Host $javaVersion
+  if ($javaExitCode -ne 0 -or $javaVersion -notmatch 'version "1\.8\.') { throw "OpenJDK 8 at $JAVA_HOME does not report Java 1.8 (exit code $javaExitCode)" }
+  if (-not (Test-Path "$JAVA_HOME/bin/javac.exe")) { throw "javac.exe is missing from $JAVA_HOME" }
+}
+
 if (Find-Module $UNITY_MODULES_LIST 'android-sdk-command-line-tools')
 {
   $TOOLS_PATH = Get-ModuleRenamedPath $UNITY_MODULES_LIST 'android-sdk-command-line-tools' $Env:UNITY_PATH

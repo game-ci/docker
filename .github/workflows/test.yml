@@ -108,27 +108,27 @@ jobs:
         id: setup
         run: |
           # Get the Unity versions for test. (The latest patch versions for each minor version.)
-          VERSIONS=`npx unity-changeset list --versions --latest-patch --json --min 2019.3`
+          VERSIONS=$(npx unity-changeset list --versions --latest-patch --json --min 2019.3)
           echo "Versions: $VERSIONS"
           echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
 
           # Unity 2021.1 and 2021.2 do not build il2cpp properly and will be skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"windows-il2cpp\"} ]'`"
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "windows-il2cpp"} ]')"
 
           # Issues with 2021.1 and 2021.2 on Universal Windows Platform so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"universal-windows-platform\"} ]'`"
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "universal-windows-platform"} ]')"
 
           # Issues with 2021.1 and 2021.2 on AppleTV so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"appletv\"} ]'`"
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "appletv"} ]')"
 
           # Issues with 2021.1 and 2021.2 on Android so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"android\"} ]'`"
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "android"} ]')"
 
           # Issues with 2021.1 and 2021.2 on Mono so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES `echo \"$VERSIONS\" | jq -c '[ .[] | select(test(\"2021.1|2021.2\")) | { version: ., module: \"base\"} ]'`"
+          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "base"} ]')"
 
-          LINUX_EXCLUDES=`echo "$LINUX_EXCLUDES" | jq -s -c 'flatten'`
-          WINDOWS_EXCLUDES=`echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten'`
+          LINUX_EXCLUDES=$(echo "$LINUX_EXCLUDES" | jq -s -c 'flatten')
+          WINDOWS_EXCLUDES=$(echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten')
 
           echo "Linux Excludes: $LINUX_EXCLUDES"
           echo "Windows Excludes: $WINDOWS_EXCLUDES"
@@ -195,6 +195,33 @@ jobs:
       ##################################
       #   Build Windows base and hub   #
       ##################################
+      - name: Wait for Docker daemon
+        shell: powershell
+        run: |
+          $maxRetries = 10
+          $retryDelay = 6
+          for ($i = 0; $i -lt $maxRetries; $i++) {
+            $svc = Get-Service docker -ErrorAction SilentlyContinue
+            if ($svc -and $svc.Status -eq 'Running') {
+              $previousPreference = $ErrorActionPreference
+              $ErrorActionPreference = 'Continue'
+              docker version 2>$null
+              $probeExitCode = $LASTEXITCODE
+              $ErrorActionPreference = $previousPreference
+              if ($probeExitCode -eq 0) {
+                Write-Host "Docker is ready."
+                exit 0
+              }
+            }
+            if ($svc -and $svc.Status -eq 'Stopped') {
+              Write-Host "Docker service stopped, attempting to start..."
+              Start-Service docker -ErrorAction SilentlyContinue
+            }
+            Write-Host "Waiting for Docker daemon (attempt $($i+1)/$maxRetries)..."
+            Start-Sleep -Seconds $retryDelay
+          }
+          Write-Error "Docker daemon did not start within $($maxRetries * $retryDelay) seconds"
+          exit 1
       - name: Build base
         run: |
           docker build -t base:windows-dev -f ./images/windows/base/Dockerfile .
@@ -296,10 +323,10 @@ jobs:
         id: setup
         run: |
           # The changeset for unity version
-          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> "$GITHUB_OUTPUT"
+          echo "CHANGESET=$(npx unity-changeset ${{ matrix.version }})" >> "$GITHUB_OUTPUT"
 
           # For 2019.3 or later, non-il2cpp would also be possible to build with il2cpp image.
-          if [ `echo "${{ matrix.version }}" | grep -v '\(2018\|2019.1\|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
+          if echo "${{ matrix.version }}" | grep -qv '\(2018\|2019.1\|2019.2\)' && [ "${{ matrix.module }}" = 'base' ] ; then
             echo "MODULE=linux-il2cpp" >> "$GITHUB_OUTPUT"
           else
             echo "MODULE=${{ matrix.module }}" >> "$GITHUB_OUTPUT"
@@ -352,6 +379,11 @@ jobs:
       #####################
       - name: Show image size
         run: docker images
+      - name: Validate semaphore EINTR shim
+        timeout-minutes: 5
+        run: |
+          docker run --rm --env SEM_EINTR_RETRY_LOG=1 editor:ubuntu-dev \
+            bash -c 'unity-editor -version 2>&1 | tee /dev/stderr | grep -q "\[sem_eintr_retry\] active"'
       - name: Setup to test
         run: |
           # For 'linux-il2cpp' module, switch the script backend to 'IL2CPP'
@@ -500,6 +532,33 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: windows-base-and-hub
+      - name: Wait for Docker daemon
+        shell: powershell
+        run: |
+          $maxRetries = 10
+          $retryDelay = 6
+          for ($i = 0; $i -lt $maxRetries; $i++) {
+            $svc = Get-Service docker -ErrorAction SilentlyContinue
+            if ($svc -and $svc.Status -eq 'Running') {
+              $previousPreference = $ErrorActionPreference
+              $ErrorActionPreference = 'Continue'
+              docker version 2>$null
+              $probeExitCode = $LASTEXITCODE
+              $ErrorActionPreference = $previousPreference
+              if ($probeExitCode -eq 0) {
+                Write-Host "Docker is ready."
+                exit 0
+              }
+            }
+            if ($svc -and $svc.Status -eq 'Stopped') {
+              Write-Host "Docker service stopped, attempting to start..."
+              Start-Service docker -ErrorAction SilentlyContinue
+            }
+            Write-Host "Waiting for Docker daemon (attempt $($i+1)/$maxRetries)..."
+            Start-Sleep -Seconds $retryDelay
+          }
+          Write-Error "Docker daemon did not start within $($maxRetries * $retryDelay) seconds"
+          exit 1
       - name: Restore base and hub
         run: |
           mkdir c:/artifact
@@ -509,7 +568,7 @@ jobs:
           docker load -i windows-base-and-hub.tar
           RAW_WORKSPACE_PATH="${{ github.workspace }}"
           WORKSPACE_PATH=${RAW_WORKSPACE_PATH//\\//}
-          cd $WORKSPACE_PATH
+          cd "$WORKSPACE_PATH"
           rm -rf c:/artifact
         shell: bash
 
@@ -520,10 +579,10 @@ jobs:
         id: setup
         run: |
           # The changeset for unity version
-          echo "CHANGESET=`npx unity-changeset ${{ matrix.version }}`" >> "$GITHUB_OUTPUT"
+          echo "CHANGESET=$(npx unity-changeset ${{ matrix.version }})" >> "$GITHUB_OUTPUT"
 
           # For 2019.3 or later, non-il2cpp would also be possible to build with il2cpp image.
-          if [ `echo "${{ matrix.version }}" | grep -v '\(2018\|2019.1\|2019.2\)'` ] && [ "${{ matrix.module }}" = 'base' ] ; then
+          if echo "${{ matrix.version }}" | grep -qv '\(2018\|2019.1\|2019.2\)' && [ "${{ matrix.module }}" = 'base' ] ; then
             echo "MODULE=windows-il2cpp" >> "$GITHUB_OUTPUT"
           else
             echo "MODULE=${{ matrix.module }}" >> "$GITHUB_OUTPUT"
