@@ -307,7 +307,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: ubuntu-base-and-hub
 
@@ -529,7 +529,7 @@ jobs:
       ############################
       #   Restore base and hub   #
       ############################
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v6
         with:
           name: windows-base-and-hub
       - name: Wait for Docker daemon
