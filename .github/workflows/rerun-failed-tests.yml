@@ -64,8 +64,9 @@ jobs:
               if [ "$step_count" -eq 0 ]; then
                 skip "job $job_id was cancelled before it started, so the run was cancelled as a whole"
               fi
-              reason=$(gh api "repos/$REPOSITORY/check-runs/$job_id/annotations" \
-                --jq '[.[].message | select(test("^The run was canceled by|higher priority waiting request"))][0] // ""')
+              reasons=$(gh api "repos/$REPOSITORY/check-runs/$job_id/annotations?per_page=100" --paginate \
+                --jq '.[].message | select(test("^The run was canceled by|higher priority waiting request"))')
+              reason=${reasons%%$'\n'*}
               if [ -n "$reason" ]; then
                 skip "job $job_id was cancelled on purpose: $reason"
               fi
