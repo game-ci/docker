@@ -23,8 +23,8 @@ jobs:
 
       - name: Checkout latest release tag
         run: |
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          git checkout $LATEST_TAG
+          LATEST_TAG=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+          git checkout "$LATEST_TAG"
 
       #################
       #   Variables   #
@@ -63,12 +63,12 @@ jobs:
         run: |
           # DockerHub V2 API (V1 was decommissioned, returns 410 Gone)
           function docker_tag_exists() {
-            curl --silent -f -lSL https://hub.docker.com/v2/repositories/$1/tags/$2 > /dev/null
+            curl --silent -f -lSL "https://hub.docker.com/v2/repositories/$1/tags/$2" > /dev/null
           }
 
           if docker_tag_exists unityci/hub ubuntu-${{ github.event.client_payload.repoVersionFull }} ; then
             echo "Image already exists. Exiting."
-            echo "image_exists=true" >> $GITHUB_OUTPUT
+            echo "image_exists=true" >> "$GITHUB_OUTPUT"
             exit 1
           fi
       - name: Cache Docker layers
