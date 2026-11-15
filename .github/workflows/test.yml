@@ -108,24 +108,10 @@ jobs:
         id: setup
         run: |
           # Get the Unity versions for test. (The latest patch versions for each minor version.)
-          VERSIONS=$(npx unity-changeset list --versions --latest-patch --json --min 2019.3)
+          # Editors older than 2022 are end-of-life: GameCI no longer builds images for them.
+          VERSIONS=$(npx unity-changeset list --versions --latest-patch --json --min 2022.1)
           echo "Versions: $VERSIONS"
           echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
-
-          # Unity 2021.1 and 2021.2 do not build il2cpp properly and will be skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "windows-il2cpp"} ]')"
-
-          # Issues with 2021.1 and 2021.2 on Universal Windows Platform so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "universal-windows-platform"} ]')"
-
-          # Issues with 2021.1 and 2021.2 on AppleTV so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "appletv"} ]')"
-
-          # Issues with 2021.1 and 2021.2 on Android so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "android"} ]')"
-
-          # Issues with 2021.1 and 2021.2 on Mono so they are skipped
-          WINDOWS_EXCLUDES="$WINDOWS_EXCLUDES $(echo "$VERSIONS" | jq -c '[ .[] | select(test("2021.1|2021.2")) | { version: ., module: "base"} ]')"
 
           LINUX_EXCLUDES=$(echo "$LINUX_EXCLUDES" | jq -s -c 'flatten')
           WINDOWS_EXCLUDES=$(echo "$WINDOWS_EXCLUDES" | jq -s -c 'flatten')
