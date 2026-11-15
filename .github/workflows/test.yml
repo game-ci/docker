@@ -250,6 +250,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # The game-ci organisation runs about 20 jobs at once, shared by every GameCI repository.
+      # Ubuntu and Windows cap at 8 each, leaving runners for the others.
+      max-parallel: 8
       matrix:
         # The latest patch versions for each minor version.
         version: ${{ fromJson(needs.build-matrix.outputs.versions) }}
@@ -484,6 +487,8 @@ jobs:
     runs-on: windows-2022
     strategy:
       fail-fast: false
+      # See the Ubuntu matrix: 8 each keeps runners free for other GameCI repositories.
+      max-parallel: 8
       matrix:
         # The latest patch versions for each minor version.
         version: ${{ fromJson(needs.build-matrix.outputs.versions) }}
