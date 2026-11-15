@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v7
       # Caveat - Currently we use the ubuntu readme as we do not have a catch-all readme (yet?)
       - run: |
-          echo "SHORT_DESCRIPTION=$(cat ./images/ubuntu/${{ matrix.imageType }}/100-characters-dockerhub-description.txt)" >> $GITHUB_ENV
+          echo "SHORT_DESCRIPTION=$(cat ./images/ubuntu/${{ matrix.imageType }}/100-characters-dockerhub-description.txt)" >> "$GITHUB_ENV"
       - name: Update DockerHub description
         uses: peter-evans/dockerhub-description@v5
         with:
