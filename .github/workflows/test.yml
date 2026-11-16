@@ -373,6 +373,15 @@ jobs:
         run: |
           docker run --rm --env SEM_EINTR_RETRY_LOG=1 editor:ubuntu-dev \
             bash -c 'unity-editor -version 2>&1 | tee /dev/stderr | grep -q "\[sem_eintr_retry\] active"'
+      # A uid with no /etc/passwd entry, as with docker run --user, Kubernetes or OpenShift.
+      # Without a license the editor stops after connecting to the Licensing Client, as for root.
+      - name: Validate licensing for any uid
+        if: matrix.module == 'base'
+        timeout-minutes: 5
+        run: |
+          docker run --rm --user 10000:1004 editor:ubuntu-dev \
+            bash -c 'unity-editor -batchmode -nographics -quit -logFile - 2>&1 | tee /dev/stderr \
+              | grep -q "Successfully connected to LicensingClient on channel: \"LicenseClient-unity\""'
       - name: Setup to test
         run: |
           # For 'linux-il2cpp' module, switch the script backend to 'IL2CPP'
@@ -403,6 +412,29 @@ jobs:
           projectPath: reference-project-test
           targetPlatform: ${{ matrix.platform }}
           allowDirtyBuild: true
+      - name: Open project as any uid
+        # Only run if not a PR as we need access to secrets
+        if: github.base_ref == '' && matrix.module == 'base'
+        timeout-minutes: 20
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        run: |
+          project="$RUNNER_TEMP/any-uid-project"
+          cp -r reference-project-test "$project"
+          chmod -R a+rwX "$project"
+          docker run --rm --user 10000:1004 --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
+            --volume "$project:/project" editor:ubuntu-dev bash -c '
+              set -uo pipefail
+              unity-editor -batchmode -nographics -quit -logFile - \
+                -serial "$UNITY_SERIAL" -username "$UNITY_EMAIL" -password "$UNITY_PASSWORD" || exit
+              unity-editor -batchmode -nographics -quit -logFile - -projectPath /project
+              status=$?
+              unity-editor -batchmode -nographics -quit -logFile - \
+                -returnlicense -username "$UNITY_EMAIL" -password "$UNITY_PASSWORD" \
+                || echo "::warning::Could not return the license"
+              exit $status'
 
       ###########################
       #   Build (Ubuntu GZip)   #
