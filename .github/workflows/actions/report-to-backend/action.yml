@@ -11,6 +11,10 @@ inputs:
   status:
     description: 'The type of report to send: [ started | failed | published ]'
     required: true
+  reconciliation:
+    description: 'Whether the backend reconciler requested this build to restore an image missing from Docker Hub'
+    required: false
+    default: 'false'
 
   # Started
   imageType:
