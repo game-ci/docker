@@ -56,6 +56,12 @@ RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3
     cat /var/log/install-module-windows-server.log; \
     ! grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-windows-server.log;
 
+# Let any user read the editor, so containers that run as a non-root user can compile.
+# Some files ship readable by their owner only (such as Mono's class libraries).
+# Only those are changed, so the layer stays small.
+RUN find "/opt/unity/editors/$version" -xdev \( -type f ! -perm -o+r -o -type d ! -perm -o+rx \) -print0 \
+  | xargs -0 --no-run-if-empty chmod a+rX
+
 ###########################
 #  Semaphore EINTR shim   #
 ###########################
