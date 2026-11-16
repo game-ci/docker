@@ -20,7 +20,7 @@ RUN wget -qO - https://hub.unity3d.com/linux/keys/public | gpg --dearmor | tee /
 RUN sed -i 's/^\(.*DISPLAY=:.*XAUTHORITY=.*\)\( "\$@" \)2>&1$/\1\2/' /usr/bin/xvfb-run
 
 # Alias to "unity-hub" with default params
-RUN echo '#!/bin/bash\nxvfb-run -a /opt/unityhub/unityhub-bin --no-sandbox --headless "$@" 2>/dev/null' > /usr/bin/unity-hub \
+RUN printf '#!/bin/bash\nxvfb-run -a /opt/unityhub/unityhub-bin --no-sandbox --headless "$@" 2>/dev/null\n' > /usr/bin/unity-hub \
  && chmod +x /usr/bin/unity-hub
 
 # Configure
