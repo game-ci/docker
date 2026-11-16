@@ -41,6 +41,7 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ github.event.client_payload.jobId }}
+          reconciliation: ${{ github.event.client_payload.reconciliation || false }}
           status: started
           # Build info
           imageType: hub
@@ -119,6 +120,7 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ github.event.client_payload.jobId }}
+          reconciliation: ${{ github.event.client_payload.reconciliation || false }}
           status: published
           # Build info
           imageType: hub
@@ -136,6 +138,7 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ github.event.client_payload.jobId }}
+          reconciliation: ${{ github.event.client_payload.reconciliation || false }}
           status: failed
           # Build info
           imageType: hub
