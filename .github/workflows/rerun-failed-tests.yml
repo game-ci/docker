@@ -1,9 +1,10 @@
 name: Re-run failed tests
 
 # Re-runs the failed jobs of a "Test" run once, on fresh runners.
-# Hosted runners fail intermittently (Docker daemon not ready, full disk, stalled downloads),
-# and a second attempt on another runner usually passes. A job that fails twice stays red.
-# The first attempt's logs remain available on the run.
+# Hosted runners fail intermittently (Docker daemon not ready, full disk, stalled downloads,
+# lost runners, timeouts), and a second attempt on another runner usually passes. A job that
+# fails twice stays red. The first attempt's logs remain available on the run.
+# A run that a person or a newer run cancelled is left alone.
 
 on:
   workflow_run:
@@ -18,7 +19,7 @@ permissions:
 jobs:
   rerun:
     name: Re-run failed jobs once
-    if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt == 1
+    if: contains(fromJson('["failure", "cancelled"]'), github.event.workflow_run.conclusion)
     runs-on: ubuntu-latest
     steps:
       - name: Re-run failed jobs
@@ -26,6 +27,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           RUN_URL: ${{ github.event.workflow_run.html_url }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           RUN_EVENT: ${{ github.event.workflow_run.event }}
@@ -43,6 +46,32 @@ jobs:
             echo "Not re-running [run $RUN_ID]($RUN_URL): $1" | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           }
+          # Runs from forks may wait for approval first: that attempt ends as "action_required"
+          # without running a job, so the first attempt that ran jobs can be a later one.
+          for ((attempt = 1; attempt < RUN_ATTEMPT; attempt++)); do
+            earlier=$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$attempt" --jq .conclusion)
+            if [ "$earlier" != action_required ]; then
+              skip "attempt $RUN_ATTEMPT is a re-run of attempt $attempt, which ran jobs"
+            fi
+          done
+          if [ "$RUN_CONCLUSION" = cancelled ]; then
+            # Lost runners and timeouts cancel single jobs that had started. A person or a newer
+            # run cancels the whole run: jobs that had not started yet, and annotations naming why.
+            cancelled_jobs=$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=30" --paginate \
+              --jq '.jobs[] | select(.conclusion == "cancelled") | "\(.id) \(.steps | length)"')
+            while read -r job_id step_count; do
+              [ -n "$job_id" ] || continue
+              if [ "$step_count" -eq 0 ]; then
+                skip "job $job_id was cancelled before it started, so the run was cancelled as a whole"
+              fi
+              reasons=$(gh api "repos/$REPOSITORY/check-runs/$job_id/annotations?per_page=100" --paginate \
+                --jq '.[].message | select(test("^The run was canceled by|higher priority waiting request"))')
+              reason=${reasons%%$'\n'*}
+              if [ -n "$reason" ]; then
+                skip "job $job_id was cancelled on purpose: $reason"
+              fi
+            done <<< "$cancelled_jobs"
+          fi
           if [ "$RUN_EVENT" = pull_request ]; then
             head="${HEAD_REPOSITORY%%/*}:$HEAD_BRANCH"
             open_prs=$(gh api -X GET "repos/$REPOSITORY/pulls" -f head="$head" -f state=open --jq length)
@@ -65,12 +94,13 @@ jobs:
           if [ -n "$newer_run" ]; then
             skip "it is superseded by $newer_run"
           fi
-          failed_jobs=$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/1/jobs?per_page=100" --paginate \
-            --jq '.jobs[] | select(.conclusion == "failure") | "- \(.name): \([.steps[] | select(.conclusion == "failure") | .name] | join(", "))"')
+          failed_jobs=$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/attempts/$RUN_ATTEMPT/jobs?per_page=30" --paginate \
+            --jq '.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled")
+              | "- \(.name) (\(.conclusion)): \([.steps[] | select(.conclusion == "failure" or .conclusion == "cancelled") | .name] | join(", "))"')
           {
             echo "### Re-running failed jobs of [run $RUN_ID]($RUN_URL)"
             echo
             echo "${failed_jobs:-No failed jobs listed.}"
           } | tee -a "$GITHUB_STEP_SUMMARY"
           gh run rerun "$RUN_ID" --failed --repo "$REPOSITORY"
-          echo "Requested attempt 2 for run $RUN_ID"
+          echo "Requested attempt $((RUN_ATTEMPT + 1)) for run $RUN_ID"
