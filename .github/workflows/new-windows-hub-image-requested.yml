@@ -32,14 +32,14 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Checkout latest release tag
         run: |
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
-          git checkout $LATEST_TAG
+          LATEST_TAG=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+          git checkout "$LATEST_TAG"
         shell: bash
 
       #################
@@ -77,6 +77,7 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ steps.buildParameters.outputs.jobId }}
+          reconciliation: ${{ github.event.client_payload.reconciliation || false }}
           status: started
           # Build info
           imageType: hub
@@ -187,6 +188,7 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ steps.buildParameters.outputs.jobId }}
+          reconciliation: ${{ github.event.client_payload.reconciliation || false }}
           status: published
           # Build info
           imageType: hub
@@ -205,6 +207,7 @@ jobs:
         with:
           token: ${{ secrets.VERSIONING_TOKEN }}
           jobId: ${{ steps.buildParameters.outputs.jobId }}
+          reconciliation: ${{ github.event.client_payload.reconciliation || false }}
           status: failed
           # Build info
           imageType: hub

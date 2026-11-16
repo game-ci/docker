@@ -5,3 +5,9 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+
+  # Maintain dependencies for the report-to-backend action
+  - package-ecosystem: "npm"
+    directory: "/.github/workflows/actions/report-to-backend"
+    schedule:
+      interval: "weekly"

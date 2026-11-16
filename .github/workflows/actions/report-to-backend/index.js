@@ -57,6 +57,8 @@ const action = async () => {
   const repoVersion = core.getInput('repoVersion', { required: true });
   const editorVersion = core.getInput('editorVersion', { required: false }) || 'none';
   const targetPlatform = core.getInput('targetPlatform', { required: false }) || 'none';
+  // Reconciliation failures are recorded by the backend without holding back its build queue
+  const reconciliation = core.getInput('reconciliation', { required: false }) === 'true';
 
   const isDryRun = jobIdInput === 'dryRun';
 
@@ -91,6 +93,7 @@ const action = async () => {
         repoVersion,
         editorVersion,
         targetPlatform,
+        reconciliation,
       }
 
       const { statusCode, data } = await postWithRetry(startedEndpoint, headers, body);
@@ -118,6 +121,7 @@ const action = async () => {
         jobId,
         buildId,
         reason,
+        reconciliation,
       }
 
       const { statusCode, data } = await postWithRetry(failedEndpoint, headers, body);
