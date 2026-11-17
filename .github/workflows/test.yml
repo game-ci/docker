@@ -523,6 +523,23 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: windows-base-and-hub
+      # C: has about 70 GB free and D: about 150 GB. A Unity 6 editor image is over 20 GB and building it
+      # briefly holds the editor twice, so C: can fill up and take the runner down. Keep Docker data on D:.
+      - name: Keep Docker data on drive D
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $configPath = 'C:\ProgramData\docker\config\daemon.json'
+          $config = @{}
+          if (Test-Path $configPath) {
+            (Get-Content $configPath -Raw | ConvertFrom-Json).PSObject.Properties | ForEach-Object { $config[$_.Name] = $_.Value }
+          }
+          $config['data-root'] = 'D:\docker'
+          New-Item -ItemType Directory -Force -Path (Split-Path $configPath), 'D:\docker' | Out-Null
+          $config | ConvertTo-Json | Set-Content -Path $configPath -Encoding ascii
+          Get-Content $configPath
+          Stop-Service docker
+          Start-Service docker
       - name: Wait for Docker daemon
         shell: powershell
         run: |
@@ -552,15 +569,15 @@ jobs:
           exit 1
       - name: Restore base and hub
         run: |
-          mkdir c:/artifact
-          mv windows-base-and-hub.tar.zst c:/artifact
-          cd c:/artifact
+          mkdir d:/artifact
+          mv windows-base-and-hub.tar.zst d:/artifact
+          cd d:/artifact
           zstd -d windows-base-and-hub.tar.zst
           docker load -i windows-base-and-hub.tar
           RAW_WORKSPACE_PATH="${{ github.workspace }}"
           WORKSPACE_PATH=${RAW_WORKSPACE_PATH//\\//}
           cd "$WORKSPACE_PATH"
-          rm -rf c:/artifact
+          rm -rf d:/artifact
         shell: bash
 
       ######################
@@ -613,6 +630,9 @@ jobs:
       #####################
       - name: Show image size
         run: docker images
+      - name: Show disk space
+        if: always()
+        run: get-PSDrive -PSProvider FileSystem
       - name: Setup to test
         run: |
           # For 'windows-il2cpp' module, switch the script backend to 'IL2CPP'
