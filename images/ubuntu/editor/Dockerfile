@@ -208,6 +208,60 @@ RUN apt-get -q update \
   && apt-get -q install -y --no-install-recommends gcc libc6-dev \
   && gcc -shared -fPIC -O2 -Wall -Wextra -Werror -o /libsem_eintr_retry.so /src/sem_eintr_retry.c -ldl
 
+# bee_backend (Unity 2022.1 and older) deadlocks on exit with Ubuntu 24.04 glibc: its stdin
+# canary thread holds stdin's lock, which exit() now waits for. This shim reads stdin unlocked.
+FROM $baseImage AS stdin-canary-unlocked
+
+COPY <<'EOF' /src/stdin_canary_unlocked.c
+// LD_PRELOAD shim for bee_backend's --stdin-canary on newer glibc.
+//
+// bee_backend (Unity 2022.1 and older) watches its parent through a thread that blocks
+// in getc(stdin) until the editor closes the pipe. getc holds stdin's lock while it waits.
+// Newer glibc takes every stream's lock when exit() flushes, so bee_backend can never
+// exit, and the editor only closes the pipe once bee_backend has exited: a deadlock.
+//
+// In bee_backend only, reads of stdin through getc and fgetc skip the stream lock. exit()
+// flushes only streams with pending output, so it never touches stdin's read buffer.
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+typedef int (*getc_fn)(FILE *);
+
+static getc_fn real_getc;
+static getc_fn real_fgetc;
+static int is_bee_backend;
+
+__attribute__((constructor)) static void initialise(void) {
+  real_getc = (getc_fn)dlsym(RTLD_NEXT, "getc");
+  real_fgetc = (getc_fn)dlsym(RTLD_NEXT, "fgetc");
+
+  char executable_path[4096];
+  ssize_t length = readlink("/proc/self/exe", executable_path, sizeof executable_path - 1);
+  if (length <= 0) return;
+  executable_path[length] = '\0';
+  const char *executable_name = strrchr(executable_path, '/');
+  executable_name = executable_name ? executable_name + 1 : executable_path;
+  is_bee_backend = strcmp(executable_name, "bee_backend") == 0;
+}
+
+int getc(FILE *stream) {
+  if (is_bee_backend && stream == stdin) return getc_unlocked(stream);
+  return real_getc(stream);
+}
+
+int fgetc(FILE *stream) {
+  if (is_bee_backend && stream == stdin) return getc_unlocked(stream);
+  return real_fgetc(stream);
+}
+EOF
+
+RUN apt-get -q update \
+  && apt-get -q install -y --no-install-recommends gcc libc6-dev \
+  && gcc -shared -fPIC -O2 -Wall -Wextra -Werror -o /libstdin_canary_unlocked.so /src/stdin_canary_unlocked.c -ldl
+
 ###########################
 #          Editor         #
 ###########################
@@ -224,28 +278,8 @@ RUN echo $version > "$UNITY_PATH/version"
 
 # Retry semaphore waits interrupted by signals; see the "Semaphore EINTR shim" stage
 COPY --from=sem-eintr-retry /libsem_eintr_retry.so /usr/lib/game-ci/libsem_eintr_retry.so
-
-###########################
-#  bee_backend exit hang  #
-###########################
-
-# Before 2022.2, the editor starts bee_backend with --stdin-canary: a thread blocks reading stdin
-# while the main thread exits. Since glibc 2.38 (Ubuntu 24.04), exit() waits for that thread's
-# stdin lock, so script compilation hangs forever (https://sourceware.org/bugzilla/show_bug.cgi?id=31841).
-# The canary only lets the editor cancel a build from its progress bar, which batch mode never does,
-# so run bee_backend without it. 2022.2 and later talk to bee_backend over a socket (--ipc) instead.
-RUN if echo "$version" | grep -qP '^(20(1[0-9]|2[01])\.|2022\.1\.)'; then \
-      bee="$UNITY_PATH/Editor/Data/bee_backend" \
-      && mv "$bee" "$bee-real" \
-      && printf '%s\n' \
-        '#!/bin/bash' \
-        '# Runs bee_backend without --stdin-canary; see the editor Dockerfile (game-ci/docker).' \
-        'args=()' \
-        'for arg in "$@"; do [ "$arg" = --stdin-canary ] || args+=("$arg"); done' \
-        'exec "$0-real" "${args[@]}"' \
-        > "$bee" \
-      && chmod 755 "$bee"; \
-    fi
+# Let bee_backend exit on Ubuntu 24.04; see the "stdin-canary-unlocked" stage
+COPY --from=stdin-canary-unlocked /libstdin_canary_unlocked.so /usr/lib/game-ci/libstdin_canary_unlocked.so
 
 
 ###########################
@@ -265,6 +299,7 @@ fi\n\
 if [ "${SEM_EINTR_RETRY:-true}" != false ] ; then\n\
   export LD_PRELOAD="/usr/lib/game-ci/libsem_eintr_retry.so${LD_PRELOAD:+:$LD_PRELOAD}"\n\
 fi\n\
+export LD_PRELOAD="/usr/lib/game-ci/libstdin_canary_unlocked.so${LD_PRELOAD:+:$LD_PRELOAD}"\n\
 \n\
 xvfb-run -ae /dev/stdout "$UNITY_PATH/Editor/Unity" -batchmode "$@"' > /usr/bin/unity-editor \
   && chmod 755 /usr/bin/unity-editor \
