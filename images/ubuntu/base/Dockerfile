@@ -10,6 +10,7 @@ ENV LC_ALL C.UTF-8
 RUN echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
 # Global dependencies
+# python3 runs WebGL's Emscripten (emcc); Ubuntu 22.04 only brought it in through lsb-release.
 RUN apt-get -q update \
  && apt-get -q install -y --no-install-recommends apt-utils \
  && apt-get -q install -y --no-install-recommends --allow-downgrades \
@@ -28,6 +29,7 @@ RUN apt-get -q update \
  libxss1 \
  cpio \
  lsb-release \
+ python3 \
  xvfb \
  xz-utils \
  && apt-get clean \
