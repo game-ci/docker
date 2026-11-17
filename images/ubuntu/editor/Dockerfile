@@ -225,6 +225,28 @@ RUN echo $version > "$UNITY_PATH/version"
 # Retry semaphore waits interrupted by signals; see the "Semaphore EINTR shim" stage
 COPY --from=sem-eintr-retry /libsem_eintr_retry.so /usr/lib/game-ci/libsem_eintr_retry.so
 
+###########################
+#  bee_backend exit hang  #
+###########################
+
+# Before 2022.2, the editor starts bee_backend with --stdin-canary: a thread blocks reading stdin
+# while the main thread exits. Since glibc 2.38 (Ubuntu 24.04), exit() waits for that thread's
+# stdin lock, so script compilation hangs forever (https://sourceware.org/bugzilla/show_bug.cgi?id=31841).
+# The canary only lets the editor cancel a build from its progress bar, which batch mode never does,
+# so run bee_backend without it. 2022.2 and later talk to bee_backend over a socket (--ipc) instead.
+RUN if echo "$version" | grep -qP '^(20(1[0-9]|2[01])\.|2022\.1\.)'; then \
+      bee="$UNITY_PATH/Editor/Data/bee_backend" \
+      && mv "$bee" "$bee-real" \
+      && printf '%s\n' \
+        '#!/bin/bash' \
+        '# Runs bee_backend without --stdin-canary; see the editor Dockerfile (game-ci/docker).' \
+        'args=()' \
+        'for arg in "$@"; do [ "$arg" = --stdin-canary ] || args+=("$arg"); done' \
+        'exec "$0-real" "${args[@]}"' \
+        > "$bee" \
+      && chmod 755 "$bee"; \
+    fi
+
 
 ###########################
 #  Alias to unity-editor  #
