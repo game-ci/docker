@@ -61,18 +61,20 @@ const action = async () => {
   const reconciliation = core.getInput('reconciliation', { required: false }) === 'true';
 
   const isDryRun = jobIdInput === 'dryRun';
+  // Test runs can overlap, so each run's dry-run job and builds get their own ids
+  const dryRunPrefix = `dryRun-${process.env.GITHUB_RUN_ID || 'local'}`;
 
   // Determine job for dryRun automatically
   let jobId = jobIdInput
   if (isDryRun) {
-    jobId += `-${imageType}`
+    jobId = `${dryRunPrefix}-${imageType}`
     if (imageType === 'editor') { jobId += `-${editorVersion}` }
     jobId += `-${repoVersion}`
   }
 
   // Determine identifier for this build
   let buildId = '';
-  if (isDryRun) { buildId += `dryRun-` }
+  if (isDryRun) { buildId += `${dryRunPrefix}-` }
   buildId += `${imageType}-${baseOs}`
   if (imageType === 'editor') { buildId += `-${editorVersion}-${targetPlatform}` }
   buildId += `-${repoVersion}`
