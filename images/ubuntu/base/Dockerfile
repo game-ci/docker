@@ -202,13 +202,14 @@ RUN /bin/echo -e 'pcm.!default {\n\
 RUN mkdir -p /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix
 
 # Any uid gets a user name (see the current-user-nss stage) and a writable home: Docker sets
-# HOME=/ for a uid with no /etc/passwd entry, and Unity writes to ~/.config, ~/.local and ~/.cache.
+# HOME=/ for a uid with no /etc/passwd entry. Unity writes to ~/.config, ~/.local/share and ~/.cache
+# without creating their parents.
 COPY --from=current-user-nss /libnss_currentuser.so.2 /usr/local/lib/libnss_currentuser.so.2
 RUN ldconfig \
  && sed -i -E 's/^(passwd:.*)$/\1 currentuser/' /etc/nsswitch.conf \
  && grep -Eq '^passwd:.* currentuser$' /etc/nsswitch.conf \
- && mkdir -p /.cache /.config /.local \
- && chmod 1777 /.cache /.config /.local
+ && mkdir -p /.cache /.config /.local/share \
+ && chmod 1777 /.cache /.config /.local /.local/share
 
 # Support forward compatibility for unity activation
 RUN echo "576562626572264761624c65526f7578" > /etc/machine-id && mkdir -p /var/lib/dbus/ && ln -sf /etc/machine-id /var/lib/dbus/machine-id
