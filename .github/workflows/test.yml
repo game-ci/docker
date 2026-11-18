@@ -375,13 +375,15 @@ jobs:
             bash -c 'unity-editor -version 2>&1 | tee /dev/stderr | grep -q "\[sem_eintr_retry\] active"'
       # A uid with no /etc/passwd entry, as with docker run --user, Kubernetes or OpenShift.
       # Without a license the editor stops after connecting to the Licensing Client, as for root.
+      # Unity treats the working directory as the project, so it must be writable for that uid.
       - name: Validate licensing for any uid
         if: matrix.module == 'base'
         timeout-minutes: 5
         run: |
-          docker run --rm --user 10000:1004 editor:ubuntu-dev \
-            bash -c 'unity-editor -batchmode -nographics -quit -logFile - 2>&1 | tee /dev/stderr \
-              | grep -q "Successfully connected to LicensingClient on channel: \"LicenseClient-unity\""'
+          docker run --rm --user 10000:1004 --workdir /tmp editor:ubuntu-dev bash -c '
+            timeout 180 unity-editor -batchmode -nographics -quit -logFile /tmp/editor.log
+            cat /tmp/editor.log
+            grep -q "Successfully connected to LicensingClient on channel: \"LicenseClient-unity\"" /tmp/editor.log'
       - name: Setup to test
         run: |
           # For 'linux-il2cpp' module, switch the script backend to 'IL2CPP'
@@ -425,7 +427,7 @@ jobs:
           cp -r reference-project-test "$project"
           chmod -R a+rwX "$project"
           docker run --rm --user 10000:1004 --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
-            --volume "$project:/project" editor:ubuntu-dev bash -c '
+            --volume "$project:/project" --workdir /project editor:ubuntu-dev bash -c '
               set -uo pipefail
               unity-editor -batchmode -nographics -quit -logFile - \
                 -serial "$UNITY_SERIAL" -username "$UNITY_EMAIL" -password "$UNITY_PASSWORD" || exit
