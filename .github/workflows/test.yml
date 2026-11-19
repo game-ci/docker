@@ -428,7 +428,8 @@ jobs:
           # Open it fresh, as the root build above did, not with that build's Library
           rm -rf "$project/Library" "$project/Temp" "$project/Logs" "$project/UserSettings"
           chmod -R a+rwX "$project"
-          docker run --rm --user 10000:1004 --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
+          # Unity 6000.6+ needs 1 GiB of /dev/shm; unity-builder passes the same flag.
+          docker run --rm --user 10000:1004 --shm-size=1025m --env UNITY_EMAIL --env UNITY_PASSWORD --env UNITY_SERIAL \
             --volume "$project:/project" --workdir /project editor:ubuntu-dev bash -c '
               set -uo pipefail
               unity-editor -batchmode -nographics -quit -logFile - \
