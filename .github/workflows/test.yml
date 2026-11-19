@@ -382,7 +382,9 @@ jobs:
         run: |
           docker run --rm --user 10000:1004 --workdir /tmp editor:ubuntu-dev bash -c '
             timeout 180 unity-editor -batchmode -nographics -quit -logFile /tmp/editor.log
+            status=$?
             cat /tmp/editor.log
+            if [ "$status" -eq 124 ]; then echo "::error::The editor did not exit within 180 seconds"; exit 1; fi
             grep -q "Successfully connected to LicensingClient on channel: \"LicenseClient-unity\"" /tmp/editor.log'
       - name: Setup to test
         run: |
