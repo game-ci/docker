@@ -1,4 +1,5 @@
 name: New Ubuntu Base Version ⛭
+run-name: "${{ github.event.client_payload.jobId }} · ${{ github.workflow }}"
 
 on:
   repository_dispatch:
