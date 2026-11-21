@@ -1,4 +1,5 @@
 name: Retry Building Ubuntu Editor Version 🗔
+run-name: Retry Building Ubuntu Editor Version 🗔 [${{ github.event.client_payload.jobId }}]
 
 on:
   repository_dispatch:

@@ -1,4 +1,5 @@
 name: New Ubuntu Editor Version 🗔
+run-name: New Ubuntu Editor Version 🗔 [${{ github.event.client_payload.jobId }}]
 
 on:
   repository_dispatch:
