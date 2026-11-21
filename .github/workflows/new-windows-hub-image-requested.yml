@@ -1,4 +1,5 @@
 name: New Windows Hub Version ⚙
+run-name: New Windows Hub Version ⚙ [${{ github.event.client_payload.jobId || inputs.jobId }}]
 
 on:
   repository_dispatch:

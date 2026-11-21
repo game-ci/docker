@@ -1,4 +1,5 @@
 name: New Ubuntu Hub Version ⚙
+run-name: New Ubuntu Hub Version ⚙ [${{ github.event.client_payload.jobId }}]
 
 on:
   repository_dispatch:
