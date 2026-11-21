@@ -7,12 +7,18 @@ ARG baseImage="unityci/base"
 
 FROM $hubImage AS builder
 
+# Unity Hub can stall on a download without exiting or printing anything.
+# Stop each install after this long, so the build fails and is retried
+# instead of holding a runner until the job times out.
+ARG installTimeout="60m"
+
 # Install editor
 ARG version
 ARG changeSet
-RUN unity-hub install --version "$version" --changeset "$changeSet" > /var/log/install-editor.log 2>&1; \
+RUN timeout --kill-after=1m "$installTimeout" unity-hub install --version "$version" --changeset "$changeSet" > /var/log/install-editor.log 2>&1; \
     status=$?; \
     cat /var/log/install-editor.log; \
+    if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then echo "Installing the editor timed out after $installTimeout"; fi; \
     [ "$status" -eq 0 ] \
   && ! grep -Eq 'Failed to install|Error while installing an editor|Completed with errors' /var/log/install-editor.log \
   && test -d "/opt/unity/editors/$version/Editor" \
@@ -24,8 +30,10 @@ RUN for mod in $module; do \
       if [ "$mod" = "base" ] ; then \
         echo "running default modules for this baseOs"; \
       else \
-        unity-hub install-modules --version "$version" --module "$mod" --childModules > /var/log/install-module-${mod}.log 2>&1; \
+        timeout --kill-after=1m "$installTimeout" unity-hub install-modules --version "$version" --module "$mod" --childModules > /var/log/install-module-${mod}.log 2>&1; \
+        status=$?; \
         cat /var/log/install-module-${mod}.log; \
+        if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then echo "Installing module $mod timed out after $installTimeout"; exit 1; fi; \
         if grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-${mod}.log; then \
           exit 1; \
         fi; \
@@ -41,8 +49,10 @@ RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3
       echo "linux-server already selected; skipping auto-install"; \
       exit 0; \
     fi; \
-    unity-hub install-modules --version "$version" --module "linux-server" --childModules > /var/log/install-module-linux-server.log 2>&1; \
+    timeout --kill-after=1m "$installTimeout" unity-hub install-modules --version "$version" --module "linux-server" --childModules > /var/log/install-module-linux-server.log 2>&1; \
+    status=$?; \
     cat /var/log/install-module-linux-server.log; \
+    if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then echo "Installing module linux-server timed out after $installTimeout"; exit 1; fi; \
     ! grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-linux-server.log;
 
 RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3-9]|202[2-9]|[6-9][0-9]{3}|[1-9][0-9]{4,}).*windows'; then \
@@ -52,8 +62,10 @@ RUN if ! echo "$version-$module" | grep -qP '^(2021.2.(?![0-4](?![0-9]))|2021.[3
       echo "windows-server already selected; skipping auto-install"; \
       exit 0; \
     fi; \
-    unity-hub install-modules --version "$version" --module "windows-server" --childModules > /var/log/install-module-windows-server.log 2>&1; \
+    timeout --kill-after=1m "$installTimeout" unity-hub install-modules --version "$version" --module "windows-server" --childModules > /var/log/install-module-windows-server.log 2>&1; \
+    status=$?; \
     cat /var/log/install-module-windows-server.log; \
+    if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then echo "Installing module windows-server timed out after $installTimeout"; exit 1; fi; \
     ! grep -Eq 'Missing module|Completed with errors|Failed to execute the command due the following|^Error:' /var/log/install-module-windows-server.log;
 
 # Let any user read the editor, so containers that run as a non-root user can compile.
